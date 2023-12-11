@@ -19,16 +19,16 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: 'npm'
+          cache: 'yarn'
 
-      - name: Install
-        run: npm ci --ignore-scripts
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
       - name: Build
-        run: npm run build
+        run: yarn build
 
       - name: Test
-        run: npm run test
+        run: yarn test
 
       - name: Bump version & push
         run: |
@@ -36,7 +36,7 @@ jobs:
           git config --global user.email 'focus1691@users.noreply.github.com'
 
           # Update the version in package.json, and commit & tag the change:
-          npm version patch # YMMV - you might want the semver level as a workflow input
+          yarn version --patch # YMMV - you might want the semver level as a workflow input
 
           git push && git push --tags
 
