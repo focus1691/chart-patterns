@@ -32,7 +32,7 @@ jobs:
 
       - name: Bump version & push
         run: |
-          git config --global user.name 'focus1691
+          git config --global user.name 'focus1691'
           git config --global user.email 'focus1691@users.noreply.github.com'
 
           # Update the version in package.json, and commit & tag the change:
