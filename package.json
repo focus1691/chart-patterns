@@ -11,9 +11,9 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build": "npm run clean && tsc --build tsconfig.build.json",
-    "build:watch": "npm run clean && tsc --build tsconfig.build.json --watch",
-    "build:clean": "npm run clean && npm run build",
+    "build": "yarn run clean && tsc --build tsconfig.build.json",
+    "build:watch": "yarn run clean && tsc --build tsconfig.build.json --watch",
+    "build:clean": "yarn run clean && yarn run build",
     "clean": "rimraf lib dist",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
@@ -34,5 +34,8 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "moment": "^2.29.4"
   }
 }
