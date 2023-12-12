@@ -24,8 +24,11 @@ export class RangeBuilder {
   public static LAG: number = 10
   public static THRESHOLD: number = 2
   public static INFLUENCE: number = 1
+  private peakDetector: PeakDetector
 
-  constructor(private peakDetector: PeakDetector) {}
+  constructor() {
+    this.peakDetector = new PeakDetector(RangeBuilder.LAG, RangeBuilder.THRESHOLD, RangeBuilder.INFLUENCE)
+  }
 
   private toZigzags(this: { klines: ICandle[] }, peaks: IPeak[]): IZigZag {
     const zigzag: IZigZag = {} as IZigZag

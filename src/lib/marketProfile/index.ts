@@ -15,7 +15,8 @@ import { ValueArea } from '../valueArea'
 import momentTimezone from 'moment-timezone'
 
 export class MarketProfileService {
-  constructor(private valueArea: ValueArea) {
+  private valueArea: ValueArea = new ValueArea()
+  constructor() {
     moment.updateLocale('en', {
       week: {
         dow: 1 // Monday is the first day of the week.
