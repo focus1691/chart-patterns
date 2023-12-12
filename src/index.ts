@@ -1,1 +1,7 @@
-export { ValueArea } from './lib/ValueArea'
+export { MarketProfileService } from './lib/marketProfile'
+export { ValueArea } from './lib/valueArea'
+export * from './lib/candlePatterns'
+export { PeakDetector } from './lib/peakDetector'
+export { RangeBuilder } from './lib/range'
+export * from './lib/zscores'
+export * from './types'

@@ -1,7 +1,7 @@
 import moment from 'moment'
-import { IValueArea, IVolumeRow } from '../types/valueArea.types'
-import { countDecimals, round } from '../utils/math'
-import { ICandle } from '../types/candle.types'
+import { IValueArea, IVolumeRow } from '../../types/valueArea.types'
+import { countDecimals, round } from '../../utils/math'
+import { ICandle } from '../../types/candle.types'
 
 export class ValueArea {
   private readonly nRows: number = 24

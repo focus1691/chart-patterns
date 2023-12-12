@@ -20,7 +20,7 @@ Number.prototype.between = function (a: number, b: number): boolean {
   return this >= min && this <= max
 }
 
-export class RangesService {
+export class RangeBuilder {
   public static LAG: number = 10
   public static THRESHOLD: number = 2
   public static INFLUENCE: number = 1

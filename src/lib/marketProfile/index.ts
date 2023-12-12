@@ -2,7 +2,7 @@ import _ from 'lodash'
 import moment from 'moment'
 import { INTERVALS, TIME_PERIODS } from '../../constants/candles'
 import { TechnicalIndicators } from '../../constants/indicators'
-import { CANDLE_OBSERVATIONS, EXCESS_TAIL_LENGTH_SIGNIFICANCE, MARKET_PROFILE_OPEN, POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE, SINGLE_PRINTS_KLINE_LENGTH_SIGNIFICANCE } from '../../constants/marketProfile'
+import { CANDLE_OBSERVATIONS, MARKET_PROFILE_OPEN, POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE, SINGLE_PRINTS_KLINE_LENGTH_SIGNIFICANCE } from '../../constants/marketProfile'
 import { SIGNAL_DIRECTION, SIGNALS } from '../../constants/signals'
 import { ICandle } from '../../types/candle.types'
 import { IInitialBalance, IMarketProfile, IMarketProfileFindings, IMarketProfileObservation } from '../../types/marketProfile.types'
@@ -10,7 +10,8 @@ import { ISignal } from '../../types/signals.types'
 import { INakedPointOfControl, IValueArea } from '../../types/valueArea.types'
 import { convertTpoPeriodToLetter } from '../../utils/marketProfile'
 import { getTicksFromPrice } from '../../utils/math'
-import { ValueArea } from '../ValueArea'
+import { findExcess } from '../candlePatterns'
+import { ValueArea } from '../valueArea'
 import momentTimezone from 'moment-timezone'
 
 export class MarketProfileService {
@@ -47,7 +48,7 @@ export class MarketProfileService {
           marketProfile.IB = this.calcInitialBalance(tpos)
           if (values.length > 0 && marketProfile.IB.low && marketProfile.IB.high && numTpos > 2) {
             marketProfile.failedAuction = this.isFailedAuction(tpos, marketProfile.IB)
-            marketProfile.excess = this.findExcess(tpos, marketProfile.valueArea)
+            marketProfile.excess = findExcess(tpos, marketProfile.valueArea)
             marketProfile.poorHighLow = this.findPoorHighAndLows(tpos, marketProfile.valueArea)
             marketProfile.singlePrints = this.findSinglePrints(tpos)
             // marketProfile.ledges = this.findLedges(tpos, marketProfile.valueArea)
@@ -133,44 +134,6 @@ export class MarketProfileService {
       }
     }
     return failedAuctions
-  }
-
-  findExcess(tpos: ICandle[], VA?: IValueArea): IMarketProfileObservation[] {
-    const excess: IMarketProfileObservation[] = []
-
-    for (let i = 0; i < tpos.length; i++) {
-      const open: number = tpos[i].open
-      const high: number = tpos[i].high
-      const low: number = tpos[i].low
-      const close: number = tpos[i].close
-      const klineLength: number = Math.abs(close - open)
-      const klineUpperTail: number = Math.abs(close - high)
-      const klineLowerTail: number = Math.abs(close - low)
-
-      if (high >= VA.high && klineUpperTail / klineLength > EXCESS_TAIL_LENGTH_SIGNIFICANCE) {
-        excess.push({
-          indicator: CANDLE_OBSERVATIONS.EXCESS,
-          intervals: [INTERVALS.THIRTY_MINUTES],
-          type: SIGNALS.CANDLE_ANOMALY,
-          period: convertTpoPeriodToLetter(i),
-          direction: SIGNAL_DIRECTION.BULLISH,
-          peakValue: high,
-          troughValue: low
-        })
-      }
-      if (low <= VA.low && klineLowerTail / klineLength > EXCESS_TAIL_LENGTH_SIGNIFICANCE) {
-        excess.push({
-          indicator: CANDLE_OBSERVATIONS.EXCESS,
-          intervals: [INTERVALS.THIRTY_MINUTES],
-          type: SIGNALS.CANDLE_ANOMALY,
-          period: convertTpoPeriodToLetter(i),
-          direction: SIGNAL_DIRECTION.BEARISH,
-          peakValue: high,
-          troughValue: low
-        })
-      }
-    }
-    return excess
   }
 
   findPoorHighAndLows(tpos: ICandle[], VA?: IValueArea): IMarketProfileObservation[] {

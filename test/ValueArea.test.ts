@@ -1,4 +1,4 @@
-import { ValueArea } from '../src/lib/ValueArea'
+import { ValueArea } from '../src/lib/valueArea'
 
 describe('ValueArea', () => {
   it('should be defined', () => {
