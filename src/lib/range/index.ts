@@ -5,7 +5,7 @@ import { ICandle } from '../../types/candle.types'
 import { bias, ILocalRange, IPeak, IRanges, IZigZag } from '../../types/range.types'
 import { countDecimals, round } from '../../utils/math'
 import { PeakDetector } from '../peakDetector'
-import { FIBONACCI_NUMBERS, IFibonacciRetracement } from 'src/constants/range'
+import { FIBONACCI_NUMBERS, IFibonacciRetracement } from '../../constants/range'
 
 declare global {
   interface Number {
