@@ -2,9 +2,10 @@ import _ from 'lodash'
 import moment from 'moment'
 import { from, map, toArray } from 'rxjs'
 import { ICandle } from '../../types/candle.types'
-import { PeakDetector } from '../peakDetector'
-import { bias, FIBONACCI_NUMBERS, IFibonacciRetracement, ILocalRange, IPeak, IRanges, IZigZag } from '../../types/range.types'
+import { bias, ILocalRange, IPeak, IRanges, IZigZag } from '../../types/range.types'
 import { countDecimals, round } from '../../utils/math'
+import { PeakDetector } from '../peakDetector'
+import { FIBONACCI_NUMBERS, IFibonacciRetracement } from 'src/constants/range'
 
 declare global {
   interface Number {

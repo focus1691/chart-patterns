@@ -1,10 +1,11 @@
-import { VALUE_AREA, VALUE_AREA_PERIODS, VALUE_AREA_TENSE } from './valueArea.types'
-import { ILevelZone } from '../types/levels.types'
+import { LEVEL_ZONE } from '../constants/levels'
+import { IFibonacciRetracement, zigzagType } from '../constants/range'
+import { VALUE_AREA, VALUE_AREA_PERIODS, VALUE_AREA_TENSE } from '../constants/valueArea'
 
 export interface ILocalRangeDescription {
   price: number
   level: VALUE_AREA
-  levelType: ILevelZone
+  levelType: LEVEL_ZONE
   period: VALUE_AREA_PERIODS
   tense: VALUE_AREA_TENSE
 }
@@ -42,30 +43,4 @@ export interface IZigZag {
   price: number
   direction: zigzagType
   timestamp: number | string
-}
-
-export type zigzagType = 'PEAK' | 'TROUGH'
-
-export interface IFibonacciRetracement {
-  0: number | null
-  0.236: number | null
-  0.382: number | null
-  0.5: number | null
-  0.618: number | null
-  0.66: number | null
-  0.786: number | null
-  1: number | null
-  1.618: number | null
-}
-
-export enum FIBONACCI_NUMBERS {
-  ZERO = 0,
-  TWO_THREE_SIX = 0.236,
-  THREE_EIGHT_TWO = 0.382,
-  FIVE = 0.5,
-  SIX_ONE_EIGHT = 0.618,
-  SIX_SIX = 0.66,
-  SEVEN_EIGHT_SIX = 0.786,
-  ONE = 1,
-  ONE_SIX_EIGHT = 1.618
 }

@@ -3,3 +3,8 @@ export enum PRICE_POSITION {
   ABOVE = 'above',
   BELOW = 'below'
 }
+
+export enum LEVEL_ZONE {
+  SUPPORT = 'support',
+  RESISTANCE = 'resistance'
+}
