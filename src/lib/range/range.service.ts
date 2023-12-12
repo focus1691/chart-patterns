@@ -1,9 +1,9 @@
 import _ from 'lodash'
 import moment from 'moment'
 import { from, map, toArray } from 'rxjs'
-import { ICandle } from '@trading/dto/candle.dto'
+import { ICandle } from '../../types/candle.types'
 import { PeakDetector } from '../peakDetector'
-import { bias, FIBONACCI_NUMBERS, IFibonacciRetracement, ILocalRange, IPeak, IRanges, IZigZag } from '../range/range.types'
+import { bias, FIBONACCI_NUMBERS, IFibonacciRetracement, ILocalRange, IPeak, IRanges, IZigZag } from '../../types/range.types'
 import { countDecimals, round } from '../../utils/math'
 
 declare global {
@@ -19,13 +19,12 @@ Number.prototype.between = function (a: number, b: number): boolean {
   return this >= min && this <= max
 }
 
-@Injectable()
 export class RangesService {
   public static LAG: number = 10
   public static THRESHOLD: number = 2
   public static INFLUENCE: number = 1
 
-  constructor(@Inject('PeakDetector') private peakDetector: PeakDetector) {}
+  constructor(private peakDetector: PeakDetector) {}
 
   private toZigzags(this: { klines: ICandle[] }, peaks: IPeak[]): IZigZag {
     const zigzag: IZigZag = {} as IZigZag

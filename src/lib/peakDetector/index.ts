@@ -1,6 +1,6 @@
 
 import { ZScoreOutput, ZScore } from '../zscores'
-import { IPeak, IPeakRange } from '../range/range.types'
+import { IPeak, IPeakRange } from '../../types/range.types'
 
 export class PeakDetector {
   public lag: number = 5

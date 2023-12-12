@@ -1,10 +1,10 @@
-import { VALUE_AREA, VALUE_AREA_PERIODS, VALUE_AREA_TENSE } from '@technical-analysis/valueArea/valueArea.types'
-import { LEVEL_ZONE } from '@technical-analysis/levels/levels.types'
+import { VALUE_AREA, VALUE_AREA_PERIODS, VALUE_AREA_TENSE } from './valueArea.types'
+import { ILevelZone } from '../types/levels.types'
 
 export interface ILocalRangeDescription {
   price: number
   level: VALUE_AREA
-  levelType: LEVEL_ZONE
+  levelType: ILevelZone
   period: VALUE_AREA_PERIODS
   tense: VALUE_AREA_TENSE
 }
