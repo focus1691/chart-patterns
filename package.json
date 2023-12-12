@@ -37,6 +37,8 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "moment": "^2.29.4"
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "rxjs": "^7.8.1"
   }
 }
