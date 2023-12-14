@@ -1,20 +1,32 @@
 import moment from 'moment'
 import { IZigZag } from '../../types/zigzags.types'
+import { IPeak, ICandle } from '../../types'
+import { PeakDetector } from '../peakDetector'
 
 export class ZigZags {
-  static create(klines: ICandle[], peaks: IPeak[]): IZigZag {
+  public static LAG: number = 5
+  public static THRESHOLD: number = 2
+  public static INFLUENCE: number = 0.3
+  private static peakDetector: PeakDetector = new PeakDetector(ZigZags.LAG, ZigZags.THRESHOLD, ZigZags.INFLUENCE)
+
+  static create(candles: ICandle[]): IZigZag {
     const zigzag: IZigZag = {} as IZigZag
-    for (let i = 0; i < peaks.length; i++) {
-      const { position, direction }: IPeak = peaks[i]
-      const close: number = Number(this.klines[position]?.close)
-      if (!zigzag.price) {
-        zigzag.direction = direction === 1 ? 'PEAK' : 'TROUGH'
-        zigzag.price = close
-        zigzag.timestamp = moment(this.klines[position].openTime).unix()
-      } else {
-        if ((zigzag.direction === 'PEAK' && close > zigzag.price) || (zigzag.direction === 'TROUGH' && close < zigzag.price)) {
+    const values: number[] = candles.map((kline) => kline.close)
+    const groupedPeaks: IPeak[][] = ZigZags.peakDetector.findSignals(values)
+
+    for (const groupedPeak of groupedPeaks) {
+      for (const peak of groupedPeak) {
+        const { position, direction }: IPeak = peak
+        const close: number = Number(candles[position]?.close)
+        if (!zigzag.price) {
+          zigzag.direction = direction === 1 ? 'PEAK' : 'TROUGH'
           zigzag.price = close
-          zigzag.timestamp = moment(this.klines[position].openTime).unix()
+          zigzag.timestamp = moment(candles[position].openTime).unix()
+        } else {
+          if ((zigzag.direction === 'PEAK' && close > zigzag.price) || (zigzag.direction === 'TROUGH' && close < zigzag.price)) {
+            zigzag.price = close
+            zigzag.timestamp = moment(candles[position].openTime).unix()
+          }
         }
       }
     }
