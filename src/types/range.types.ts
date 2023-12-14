@@ -1,5 +1,5 @@
 import { LEVEL_ZONE } from '../constants/levels'
-import { IFibonacciRetracement, zigzagType } from '../constants/range'
+import { IFibonacciRetracement } from '../constants/range'
 import { VALUE_AREA, VALUE_AREA_PERIODS, VALUE_AREA_TENSE } from '../constants/valueArea'
 
 export interface ILocalRangeDescription {
@@ -37,10 +37,4 @@ export interface IPeak {
 export interface IPeakRange extends IPeak {
   start?: number
   end?: number
-}
-
-export interface IZigZag {
-  price: number
-  direction: zigzagType
-  timestamp: number | string
 }

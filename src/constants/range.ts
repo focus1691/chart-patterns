@@ -1,5 +1,3 @@
-export type zigzagType = 'PEAK' | 'TROUGH'
-
 export interface IFibonacciRetracement {
   0: number | null
   0.236: number | null
