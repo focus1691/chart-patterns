@@ -1,6 +1,7 @@
 import moment from 'moment'
+import { ICandle } from '../../types/candle.types'
+import { IPeak } from '../../types/range.types'
 import { IZigZag } from '../../types/zigzags.types'
-import { IPeak, ICandle } from '../../types'
 import { PeakDetector } from '../peakDetector'
 
 export class ZigZags {
@@ -9,27 +10,35 @@ export class ZigZags {
   public static INFLUENCE: number = 0.3
   private static peakDetector: PeakDetector = new PeakDetector(ZigZags.LAG, ZigZags.THRESHOLD, ZigZags.INFLUENCE)
 
-  static create(candles: ICandle[]): IZigZag {
-    const zigzag: IZigZag = {} as IZigZag
-    const values: number[] = candles.map((kline) => kline.close)
-    const groupedPeaks: IPeak[][] = ZigZags.peakDetector.findSignals(values)
+  static create(candles: ICandle[]): IZigZag[] {
+    const zigzags: IZigZag[] = []
+    const groupedPeaks: IPeak[][] = ZigZags.peakDetector.findSignals(candles.map((candle) => candle.close))
 
-    for (const groupedPeak of groupedPeaks) {
-      for (const peak of groupedPeak) {
-        const { position, direction }: IPeak = peak
-        const close: number = Number(candles[position]?.close)
-        if (!zigzag.price) {
-          zigzag.direction = direction === 1 ? 'PEAK' : 'TROUGH'
-          zigzag.price = close
-          zigzag.timestamp = moment(candles[position].openTime).unix()
-        } else {
-          if ((zigzag.direction === 'PEAK' && close > zigzag.price) || (zigzag.direction === 'TROUGH' && close < zigzag.price)) {
-            zigzag.price = close
-            zigzag.timestamp = moment(candles[position].openTime).unix()
-          }
+    for (const group of groupedPeaks) {
+      const direction = group[0].direction
+      let extremeValue = direction === 1 ? Number.MIN_SAFE_INTEGER : Number.MAX_SAFE_INTEGER
+      let extremeCandle = null
+
+      for (const peak of group) {
+        const candle = candles[peak.position]
+        if (direction === 1 && candle.high > extremeValue) {
+          extremeValue = candle.high
+          extremeCandle = candle
+        } else if (direction === -1 && candle.low < extremeValue) {
+          extremeValue = candle.low
+          extremeCandle = candle
         }
       }
+
+      if (extremeCandle) {
+        const zigzag: IZigZag = {
+          direction: direction === 1 ? 'PEAK' : 'TROUGH',
+          price: extremeValue,
+          timestamp: moment(extremeCandle.openTime).unix()
+        }
+        zigzags.push(zigzag)
+      }
     }
-    return zigzag
+    return zigzags
   }
 }
