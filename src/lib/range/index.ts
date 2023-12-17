@@ -1,12 +1,13 @@
 import _ from 'lodash'
 import moment from 'moment'
 import { from, map, toArray } from 'rxjs'
+import { FIBONACCI_NUMBERS, IFibonacciRetracement } from '../../constants/range'
 import { ICandle } from '../../types/candle.types'
+import { ISignalsConfig } from '../../types/peakDetector.types'
 import { bias, ILocalRange, IPeak, IRanges } from '../../types/range.types'
 import { IZigZag } from '../../types/zigzags.types'
 import { countDecimals, round } from '../../utils/math'
 import { PeakDetector } from '../peakDetector'
-import { FIBONACCI_NUMBERS, IFibonacciRetracement } from '../../constants/range'
 
 declare global {
   interface Number {
@@ -22,14 +23,7 @@ Number.prototype.between = function (a: number, b: number): boolean {
 }
 
 export class RangeBuilder {
-  public static LAG: number = 10
-  public static THRESHOLD: number = 2
-  public static INFLUENCE: number = 1
   private peakDetector: PeakDetector
-
-  constructor() {
-    this.peakDetector = new PeakDetector(RangeBuilder.LAG, RangeBuilder.THRESHOLD, RangeBuilder.INFLUENCE)
-  }
 
   private toZigzags(this: { klines: ICandle[] }, peaks: IPeak[]): IZigZag {
     const zigzag: IZigZag = {} as IZigZag
@@ -206,13 +200,19 @@ export class RangeBuilder {
     return range
   }
 
-  public findRanges(klines: ICandle[]): IRanges {
+  public findRanges(candles: ICandle[], lag: number, threshold: number, influence: number): IRanges {
     let local: ILocalRange[] = []
-    const values = klines.map((kline) => kline.close)
 
-    from(this.peakDetector.findSignals(values))
+    const config: ISignalsConfig = {
+      values: candles.map((candle) => candle.close),
+      lag,
+      threshold,
+      influence
+    }
+
+    from(this.peakDetector.findSignals(config))
       .pipe(
-        map(this.toZigzags.bind({ klines })),
+        map(this.toZigzags.bind({ candles })),
         toArray(),
         map(this.toRanges.bind(this)),
         map(this.mergeRanges),
