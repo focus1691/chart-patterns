@@ -29,30 +29,15 @@ export function findHarmonics(type: HARMONIC_PATTERNS, xabcdPattern: IXABCDPatte
     XAD: [minXAD, maxXAD]
   } = ratios
 
-  let XAB_ERROR = 0
-  if (XAB < minXAB || XAB > maxXAB) {
-    XAB_ERROR = Math.abs((XAB - minXAB) / XAB) * 100 + Math.abs((XAB - maxXAB) / XAB) * 100
-  }
-
-  let ABC_ERROR = 0
-  if (ABC === minABC || ABC === maxABC) {
-    ABC_ERROR = 0
-  } else if (ABC < minABC || ABC > maxABC) {
-    ABC_ERROR = Math.abs((ABC - minABC) / ABC) * 100 + Math.abs((ABC - maxABC) / ABC) * 100
-  }
-
-  let BCD_ERROR = 0
-  if (BCD < minBCD || BCD > maxBCD) {
-    BCD_ERROR = Math.abs((BCD - minBCD) / BCD) * 100 + Math.abs((BCD - maxBCD) / BCD) * 100
-  }
-
-  let XAD_ERROR = 0
-  if (XAD < minXAD || XAD > maxXAD) {
-    XAD_ERROR = Math.abs((XAD - minXAD) / XAD) * 100 + Math.abs((XAD - maxXAD) / XAD) * 100
-  }
+  // Calculating errors using the new formula
+  let XAB_ERROR = calculateError(XAB, [minXAB, maxXAB])
+  let ABC_ERROR = calculateError(ABC, [minABC, maxABC])
+  let BCD_ERROR = calculateError(BCD, [minBCD, maxBCD])
+  let XAD_ERROR = calculateError(XAD, [minXAD, maxXAD])
 
   const totalError = XAB_ERROR + ABC_ERROR + BCD_ERROR + XAD_ERROR
-  if (totalError === 0) {
+
+  if (totalError < 50) {
     return {
       ...xabcdPattern,
       error: totalError,
@@ -66,16 +51,17 @@ export function findXABCDCombinations(zigzags: IZigZag[]): number[][] {
   const combinations: number[][] = []
 
   for (let i = 0; i < zigzags.length - 4; i++) {
-    for (let j = i + 1; j < zigzags.length - 3; j++) {
-      for (let k = j + 1; k < zigzags.length - 2; k++) {
-        for (let l = k + 1; l < zigzags.length - 1; l++) {
-          for (let m = l + 1; m < zigzags.length; m++) {
-            if (isValidCombination([zigzags[i], zigzags[j], zigzags[k], zigzags[l], zigzags[m]])) {
-              combinations.push([i, j, k, l, m])
-            }
-          }
-        }
-      }
+    const potentialCombination = [i, i + 1, i + 2, i + 3, i + 4]
+    if (
+      isValidCombination([
+        zigzags[potentialCombination[0]],
+        zigzags[potentialCombination[1]],
+        zigzags[potentialCombination[2]],
+        zigzags[potentialCombination[3]],
+        zigzags[potentialCombination[4]]
+      ])
+    ) {
+      combinations.push(potentialCombination)
     }
   }
 
@@ -89,4 +75,14 @@ function isValidCombination(points: IZigZag[]): boolean {
     }
   }
   return true
+}
+
+function calculateError(calculated, expected_range) {
+  if (calculated < expected_range[0]) {
+    return Math.abs((calculated - expected_range[0]) / calculated) * 100
+  } else if (calculated > expected_range[1]) {
+    return Math.abs((calculated - expected_range[1]) / calculated) * 100
+  } else {
+    return 0
+  }
 }
