@@ -2,17 +2,21 @@ import moment from 'moment'
 import { ICandle } from '../../types/candle.types'
 import { IPeak } from '../../types/range.types'
 import { IZigZag } from '../../types/zigzags.types'
+import { ISignalsConfig } from '../../types/peakDetector.types'
 import { PeakDetector } from '../peakDetector'
 
 export class ZigZags {
-  public static LAG: number = 5
-  public static THRESHOLD: number = 2
-  public static INFLUENCE: number = 0.3
-  private static peakDetector: PeakDetector = new PeakDetector(ZigZags.LAG, ZigZags.THRESHOLD, ZigZags.INFLUENCE)
+  private static peakDetector: PeakDetector = new PeakDetector()
 
-  static create(candles: ICandle[]): IZigZag[] {
+  static create(candles: ICandle[], lag: number, threshold: number, influence: number): IZigZag[] {
     const zigzags: IZigZag[] = []
-    const groupedPeaks: IPeak[][] = ZigZags.peakDetector.findSignals(candles.map((candle) => candle.close))
+    const config: ISignalsConfig = {
+      values: candles.map((candle) => candle.close),
+      lag,
+      threshold,
+      influence
+    }
+    const groupedPeaks: IPeak[][] = ZigZags.peakDetector.findSignals(config)
 
     for (const group of groupedPeaks) {
       const direction = group[0].direction

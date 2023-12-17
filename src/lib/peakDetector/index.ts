@@ -1,20 +1,17 @@
 
 import { ZScoreOutput, ZScore } from '../zscores'
 import { IPeak, IPeakRange } from '../../types/range.types'
+import { ISignalsConfig } from '../../types/peakDetector.types'
 
 export class PeakDetector {
-  public lag: number = 5
-  public threshold: number = 2
-  public influence: number = 0.3
-
-  constructor(lag: number, threshold: number, infleunce: number) {
-    this.lag = lag
-    this.threshold = threshold
-    this.influence = infleunce
+  private validateInput(config: ISignalsConfig): void {
+    if (!config.lag || !config.threshold || !config.influence) throw new Error('Parameter(s) required: lag, threshold, influence')
+    if (config.influence < 0 || config.influence > 1) throw new Error('\'influence\' should be between 0 - 1')
   }
 
-  public findSignals(values: number[]): IPeak[][] {
-    const output: ZScoreOutput = ZScore.calc(values, this.lag, this.threshold, this.influence)
+  public findSignals(config: ISignalsConfig): IPeak[][] {
+    this.validateInput(config)
+    const output: ZScoreOutput = ZScore.calc(config.values, config.lag, config.threshold, config.influence)
     const signals: IPeak[] = output.signals
       .map((direction, position) => direction !== 0 && ({ position, direction } as IPeak))
       .filter(({ direction }) => Boolean(direction))

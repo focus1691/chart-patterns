@@ -4,11 +4,11 @@ import { IZigZag } from '../../types/zigzags.types'
 import { round } from '../../utils/math'
 
 export function calcHarmonicRatios(X: IZigZag, A: IZigZag, B: IZigZag, C: IZigZag, D: IZigZag): IXABCDPattern {
-  const XA: number = Math.abs(X.price - A.price)
-  const AB: number = Math.abs(A.price - B.price)
-  const BC: number = Math.abs(B.price - C.price)
-  const CD: number = Math.abs(C.price - D.price)
-  const XD: number = Math.abs(X.price - D.price)
+  const XA: number = Math.round(Math.abs(X.price - A.price))
+  const AB: number = Math.round(Math.abs(A.price - B.price))
+  const BC: number = Math.round(Math.abs(B.price - C.price))
+  const CD: number = Math.round(Math.abs(C.price - D.price))
+  const XD: number = Math.round(Math.abs(X.price - D.price))
 
   const XAB: number = round(AB / XA)
   const ABC: number = round(BC / AB)
@@ -30,12 +30,12 @@ export function findHarmonics(type: HARMONIC_PATTERNS, xabcdPattern: IXABCDPatte
   } = ratios
 
   // Calculating errors using the new formula
-  let XAB_ERROR = calculateError(XAB, [minXAB, maxXAB])
-  let ABC_ERROR = calculateError(ABC, [minABC, maxABC])
-  let BCD_ERROR = calculateError(BCD, [minBCD, maxBCD])
-  let XAD_ERROR = calculateError(XAD, [minXAD, maxXAD])
+  const XAB_ERROR: number = calculateError(XAB, [minXAB, maxXAB])
+  const ABC_ERROR: number = calculateError(ABC, [minABC, maxABC])
+  const BCD_ERROR: number = calculateError(BCD, [minBCD, maxBCD])
+  const XAD_ERROR: number = calculateError(XAD, [minXAD, maxXAD])
 
-  const totalError = XAB_ERROR + ABC_ERROR + BCD_ERROR + XAD_ERROR
+  const totalError: number = round(XAB_ERROR + ABC_ERROR + BCD_ERROR + XAD_ERROR)
 
   if (totalError < 50) {
     return {
