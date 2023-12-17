@@ -29,19 +29,23 @@ export function findHarmonics(type: HARMONIC_PATTERNS, xabcdPattern: IXABCDPatte
     XAD: [minXAD, maxXAD]
   } = ratios
 
-  // Calculating errors using the new formula
-  const XAB_ERROR: number = calculateError(XAB, [minXAB, maxXAB])
-  const ABC_ERROR: number = calculateError(ABC, [minABC, maxABC])
-  const BCD_ERROR: number = calculateError(BCD, [minBCD, maxBCD])
-  const XAD_ERROR: number = calculateError(XAD, [minXAD, maxXAD])
+  const XAB_ERROR: number = round(calculateError(XAB, [minXAB, maxXAB]))
+  const ABC_ERROR: number = round(calculateError(ABC, [minABC, maxABC]))
+  const BCD_ERROR: number = round(calculateError(BCD, [minBCD, maxBCD]))
+  const XAD_ERROR: number = round(calculateError(XAD, [minXAD, maxXAD]))
 
   const totalError: number = round(XAB_ERROR + ABC_ERROR + BCD_ERROR + XAD_ERROR)
+  const isComplete: boolean = typeof XAB === 'number' && typeof ABC === 'number' && typeof BCD === 'number' && typeof XAD === 'number'
+  const isDeveloping: boolean = !isComplete && typeof XAB === 'number' && typeof ABC === 'number' && typeof BCD === 'number'
+  const lastTimestamp: number = isDeveloping ? xabcdPattern.C.timestamp : xabcdPattern.D?.timestamp ?? null
 
-  if (totalError < 50) {
+  if ((totalError < 50 && isComplete) || isDeveloping) {
     return {
       ...xabcdPattern,
       error: totalError,
-      type
+      type,
+      isDeveloping,
+      lastTimestamp
     }
   }
   return null

@@ -3,6 +3,8 @@ import { HARMONIC_PATTERNS } from '../constants/harmonics'
 
 export interface IHarmonic extends IXABCDPattern {
   type: HARMONIC_PATTERNS
+  isDeveloping: boolean
+  lastTimestamp?: number
 }
 
 export interface IXABCDPattern {
@@ -10,7 +12,7 @@ export interface IXABCDPattern {
   A: IZigZag
   B: IZigZag
   C: IZigZag
-  D: IZigZag
+  D?: IZigZag
   XAB: number
   ABC: number
   BCD: number
