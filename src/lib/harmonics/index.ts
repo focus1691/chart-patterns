@@ -1,4 +1,4 @@
-import { HARMONIC_PATTERNS } from '../../constants/harmonics'
+import { HARMONIC_PATTERNS, harmonicRatios } from '../../constants/harmonics'
 import { IHarmonic, IXABCDPattern, IXABCDRatio } from '../../types/harmonics.types'
 import { IZigZag } from '../../types/zigzags.types'
 import { round } from '../../utils/math'
@@ -20,7 +20,26 @@ export function calcHarmonicRatios(X: IZigZag, A: IZigZag, B: IZigZag, C: IZigZa
   return XABCD
 }
 
-export function findHarmonics(type: HARMONIC_PATTERNS, xabcdPattern: IXABCDPattern, ratios: IXABCDRatio): IHarmonic | null {
+export function findHarmonicPatterns(zigzags: IZigZag[]) {
+  const combinations = findXABCDCombinations(zigzags)
+  const harmonics: IHarmonic[] = []
+
+  for (const combination of combinations) {
+    const [x, a, b, c, d] = combination.map((index) => zigzags[index])
+    const xabcdPattern = calcHarmonicRatios(x, a, b, c, d)
+
+    for (const patternType of Object.values(HARMONIC_PATTERNS)) {
+      const harmonic = checkHarmonicPattern(patternType, xabcdPattern, harmonicRatios[patternType])
+      if (harmonic) {
+        harmonics.push(harmonic)
+      }
+    }
+  }
+
+  return harmonics
+}
+
+export function checkHarmonicPattern(type: HARMONIC_PATTERNS, xabcdPattern: IXABCDPattern, ratios: IXABCDRatio): IHarmonic | null {
   const { XAB, ABC, BCD, XAD } = xabcdPattern
   const {
     XAB: [minXAB, maxXAB],
