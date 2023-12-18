@@ -3,17 +3,17 @@ import { IValueArea, IVolumeRow } from '../../types/valueArea.types'
 import { countDecimals, round } from '../../utils/math'
 import { ICandle } from '../../types/candle.types'
 
-export class ValueArea {
-  private readonly nRows: number = 24
-  private static VA_VOL_PERCENT = 0.7
-  constructor() {
-    moment.updateLocale('en', {
-      week: {
-        dow: 1 // Monday is the first day of the week.
-      }
-    })
+moment.updateLocale('en', {
+  week: {
+    dow: 1 // Monday is the first day of the week.
   }
-  sumVolumes(klines: ICandle[]) {
+})
+
+export class ValueArea {
+  private static readonly N_ROWS: number = 24
+  private static VA_VOL_PERCENT = 0.7
+
+  static sumVolumes(klines: ICandle[]) {
     let V_TOTAL: number = 0
     let highest: number = 0
     let lowest: number = Infinity
@@ -31,10 +31,10 @@ export class ValueArea {
     return { V_TOTAL: round(V_TOTAL), high: highest, low: lowest }
   }
 
-  valueAreaHistogram(klines: ICandle[], highest: number, lowest: number, nDecimals: number) {
+  static valueAreaHistogram(klines: ICandle[], highest: number, lowest: number, nDecimals: number) {
     let row = 0
     const range: number = highest - lowest
-    const stepSize: number = round(range / this.nRows, nDecimals)
+    const stepSize: number = round(range / ValueArea.N_ROWS, nDecimals)
 
     if (range <= 0) return { histogram: null, POC: null, POC_ROW: null }
 
@@ -42,7 +42,7 @@ export class ValueArea {
     let POC_ROW: number = 0
     let POC: number = 0
     let highestVolumeRow: number = 0
-    while (histogram.length < this.nRows) {
+    while (histogram.length < ValueArea.N_ROWS) {
       histogram.push({
         volume: 0,
         low: round(lowest + stepSize * row, nDecimals),
@@ -58,7 +58,7 @@ export class ValueArea {
       const low: number = Number(klines[i].low)
       const close: number = Number(klines[i].close)
       const typicalPrice: number = round((high + low + close) / 3, nDecimals)
-      const ROW: number = stepSize === 0 ? 0 : Math.min(this.nRows - 1, Math.floor((typicalPrice - lowest) / stepSize))
+      const ROW: number = stepSize === 0 ? 0 : Math.min(ValueArea.N_ROWS - 1, Math.floor((typicalPrice - lowest) / stepSize))
 
       histogram[ROW].volume += volume
 
@@ -71,7 +71,7 @@ export class ValueArea {
     return { histogram, POC, POC_ROW }
   }
 
-  calcValueArea(POC_ROW: number, histogram: IVolumeRow[], V_TOTAL: number) {
+  static calcValueArea(POC_ROW: number, histogram: IVolumeRow[], V_TOTAL: number) {
     if (!POC_ROW || !histogram || !V_TOTAL) return { VAH: null, VAL: null }
     // 70% of the total volume
     const VA_VOL: number = V_TOTAL * ValueArea.VA_VOL_PERCENT
@@ -137,19 +137,19 @@ export class ValueArea {
     return { VAH, VAL }
   }
 
-  getLevelsForPeriod(data: ICandle[]): IValueArea {
+  static getLevelsForPeriod(candles: ICandle[]): IValueArea {
     // We need to start at the start of the (day / week / month), in order to filter all the klines for the VA calculations for that period
     // current day vs previous day, current week vs previous week, current month vs previous month
-    const { V_TOTAL, high, low }: { V_TOTAL: number; high: number; low: number } = this.sumVolumes(data)
+    const { V_TOTAL, high, low }: { V_TOTAL: number; high: number; low: number } = ValueArea.sumVolumes(candles)
     const nDecimals = Math.max(countDecimals(high), countDecimals(low))
     const EQ: number = round(low + (high - low) / 2, nDecimals)
-    const { histogram, POC, POC_ROW }: { histogram: IVolumeRow[]; POC: number; POC_ROW: number } = this.valueAreaHistogram(
-      data,
+    const { histogram, POC, POC_ROW }: { histogram: IVolumeRow[]; POC: number; POC_ROW: number } = ValueArea.valueAreaHistogram(
+      candles,
       high,
       low,
       nDecimals
     )
-    const { VAH, VAL }: { VAH: number; VAL: number } = this.calcValueArea(POC_ROW, histogram, V_TOTAL)
+    const { VAH, VAL }: { VAH: number; VAL: number } = ValueArea.calcValueArea(POC_ROW, histogram, V_TOTAL)
 
     return { VAH, VAL, POC, EQ, low, high }
   }

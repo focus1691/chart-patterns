@@ -5,7 +5,7 @@ import { TechnicalIndicators } from '../../constants/indicators'
 import { CANDLE_OBSERVATIONS, EXCESS_TAIL_LENGTH_SIGNIFICANCE, MARKET_PROFILE_OPEN, POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE, SINGLE_PRINTS_KLINE_LENGTH_SIGNIFICANCE } from '../../constants/marketProfile'
 import { SIGNAL_DIRECTION, SIGNALS } from '../../constants/signals'
 import { ICandle } from '../../types/candle.types'
-import { IInitialBalance, IMarketProfile, IMarketProfileFindings, IMarketProfileObservation } from '../../types/marketProfile.types'
+import { IInitialBalance, IMarketProfile, IMarketProfileConfig, IMarketProfileFindings, IMarketProfileObservation } from '../../types/marketProfile.types'
 import { ISignal } from '../../types/signals.types'
 import { INakedPointOfControl, IValueArea } from '../../types/valueArea.types'
 import { convertTpoPeriodToLetter } from '../../utils/marketProfile'
@@ -14,7 +14,8 @@ import { ValueArea } from '../valueArea'
 import momentTimezone from 'moment-timezone'
 
 export class MarketProfile {
-  private valueArea: ValueArea = new ValueArea()
+  private static TPO_SIZE = 1
+
   constructor() {
     moment.updateLocale('en', {
       week: {
@@ -24,40 +25,47 @@ export class MarketProfile {
     momentTimezone.tz.setDefault('Europe/London')
   }
 
-  getMarketProfile(period: TIME_PERIODS, data: ICandle[], tpoSize?: number, tickSize?: number): IMarketProfile {
-    if (period === TIME_PERIODS.DAY && (!tpoSize || !tickSize)) throw new Error('No TPO Size / Tick Size to process the market profile calculations')
+  validateInput(config: IMarketProfileConfig): void {
+    if (!config.tickSize || typeof config.tickSize !== 'number') throw new Error('You must include the symbol\'s Tick Size. i.e. 0.5 for BTCUSDT.')
+    if (!config?.candles?.length) throw new Error('You need to include the candles array (ICandle format).')
+    if (config.candles.length < 24) throw new Error('Not enough candles to compute the Market Profile for a day. You need a minimum of 48 TPO\'s of 30m candles.')
+    for (let i = 0; i < config.candles.length; i++) {
+      if (config.candles[i].interval !== INTERVALS.THIRTY_MINUTES) throw new Error('Candle contains an interval other than 30m. Market Profile Theory requires 30m candles. 1 TPO = one 30 min candle,')
+    }
+  }
 
-    const timestamp = moment(data[0].openTime)
-    const from: moment.Moment = moment(timestamp).startOf(period)
+  getMarketProfile(config: IMarketProfileConfig): IMarketProfile {
+    this.validateInput(config)
+
+    const timestamp = moment(config.candles[0].openTime)
+    const from: moment.Moment = moment(timestamp).startOf(TIME_PERIODS.DAY)
     const marketProfile: IMarketProfile = { marketProfiles: null, npoc: null }
     const values: IMarketProfileFindings[] = []
     let tpos: ICandle[] = []
     do {
-      const marketProfile: IMarketProfileFindings = { startOfPeriod: from.unix() }
+      const marketProfile: IMarketProfileFindings = { startOfDay: from.unix() }
       // Filter the Klines for this period alone
-      tpos = data.filter((kline) => {
-        const timestamp = moment(kline.openTime)
-        return moment(timestamp).isSame(from, period)
+      tpos = config.candles.filter((candle) => {
+        const timestamp = moment(candle.openTime)
+        return moment(timestamp).isSame(from, TIME_PERIODS.DAY)
       })
       if (!_.isEmpty(tpos)) {
-        const valueArea: IValueArea = this.valueArea.getLevelsForPeriod(tpos)
-        marketProfile.valueArea = valueArea
-        const numTpos: number = tpoSize * tpos.length
+        const numTpos: number = MarketProfile.TPO_SIZE * tpos.length
+        marketProfile.valueArea = ValueArea.getLevelsForPeriod(tpos)
+        marketProfile.IB = this.calcInitialBalance(tpos)
 
-        if (period === TIME_PERIODS.DAY) {
-          marketProfile.IB = this.calcInitialBalance(tpos)
-          if (values.length > 0 && marketProfile.IB.low && marketProfile.IB.high && numTpos > 2) {
-            marketProfile.failedAuction = this.isFailedAuction(tpos, marketProfile.IB)
-            marketProfile.excess = this.findExcess(tpos, marketProfile.valueArea)
-            marketProfile.poorHighLow = this.findPoorHighAndLows(tpos, marketProfile.valueArea)
-            marketProfile.singlePrints = this.findSinglePrints(tpos)
-            // marketProfile.ledges = this.findLedges(tpos, marketProfile.valueArea)
-            marketProfile.ledges = []
-            marketProfile.openType = this.findOpenType(tpos, tpoSize, tickSize, marketProfile.IB, values[values.length - 1]?.valueArea)
-            // marketProfile.dayType = this.findDayType(tpos, tickSize, marketProfile.IB)
-          }
+        if (values.length > 0 && marketProfile.IB.low && marketProfile.IB.high && numTpos > 2) {
+          marketProfile.failedAuction = this.isFailedAuction(tpos, marketProfile.IB)
+          marketProfile.excess = this.findExcess(tpos, marketProfile.valueArea)
+          marketProfile.poorHighLow = this.findPoorHighAndLows(tpos, marketProfile.valueArea)
+          marketProfile.singlePrints = this.findSinglePrints(tpos)
+          // marketProfile.ledges = this.findLedges(tpos, marketProfile.valueArea)
+          marketProfile.ledges = []
+          marketProfile.openType = this.findOpenType(tpos, MarketProfile.TPO_SIZE, config.tickSize, marketProfile.IB, values[values.length - 1]?.valueArea)
+          // marketProfile.dayType = this.findDayType(tpos, tickSize, marketProfile.IB)
         }
-        from.add(1, period) // Go to the previous day / week / month
+
+        from.add(1, TIME_PERIODS.DAY) // Go to the previous day / week / month
         values.push(marketProfile)
       }
     } while (!_.isEmpty(tpos))

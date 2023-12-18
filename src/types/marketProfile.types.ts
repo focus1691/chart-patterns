@@ -3,6 +3,7 @@ import { MARKET_PROFILE_DAYS, MARKET_PROFILE_OPEN } from '../constants/marketPro
 import { VALUE_AREA, VALUE_AREA_PERIODS, VALUE_AREA_TENSE } from '../constants/valueArea'
 import { ISignal } from '../types/signals.types'
 import { INakedPointOfControl, IValueArea } from '../types/valueArea.types'
+import { ICandle } from './candle.types'
 
 export interface IMarketProfile {
   npoc?: INakedPointOfControl
@@ -10,7 +11,7 @@ export interface IMarketProfile {
 }
 
 export interface IMarketProfileFindings {
-  startOfPeriod?: number
+  startOfDay?: number
   valueArea?: IValueArea
   IB?: IInitialBalance
   failedAuction?: IMarketProfileObservation[]
@@ -55,4 +56,9 @@ export interface IPriceLevelInformation {
 export interface IPriceLevels {
   support?: IPriceLevelInformation
   resistance?: IPriceLevelInformation
+}
+
+export interface IMarketProfileConfig {
+  candles: ICandle[]
+  tickSize: number
 }
