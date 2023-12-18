@@ -1,4 +1,4 @@
-export { MarketProfileService } from './lib/marketProfile'
+export { MarketProfile } from './lib/marketProfile'
 export { ValueArea } from './lib/valueArea'
 export * from './lib/candlePatterns'
 export { PeakDetector } from './lib/peakDetector'

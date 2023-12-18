@@ -2,7 +2,7 @@ import _ from 'lodash'
 import moment from 'moment'
 import { INTERVALS, TIME_PERIODS } from '../../constants/candles'
 import { TechnicalIndicators } from '../../constants/indicators'
-import { CANDLE_OBSERVATIONS, MARKET_PROFILE_OPEN, POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE, SINGLE_PRINTS_KLINE_LENGTH_SIGNIFICANCE } from '../../constants/marketProfile'
+import { CANDLE_OBSERVATIONS, EXCESS_TAIL_LENGTH_SIGNIFICANCE, MARKET_PROFILE_OPEN, POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE, SINGLE_PRINTS_KLINE_LENGTH_SIGNIFICANCE } from '../../constants/marketProfile'
 import { SIGNAL_DIRECTION, SIGNALS } from '../../constants/signals'
 import { ICandle } from '../../types/candle.types'
 import { IInitialBalance, IMarketProfile, IMarketProfileFindings, IMarketProfileObservation } from '../../types/marketProfile.types'
@@ -14,7 +14,7 @@ import { findExcess } from '../candlePatterns'
 import { ValueArea } from '../valueArea'
 import momentTimezone from 'moment-timezone'
 
-export class MarketProfileService {
+export class MarketProfile {
   private valueArea: ValueArea = new ValueArea()
   constructor() {
     moment.updateLocale('en', {
@@ -110,6 +110,45 @@ export class MarketProfileService {
     }
 
     return signal
+  }
+
+  findExcess = (tpos: ICandle[], VA?: IValueArea): IMarketProfileObservation[] => {
+    const excess: IMarketProfileObservation[] = []
+  
+    for (let i = 0; i < tpos.length; i++) {
+      const interval: INTERVALS = tpos[i].interval as INTERVALS
+      const open: number = tpos[i].open
+      const high: number = tpos[i].high
+      const low: number = tpos[i].low
+      const close: number = tpos[i].close
+      const klineLength: number = Math.abs(close - open)
+      const klineUpperTail: number = Math.abs(close - high)
+      const klineLowerTail: number = Math.abs(close - low)
+  
+      if (high >= VA.high && klineUpperTail / klineLength > EXCESS_TAIL_LENGTH_SIGNIFICANCE) {
+        excess.push({
+          indicator: CANDLE_OBSERVATIONS.EXCESS,
+          intervals: [interval],
+          type: SIGNALS.CANDLE_ANOMALY,
+          period: convertTpoPeriodToLetter(i),
+          direction: SIGNAL_DIRECTION.BULLISH,
+          peakValue: high,
+          troughValue: low
+        })
+      }
+      if (low <= VA.low && klineLowerTail / klineLength > EXCESS_TAIL_LENGTH_SIGNIFICANCE) {
+        excess.push({
+          indicator: CANDLE_OBSERVATIONS.EXCESS,
+          intervals: [interval],
+          type: SIGNALS.CANDLE_ANOMALY,
+          period: convertTpoPeriodToLetter(i),
+          direction: SIGNAL_DIRECTION.BEARISH,
+          peakValue: high,
+          troughValue: low
+        })
+      }
+    }
+    return excess
   }
 
   isFailedAuction(tpos: ICandle[], IB: IInitialBalance): IMarketProfileObservation[] {
