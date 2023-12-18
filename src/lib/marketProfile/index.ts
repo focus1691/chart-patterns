@@ -10,7 +10,6 @@ import { ISignal } from '../../types/signals.types'
 import { INakedPointOfControl, IValueArea } from '../../types/valueArea.types'
 import { convertTpoPeriodToLetter } from '../../utils/marketProfile'
 import { getTicksFromPrice } from '../../utils/math'
-import { findExcess } from '../candlePatterns'
 import { ValueArea } from '../valueArea'
 import momentTimezone from 'moment-timezone'
 
@@ -49,7 +48,7 @@ export class MarketProfile {
           marketProfile.IB = this.calcInitialBalance(tpos)
           if (values.length > 0 && marketProfile.IB.low && marketProfile.IB.high && numTpos > 2) {
             marketProfile.failedAuction = this.isFailedAuction(tpos, marketProfile.IB)
-            marketProfile.excess = findExcess(tpos, marketProfile.valueArea)
+            marketProfile.excess = this.findExcess(tpos, marketProfile.valueArea)
             marketProfile.poorHighLow = this.findPoorHighAndLows(tpos, marketProfile.valueArea)
             marketProfile.singlePrints = this.findSinglePrints(tpos)
             // marketProfile.ledges = this.findLedges(tpos, marketProfile.valueArea)
