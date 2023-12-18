@@ -35,9 +35,12 @@ The `MarketProfile` module helps you to analyse the market profile of financial 
 
 ```typescript
 import { MarketProfile, IMarketProfile } from '@focus1691/chart-patterns'
+import { IMarketProfileConfig } from '@focus1691/chart-patterns/dist/types/marketProfile.types'
 
 const market = new MarketProfileService()
-const marketProfile: IMarketProfile = market.getMarketProfile(TIME_PERIODS.DAY, candles, 1, 0.5)
+const config: IMarketProfileConfig = { candles, tickSize: 0.5 } // 0.5 for BTCUSDT.
+// Candles must be in a 30m timeframe (Market Profile Theory for 30m candles)
+const marketProfile: IMarketProfile = market.getMarketProfile(config)
 ```
 
 ### Candles
