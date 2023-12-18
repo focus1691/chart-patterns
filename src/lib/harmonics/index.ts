@@ -20,7 +20,7 @@ export function calcHarmonicRatios(X: IZigZag, A: IZigZag, B: IZigZag, C: IZigZa
   return XABCD
 }
 
-export function findHarmonicPatterns(zigzags: IZigZag[]) {
+export function findHarmonicPatterns(zigzags: IZigZag[]): IHarmonic[] {
   const combinations = findXABCDCombinations(zigzags)
   const harmonics: IHarmonic[] = []
 
