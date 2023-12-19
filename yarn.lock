@@ -341,6 +341,16 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.55.0.tgz#b721d52060f369aa259cf97392403cb9ce892ec6"
   integrity sha512-qQfo2mxH5yVom1kacMtZZJFVdW+E70mqHMJvVg6WTLo+VBuQJ4TojZlfWBjK0ve5BdEeNAVxOsl/nvNMpJOaJA==
 
+"@focus1691/chart-patterns@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@focus1691/chart-patterns/-/chart-patterns-0.0.15.tgz#4bf26684979b20e1a4a1ccbe329ded2320b48782"
+  integrity sha512-/CWEBR8Uw2IwTKG/wOlExGfJXHUxPICcqHwHaA0wxXj0/0SLve64Rdta/hZBalz72rj7K8sC1YxYy7tXpvrRhw==
+  dependencies:
+    lodash "^4.17.21"
+    moment "^2.29.4"
+    moment-timezone "^0.5.43"
+    rxjs "^7.8.1"
+
 "@humanwhocodes/config-array@^0.11.13":
   version "0.11.13"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.11.13.tgz#075dc9684f40a531d9b26b0822153c1e832ee297"
