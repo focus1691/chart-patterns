@@ -53,4 +53,16 @@ The `Candles` module includes functions for analysing individual candlesticks, w
 import { isExcess } from '@focus1691/chart-patterns'
 
 const isExcessCandle: boolean = isExcess(candle)
+```
 
+### Shape Patterns
+
+The `Shapes` module is designed for detecting and analysing geometric patterns in financial charts, such as triangles, rectangles, and wedges. These patterns are vital for predicting market continuations or reversals, making them essential tools in technical trading analysis.
+
+**Usage:**
+
+```typescript
+import { Shapes } from '@focus1691/chart-patterns'
+import { ITrianglePattern } from '@focus1691/chart-patterns/dist/types/triangle.types'
+
+const triangles: ITrianglePattern[] = Shapes.findTrianglePatterns(zigzags)
