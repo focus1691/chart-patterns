@@ -12,7 +12,8 @@ export enum CANDLE_OBSERVATIONS {
   SINGLE_PRINT = 'single_print',
   FAILED_AUCTION = 'failed_auction',
   POOR_HIGH_LOW = 'poor_high',
-  LEDGE = 'ledge'
+  LEDGE = 'ledge',
+  ENGULFING = 'engulfing'
 }
 
 export enum MARKET_PROFILE_OPEN {
