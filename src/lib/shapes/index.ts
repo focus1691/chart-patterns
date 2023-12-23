@@ -1,1 +1,3 @@
-export * from './triangles'
+import { findTrianglePatterns } from './triangles'
+
+export { findTrianglePatterns }
