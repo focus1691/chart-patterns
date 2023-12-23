@@ -50,9 +50,11 @@ The `Candles` module includes functions for analysing individual candlesticks, w
 **Usage:**
 
 ```typescript
-import { isExcess } from '@focus1691/chart-patterns'
+import { CandlestickPatterns, ISignal } from '@focus1691/chart-patterns'
 
-const isExcessCandle: boolean = isExcess(candle)
+const isExcessCandle: boolean = CandlestickPatterns.isExcess(candle)
+const engulfingCandle: ISignal | null = CandlestickPatterns.findEngulfingCandle({ candles, index: 10 }) // Check the candle in position 10
+const engulfingCandle: ISignal | null = CandlestickPatterns.findEngulfingCandle({ candles }) // Check the last candle (default)
 ```
 
 ### Shape Patterns
