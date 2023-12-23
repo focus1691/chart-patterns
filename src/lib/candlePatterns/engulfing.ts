@@ -1,8 +1,8 @@
 import { CANDLE_OBSERVATIONS } from '../../constants/marketProfile'
+import { SIGNAL_DIRECTION, SIGNALS } from '../../constants/signals'
 import { ICandle } from '../../types'
 import { IEngulfingCandleConfig } from '../../types/engulfingCandle.types'
 import { ISignal } from '../../types/signals.types'
-import { SIGNAL_DIRECTION, SIGNALS } from 'src/constants/signals'
 
 export const findEngulfingCandle = (config: IEngulfingCandleConfig): ISignal | null => {
   const candles: ICandle[] = config.candles
