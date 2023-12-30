@@ -4,6 +4,20 @@ import { ICandle } from '../../types'
 import { IEngulfingCandleConfig } from '../../types/engulfingCandle.types'
 import { ISignal } from '../../types/signals.types'
 
+/**
+ * Finds engulfing candle patterns in a given set of candles.
+ * 
+ * @param config - The configuration object for engulfing candle detection.
+ * @returns The engulfing candle signal if found, or null otherwise.
+ * 
+ * @example
+ * ```typescript
+ * import { CandlestickPatterns, ISignal } from '@focus1691/chart-patterns';
+ * 
+ * // Assuming 'candles' is an array of candle data
+ * const engulfingCandle: ISignal | null = CandlestickPatterns.findEngulfingCandle({ candles, index: 10 });
+ * ```
+ */
 export const findEngulfingCandle = (config: IEngulfingCandleConfig): ISignal | null => {
   const candles: ICandle[] = config.candles
   if (candles.length < 2) {

@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "build": "yarn run clean && tsc --build tsconfig.build.json",
+    "build:docs": "npx typedoc",
     "build:watch": "yarn run clean && tsc --build tsconfig.build.json --watch",
     "build:clean": "yarn run clean && yarn run build",
     "clean": "rimraf lib dist",
@@ -34,6 +35,7 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "typedoc": "^0.25.4",
     "typescript": "^5.3.3"
   },
   "dependencies": {
