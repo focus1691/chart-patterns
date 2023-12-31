@@ -1,3 +1,7 @@
+/**
+ * Represents the Fibonacci retracement levels for a given price range.
+ * Each property corresponds to a standard Fibonacci retracement level and holds the price at that level.
+ */
 export interface IFibonacciRetracement {
   0: number | null
   0.236: number | null
@@ -10,6 +14,9 @@ export interface IFibonacciRetracement {
   1.618: number | null
 }
 
+/**
+ * Enumerates key Fibonacci retracement levels commonly used in financial markets to identify potential support and resistance levels.
+ */
 export enum FIBONACCI_NUMBERS {
   ZERO = 0,
   TWO_THREE_SIX = 0.236,

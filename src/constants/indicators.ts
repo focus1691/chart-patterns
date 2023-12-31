@@ -1,3 +1,6 @@
+/**
+ * Enumerates various technical indicators used in market analysis.
+ */
 export enum TechnicalIndicators {
   RANGES = 'ranges',
   EMA = 'ema',

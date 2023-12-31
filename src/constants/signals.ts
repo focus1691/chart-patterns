@@ -1,3 +1,6 @@
+/**
+ * Enumerates different types of signals generated in market analysis.
+ */
 export enum SIGNALS {
   TRIGGER_POINT = 'trigger_point',
   MARKET_SENTIMENT = 'market_sentiment',
@@ -6,6 +9,9 @@ export enum SIGNALS {
   VALUE_AREA_CONTEXT = 'value_area_context',
 }
 
+/**
+ * Enumerates potential directions for market signals.
+ */
 export enum SIGNAL_DIRECTION {
   BULLISH = 'bullish',
   BEARISH = 'bearish',
