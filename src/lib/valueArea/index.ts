@@ -9,10 +9,27 @@ moment.updateLocale('en', {
   }
 })
 
+/**
+ * The ValueArea class is used to calculate various technical analysis metrics related to the value area of a set of candlestick data.
+ * The value area represents the range of prices where a specified percentage of the market volume has occurred.
+ */
 export class ValueArea {
+  /**
+   * The number of rows used for the histogram calculation.
+   */
   private static readonly N_ROWS: number = 24
+
+  /**
+   * The percentage of total volume that defines the value area.
+   */
   private static VA_VOL_PERCENT = 0.7
 
+  /**
+   * Calculates the total volume, highest price, and lowest price from an array of candlesticks.
+   *
+   * @param klines An array of candlesticks to analyse.
+   * @returns An object containing the total volume (V_TOTAL), highest price, and lowest price of the given candlesticks.
+   */
   static sumVolumes(klines: ICandle[]) {
     let V_TOTAL: number = 0
     let highest: number = 0
@@ -31,6 +48,15 @@ export class ValueArea {
     return { V_TOTAL: round(V_TOTAL), high: highest, low: lowest }
   }
 
+  /**
+   * Generates a histogram for value area calculation and identifies the Point of Control (POC) and its corresponding row.
+   *
+   * @param klines An array of candlesticks to analyse.
+   * @param highest The highest price in the range of candlesticks.
+   * @param lowest The lowest price in the range of candlesticks.
+   * @param nDecimals The number of decimal places to consider in calculations.
+   * @returns An object containing the histogram, the price of the Point of Control (POC), and the row of the POC.
+   */
   static valueAreaHistogram(klines: ICandle[], highest: number, lowest: number, nDecimals: number) {
     let row = 0
     const range: number = highest - lowest
@@ -71,6 +97,14 @@ export class ValueArea {
     return { histogram, POC, POC_ROW }
   }
 
+  /**
+   * Calculates the Value Area High (VAH) and Value Area Low (VAL) based on the histogram and total volume.
+   *
+   * @param POC_ROW The row number of the Point of Control in the histogram.
+   * @param histogram An array of volume rows representing the histogram.
+   * @param V_TOTAL The total volume of the candlesticks.
+   * @returns An object containing the Value Area High (VAH) and Value Area Low (VAL).
+   */
   static calcValueArea(POC_ROW: number, histogram: IVolumeRow[], V_TOTAL: number) {
     if (!POC_ROW || !histogram || !V_TOTAL) return { VAH: null, VAL: null }
     // 70% of the total volume
@@ -137,18 +171,19 @@ export class ValueArea {
     return { VAH, VAL }
   }
 
+  /**
+   * analyses a set of candlesticks to calculate the value area and related metrics for a specific period.
+   *
+   * @param candles An array of candlesticks for the period to analyse.
+   * @returns An object representing the value area metrics, including VAH, VAL, POC, EQ (Equilibrium), and the low and high prices.
+   */
   static getLevelsForPeriod(candles: ICandle[]): IValueArea {
     // We need to start at the start of the (day / week / month), in order to filter all the klines for the VA calculations for that period
     // current day vs previous day, current week vs previous week, current month vs previous month
     const { V_TOTAL, high, low }: { V_TOTAL: number; high: number; low: number } = ValueArea.sumVolumes(candles)
     const nDecimals = Math.max(countDecimals(high), countDecimals(low))
     const EQ: number = round(low + (high - low) / 2, nDecimals)
-    const { histogram, POC, POC_ROW }: { histogram: IVolumeRow[]; POC: number; POC_ROW: number } = ValueArea.valueAreaHistogram(
-      candles,
-      high,
-      low,
-      nDecimals
-    )
+    const { histogram, POC, POC_ROW }: { histogram: IVolumeRow[]; POC: number; POC_ROW: number } = ValueArea.valueAreaHistogram(candles, high, low, nDecimals)
     const { VAH, VAL }: { VAH: number; VAL: number } = ValueArea.calcValueArea(POC_ROW, histogram, V_TOTAL)
 
     return { VAH, VAL, POC, EQ, low, high }
