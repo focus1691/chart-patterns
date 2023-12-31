@@ -10,7 +10,7 @@ import { ISignal } from '../../types/signals.types'
 import { INakedPointOfControl, IValueArea } from '../../types/valueArea.types'
 import { convertTpoPeriodToLetter } from '../../utils/marketProfile'
 import { getTicksFromPrice } from '../../utils/math'
-import ValueArea from '../valueArea'
+import * as ValueArea from '../valueArea'
 import momentTimezone from 'moment-timezone'
 
 /**
@@ -74,7 +74,7 @@ export function create(config: IMarketProfileConfig): IMarketProfile {
     })
     if (!_.isEmpty(tpos)) {
       const numTpos: number = TPO_SIZE * tpos.length
-      marketProfile.valueArea = ValueArea.getLevelsForPeriod(tpos)
+      marketProfile.valueArea = ValueArea.calcKeyLevels(tpos)
       marketProfile.IB = calcInitialBalance(tpos)
 
       if (values.length > 0 && marketProfile.IB.low && marketProfile.IB.high && numTpos > 2) {
