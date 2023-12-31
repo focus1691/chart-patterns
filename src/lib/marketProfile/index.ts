@@ -2,7 +2,13 @@ import _ from 'lodash'
 import moment from 'moment'
 import { INTERVALS, TIME_PERIODS } from '../../constants/candles'
 import { TechnicalIndicators } from '../../constants/indicators'
-import { CANDLE_OBSERVATIONS, EXCESS_TAIL_LENGTH_SIGNIFICANCE, MARKET_PROFILE_OPEN, POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE, SINGLE_PRINTS_KLINE_LENGTH_SIGNIFICANCE } from '../../constants/marketProfile'
+import {
+  CANDLE_OBSERVATIONS,
+  EXCESS_TAIL_LENGTH_SIGNIFICANCE,
+  MARKET_PROFILE_OPEN,
+  POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE,
+  SINGLE_PRINTS_KLINE_LENGTH_SIGNIFICANCE
+} from '../../constants/marketProfile'
 import { SIGNAL_DIRECTION, SIGNALS } from '../../constants/signals'
 import { ICandle } from '../../types/candle.types'
 import { IInitialBalance, IMarketProfile, IMarketProfileConfig, IMarketProfileFindings, IMarketProfileObservation } from '../../types/marketProfile.types'
@@ -102,8 +108,9 @@ export function create(config: IMarketProfileConfig): IMarketProfile {
   } while (!_.isEmpty(tpos))
 
   if (values) {
+    const valueAreas: IValueArea[] = values.map((finding: IMarketProfileFindings) => finding.valueArea)
     marketProfile.marketProfiles = values
-    marketProfile.npoc = findNakedPointOfControl(values)
+    marketProfile.npoc = findNakedPointOfControl(valueAreas)
   }
 
   return marketProfile
@@ -174,7 +181,7 @@ export function check80Rule(tpo: ICandle, dOpen?: number, pdVAH?: number, pdVAL?
  *
  * This function examines each candlestick in the provided array to identify such points of excess, based on the relation
  * between the candle's high/low and the value area's high/low.
- * 
+ *
  * This function should be used with a specific set of 30-minute candlesticks for one trading day,
  * starting from the 00:00 candle and ending with the 23:30 candle.
  *
@@ -278,7 +285,7 @@ export function isFailedAuction(tpos: ICandle[], IB: IInitialBalance): IMarketPr
  *
  * The function examines each candlestick in the array to determine if its high or low qualifies as a poor high or low based
  * on its relationship to the overall candle length and the value area.
- * 
+ *
  * This function should be used with a specific set of 30-minute candlesticks for one trading day,
  * starting from the 00:00 candle and ending with the 23:30 candle.
  *
@@ -338,7 +345,7 @@ export function findPoorHighAndLows(tpos: ICandle[], VA: IValueArea): IMarketPro
  *
  * The function assesses each candlestick in the array to determine if it represents a single print, based on its size relative
  * to the average candle size and whether new high or low price levels were created.
- * 
+ *
  * This function should be used with a specific set of 30-minute candlesticks for one trading day,
  * starting from the 00:00 candle and ending with the 23:30 candle.
  *
@@ -602,23 +609,23 @@ export function getPrice(data: ICandle[], timePeriod: TIME_PERIODS, key: string 
  * @param marketProfiles An array of market profile findings.
  * @returns An object containing support and resistance levels of naked points of control.
  */
-export function findNakedPointOfControl(marketProfiles: IMarketProfileFindings[]): INakedPointOfControl {
-  if (_.isEmpty(marketProfiles) || marketProfiles.length <= 1) return null
+export function findNakedPointOfControl(valueAreas: IValueArea[]): INakedPointOfControl {
+  if (_.isEmpty(valueAreas) || valueAreas.length <= 1) return null
 
   const npoc: INakedPointOfControl = { support: null, resistance: null }
-  let high: number = marketProfiles[marketProfiles.length - 1]?.valueArea?.high
-  let low: number = marketProfiles[marketProfiles.length - 1]?.valueArea?.low
+  let high: number = valueAreas[valueAreas.length - 1].high
+  let low: number = valueAreas[valueAreas.length - 1].low
 
-  for (let i = marketProfiles.length - 2; i >= 0; i--) {
-    const curr: IMarketProfileFindings = marketProfiles[i]
+  for (let i = valueAreas.length - 2; i >= 0; i--) {
+    const curr: IValueArea = valueAreas[i]
 
     // The NPOC to the upside or downside is valid if the POC is above any previous high or low, respectively
-    if (npoc.resistance === null && curr.valueArea?.POC > high) npoc.resistance = curr.valueArea?.POC
-    if (npoc.support === null && curr.valueArea?.POC < low) npoc.support = curr.valueArea?.POC
+    if (npoc.resistance === null && curr?.POC > high) npoc.resistance = curr?.POC
+    if (npoc.support === null && curr?.POC < low) npoc.support = curr?.POC
 
     // Set the new highs and lows
-    if (curr.valueArea?.high > high) high = curr.valueArea.high
-    if (curr.valueArea?.low < low) low = curr.valueArea.low
+    if (curr?.high > high) high = curr.high
+    if (curr?.low < low) low = curr.low
 
     // Return if both NPOC's are found -- no more checks are required
     if (npoc.resistance !== null && npoc.support !== null) return npoc
