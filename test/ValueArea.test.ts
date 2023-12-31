@@ -1,8 +1,7 @@
-import ValueArea from '../src/lib/valueArea'
+import * as ValueArea from '../src/lib/valueArea'
 
 describe('ValueArea', () => {
   it('should be defined', () => {
-    const valueArea = new ValueArea()
-    expect(valueArea).toBeDefined()
+    expect(ValueArea).toBeDefined()
   })
 })
