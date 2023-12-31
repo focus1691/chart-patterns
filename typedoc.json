@@ -1,4 +1,4 @@
 {
   "out": "./docs",
-  "entryPoints": ["src/lib/index.ts", "src/types/index.ts"]
+  "entryPoints": ["src/lib/index.ts", "src/types/index.ts", "src/constants/index.ts"]
 }
