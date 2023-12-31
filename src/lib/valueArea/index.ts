@@ -52,7 +52,7 @@ function sumVolumes(klines: ICandle[]) {
  * @param nDecimals The number of decimal places to consider in calculations.
  * @returns An object containing the histogram, the price of the Point of Control (POC), and the row of the POC.
  */
-function valueAreaHistogram(klines: ICandle[], highest: number, lowest: number, nDecimals: number) {
+function buildHistogram(klines: ICandle[], highest: number, lowest: number, nDecimals: number) {
   let row = 0
   const range: number = highest - lowest
   const stepSize: number = round(range / N_ROWS, nDecimals)
@@ -100,7 +100,7 @@ function valueAreaHistogram(klines: ICandle[], highest: number, lowest: number, 
  * @param V_TOTAL The total volume of the candlesticks.
  * @returns An object containing the Value Area High (VAH) and Value Area Low (VAL).
  */
-function calcValueArea(POC_ROW: number, histogram: IVolumeRow[], V_TOTAL: number) {
+function findValueAreas(POC_ROW: number, histogram: IVolumeRow[], V_TOTAL: number) {
   if (!POC_ROW || !histogram || !V_TOTAL) return { VAH: null, VAL: null }
   // 70% of the total volume
   const VA_VOL: number = V_TOTAL * VA_VOL_PERCENT
@@ -172,14 +172,14 @@ function calcValueArea(POC_ROW: number, histogram: IVolumeRow[], V_TOTAL: number
  * @param candles An array of candlesticks for the period to analyse.
  * @returns An object representing the value area metrics, including VAH, VAL, POC, EQ (Equilibrium), and the low and high prices.
  */
-export function calcKeyLevels(candles: ICandle[]): IValueArea {
+export function calculate(candles: ICandle[]): IValueArea {
   // We need to start at the start of the (day / week / month), in order to filter all the klines for the VA calculations for that period
   // current day vs previous day, current week vs previous week, current month vs previous month
   const { V_TOTAL, high, low }: { V_TOTAL: number; high: number; low: number } = sumVolumes(candles)
-  const nDecimals = Math.max(countDecimals(high), countDecimals(low))
+  const nDecimals: number = Math.max(countDecimals(high), countDecimals(low))
   const EQ: number = round(low + (high - low) / 2, nDecimals)
-  const { histogram, POC, POC_ROW }: { histogram: IVolumeRow[]; POC: number; POC_ROW: number } = valueAreaHistogram(candles, high, low, nDecimals)
-  const { VAH, VAL }: { VAH: number; VAL: number } = calcValueArea(POC_ROW, histogram, V_TOTAL)
+  const { histogram, POC, POC_ROW }: { histogram: IVolumeRow[]; POC: number; POC_ROW: number } = buildHistogram(candles, high, low, nDecimals)
+  const { VAH, VAL }: { VAH: number; VAL: number } = findValueAreas(POC_ROW, histogram, V_TOTAL)
 
   return { VAH, VAL, POC, EQ, low, high }
 }
