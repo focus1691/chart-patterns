@@ -8,6 +8,15 @@ import PeakDetector from '../peakDetector'
 export default class ZigZags {
   private static peakDetector: PeakDetector = new PeakDetector()
 
+  /**
+   * Creates an array of ZigZag points based on the provided candlestick data and peak detection configuration.
+   *
+   * @param {ICandle[]} candles - An array of candlestick data to analyse.
+   * @param {number} lag - The lag value for the peak detection algorithm.
+   * @param {number} threshold - The threshold value for identifying significant price changes.
+   * @param {number} influence - The influence factor for adjusting the impact of recent signals on the algorithm.
+   * @returns {IZigZag[]} An array of ZigZag points representing significant price changes.
+   */
   static create(candles: ICandle[], lag: number, threshold: number, influence: number): IZigZag[] {
     const zigzags: IZigZag[] = []
     const config: ISignalsConfig = {
