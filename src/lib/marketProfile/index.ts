@@ -2,7 +2,13 @@ import _ from 'lodash'
 import moment from 'moment'
 import { INTERVALS, TIME_PERIODS } from '../../constants/candles'
 import { TechnicalIndicators } from '../../constants/indicators'
-import { CANDLE_OBSERVATIONS, EXCESS_TAIL_LENGTH_SIGNIFICANCE, MARKET_PROFILE_OPEN, POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE, SINGLE_PRINTS_KLINE_LENGTH_SIGNIFICANCE } from '../../constants/marketProfile'
+import {
+  CANDLE_OBSERVATIONS,
+  EXCESS_TAIL_LENGTH_SIGNIFICANCE,
+  MARKET_PROFILE_OPEN,
+  POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE,
+  SINGLE_PRINTS_KLINE_LENGTH_SIGNIFICANCE
+} from '../../constants/marketProfile'
 import { SIGNAL_DIRECTION, SIGNALS } from '../../constants/signals'
 import { ICandle } from '../../types/candle.types'
 import { IInitialBalance, IMarketProfile, IMarketProfileConfig, IMarketProfileFindings, IMarketProfileObservation } from '../../types/marketProfile.types'
@@ -13,10 +19,21 @@ import { getTicksFromPrice } from '../../utils/math'
 import ValueArea from '../valueArea'
 import momentTimezone from 'moment-timezone'
 
+/**
+ * The MarketProfile class provides methods for calculating various aspects of the market profile of a given set of candlestick data.
+ * Market profile concepts like Value Area, Initial Balance, and Point of Control are computed to analyse the price distribution and trading activity.
+ */
 export default class MarketProfile {
+  /**
+   * Size of the Time Price Opportunity (TPO) unit.
+   */
   private static TPO_SIZE = 1
 
+  /**
+   * Constructs a MarketProfile instance and sets the locale and timezone for moment.js operations.
+   */
   constructor() {
+    // Configuration for moment and moment-timezone
     moment.updateLocale('en', {
       week: {
         dow: 1 // Monday is the first day of the week.
@@ -25,15 +42,29 @@ export default class MarketProfile {
     momentTimezone.tz.setDefault('Europe/London')
   }
 
+  /**
+   * Validates the input configuration for market profile calculations.
+   *
+   * @param config The market profile configuration object.
+   * @throws Error if the configuration is invalid.
+   */
   validateInput(config: IMarketProfileConfig): void {
-    if (!config.tickSize || typeof config.tickSize !== 'number') throw new Error('You must include the symbol\'s Tick Size. i.e. 0.5 for BTCUSDT.')
+    if (!config.tickSize || typeof config.tickSize !== 'number') throw new Error("You must include the symbol's Tick Size. i.e. 0.5 for BTCUSDT.")
     if (!config?.candles?.length) throw new Error('You need to include the candles array (ICandle format).')
-    if (config.candles.length < 24) throw new Error('Not enough candles to compute the Market Profile for a day. You need a minimum of 48 TPO\'s of 30m candles.')
+    if (config.candles.length < 24)
+      throw new Error("Not enough candles to compute the Market Profile for a day. You need a minimum of 48 TPO's of 30m candles.")
     for (let i = 0; i < config.candles.length; i++) {
-      if (config.candles[i].interval !== INTERVALS.THIRTY_MINUTES) throw new Error('Candle contains an interval other than 30m. Market Profile Theory requires 30m candles. 1 TPO = one 30 min candle,')
+      if (config.candles[i].interval !== INTERVALS.THIRTY_MINUTES)
+        throw new Error('Candle contains an interval other than 30m. Market Profile Theory requires 30m candles. 1 TPO = one 30 min candle,')
     }
   }
 
+  /**
+   * Calculates the market profile based on the given configuration.
+   *
+   * @param config The configuration object for market profile calculation.
+   * @returns An object containing market profile data.
+   */
   getMarketProfile(config: IMarketProfileConfig): IMarketProfile {
     this.validateInput(config)
 
@@ -78,6 +109,12 @@ export default class MarketProfile {
     return marketProfile
   }
 
+  /**
+   * Calculates the initial balance (IB) of the market profile.
+   *
+   * @param tpos An array of candlesticks to analyse.
+   * @returns An object representing the initial balance with high and low values.
+   */
   calcInitialBalance(tpos: ICandle[]): IInitialBalance {
     const firstTPOPeriods = tpos.filter((kline) => {
       const timestamp = moment(kline.openTime)
@@ -92,6 +129,15 @@ export default class MarketProfile {
     return IB
   }
 
+  /**
+   * Evaluates the 80% rule for market profile.
+   *
+   * @param tpo A single candlestick data.
+   * @param dOpen The day's opening price.
+   * @param pdVAH Previous day's Value Area High.
+   * @param pdVAL Previous day's Value Area Low.
+   * @returns A signal object if the 80% rule is met, otherwise null.
+   */
   check80Rule(tpo: ICandle, dOpen?: number, pdVAH?: number, pdVAL?: number): ISignal | null {
     if (!dOpen || !pdVAH || !pdVAL) {
       return null
@@ -119,9 +165,16 @@ export default class MarketProfile {
     return signal
   }
 
+  /**
+   * Finds excess points in the market profile.
+   *
+   * @param tpos An array of candlesticks.
+   * @param VA The value area object.
+   * @returns An array of market profile observations indicating excess points.
+   */
   findExcess = (tpos: ICandle[], VA?: IValueArea): IMarketProfileObservation[] => {
     const excess: IMarketProfileObservation[] = []
-  
+
     for (let i = 0; i < tpos.length; i++) {
       const interval: INTERVALS = tpos[i].interval as INTERVALS
       const open: number = tpos[i].open
@@ -131,7 +184,7 @@ export default class MarketProfile {
       const klineLength: number = Math.abs(close - open)
       const klineUpperTail: number = Math.abs(close - high)
       const klineLowerTail: number = Math.abs(close - low)
-  
+
       if (high >= VA.high && klineUpperTail / klineLength > EXCESS_TAIL_LENGTH_SIGNIFICANCE) {
         excess.push({
           indicator: CANDLE_OBSERVATIONS.EXCESS,
@@ -158,6 +211,13 @@ export default class MarketProfile {
     return excess
   }
 
+  /**
+   * Identifies failed auctions within a set of candlesticks based on the initial balance.
+   *
+   * @param tpos An array of candlesticks to analyse.
+   * @param IB The initial balance object, containing high and low values.
+   * @returns An array of market profile observations indicating failed auctions.
+   */
   isFailedAuction(tpos: ICandle[], IB: IInitialBalance): IMarketProfileObservation[] {
     const failedAuctions: IMarketProfileObservation[] = []
     let ibBroken = false
@@ -183,6 +243,13 @@ export default class MarketProfile {
     return failedAuctions
   }
 
+  /**
+   * Finds poor highs and lows in the market profile.
+   *
+   * @param tpos An array of candlesticks to analyse.
+   * @param VA The value area object, optional.
+   * @returns An array of market profile observations indicating poor highs and lows.
+   */
   findPoorHighAndLows(tpos: ICandle[], VA?: IValueArea): IMarketProfileObservation[] {
     const poorHighLow: IMarketProfileObservation[] = []
 
@@ -221,6 +288,12 @@ export default class MarketProfile {
     return poorHighLow
   }
 
+  /**
+   * Identifies single prints in the market profile.
+   *
+   * @param tpos An array of candlesticks.
+   * @returns An array of market profile observations indicating single prints.
+   */
   findSinglePrints(tpos: ICandle[]): IMarketProfileObservation[] {
     const singlePrints: IMarketProfileObservation[] = []
     const numTpos: number = tpos.length
@@ -273,6 +346,14 @@ export default class MarketProfile {
     return singlePrints
   }
 
+  /**
+   * Identifies ledges in the market profile based on a tolerance percentage.
+   *
+   * @param tpos An array of candlesticks.
+   * @param VA The value area object, optional.
+   * @param tolerancePercent A percentage used to define the tolerance for identifying ledges.
+   * @returns An array of market profile observations indicating ledges.
+   */
   findLedges(tpos: ICandle[], VA?: IValueArea, tolerancePercent: number = 0.01): IMarketProfileObservation[] {
     const ledges: IMarketProfileObservation[] = []
     const groupedLedges: number[][] = []
@@ -335,18 +416,49 @@ export default class MarketProfile {
     return ledges
   }
 
+  /**
+   * Checks if a candlestick is within the value area boundaries.
+   *
+   * @param tpo A single candlestick.
+   * @param VA The value area object, optional.
+   * @returns True if the candlestick is within the value area, false otherwise.
+   */
   isInBalance(tpo: ICandle, VA?: IValueArea): boolean {
     return tpo.high <= VA.VAH && tpo.low >= VA.VAL
   }
 
+  /**
+   * Determines if there is a level breakout upwards from the value area high.
+   *
+   * @param tpo A single candlestick.
+   * @param VA The value area object, optional.
+   * @returns True if there is a breakout above the value area high, false otherwise.
+   */
   isLevelBreakoutUp(tpo: ICandle, VA?: IValueArea): boolean {
     return tpo.high > VA.VAH
   }
 
+  /**
+   * Determines if there is a level breakout downwards from the value area low.
+   *
+   * @param tpo A single candlestick.
+   * @param VA The value area object, optional.
+   * @returns True if there is a breakout below the value area low, false otherwise.
+   */
   isLevelBreakoutDown(tpo: ICandle, VA?: IValueArea): boolean {
     return tpo.low < VA.VAL
   }
 
+  /**
+   * analyses the opening type of the market based on the initial balance and previous day's value area.
+   *
+   * @param tpos An array of candlesticks.
+   * @param tpoSize The size of the Time Price Opportunity unit.
+   * @param tickSize The size of a single tick.
+   * @param IB The initial balance object.
+   * @param pdVA The previous day's value area, optional.
+   * @returns The type of market opening identified.
+   */
   findOpenType(tpos: ICandle[], tpoSize: number, tickSize: number, IB: IInitialBalance, pdVA?: IValueArea): MARKET_PROFILE_OPEN {
     const { up: ticksAboveOpen, down: ticksBelowOpen } = getTicksFromPrice(tpos[0], 'open', tickSize)
     const tickMovement: number = Math.abs(ticksAboveOpen - ticksBelowOpen)
@@ -403,6 +515,15 @@ export default class MarketProfile {
   //   return dayType
   // }
 
+  /**
+   * Retrieves a specific price from a set of candlestick data based on the given time period.
+   *
+   * @param data An array of candlesticks.
+   * @param timePeriod The time period to consider for the price retrieval.
+   * @param key The key of the price to retrieve (e.g., 'open', 'close').
+   * @param goBackByOne Indicates whether to go back by one period.
+   * @returns The retrieved price value.
+   */
   getPrice(data: ICandle[], timePeriod: TIME_PERIODS, key: string | number, goBackByOne?: boolean): number {
     const period: moment.Moment = moment().startOf(timePeriod)
     goBackByOne && period.subtract(1, timePeriod)
@@ -419,6 +540,12 @@ export default class MarketProfile {
     return price
   }
 
+  /**
+   * Finds naked points of control (NPOC) in a series of market profiles.
+   *
+   * @param marketProfiles An array of market profile findings.
+   * @returns An object containing support and resistance levels of naked points of control.
+   */
   findNakedPointOfControl(marketProfiles: IMarketProfileFindings[]): INakedPointOfControl {
     if (_.isEmpty(marketProfiles) || marketProfiles.length <= 1) return null
 
