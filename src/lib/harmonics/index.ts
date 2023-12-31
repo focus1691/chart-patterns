@@ -6,8 +6,24 @@ import { round } from '../../utils/math'
 /**
  * Identifies harmonic patterns from an array of zigzag points.
  *
- * @param zigzags An array of zigzag points to analyse.
- * @returns An array of identified harmonic patterns.
+ * @param {IZigZag[]} zigzags - An array of zigzag points to analyze.
+ * @returns {IHarmonic[]} An array of identified harmonic patterns.
+ *
+ * @example
+ * // Parameters for generating ZigZag points
+ * const lag: number = 5;
+ * const threshold: number = 2;
+ * const influence: number = 0.3;
+ *
+ * // Assuming 'candles' is an array of ICandle objects representing the price data
+ * // Generate ZigZag points from candlestick data
+ * const zigzags: IZigZag[] = ZigZags.create(candles, lag, threshold, influence);
+ *
+ * // Find harmonic patterns from the generated ZigZag points
+ * const harmonics: IHarmonic[] = Harmonics.findPatterns(zigzags);
+ *
+ * // 'harmonics' now contains an array of identified harmonic patterns
+ * console.log(harmonics); // Outputs the identified harmonic patterns
  */
 export function findPatterns(zigzags: IZigZag[]): IHarmonic[] {
   const combinations = findXABCDCombinations(zigzags)

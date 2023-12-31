@@ -56,6 +56,14 @@ function validateInput(config: IMarketProfileConfig): void {
  *   - Value Area: The range of prices where a significant portion of trading activity occurred.
  *   - Initial Balance: The price range established during the first hour of trading.
  *   - Various observations: Insights into market behavior such as failed auctions, excess, poor highs and lows, single prints, and ledges.
+ *
+ * @example
+ * // Assuming 'candles' is an array of ICandle objects representing the price data
+ * // Create a market profile with a specified tick size
+ * const marketProfile: IMarketProfile = MarketProfile.create({ candles, tickSize: 0.5 });
+ * 
+ * // 'marketProfile' contains the market profile data including value areas and market observations
+ * console.log(marketProfile); // Outputs the market profile data
  */
 export function create(config: IMarketProfileConfig): IMarketProfile {
   validateInput(config)
