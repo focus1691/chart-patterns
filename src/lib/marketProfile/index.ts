@@ -45,13 +45,13 @@ function validateInput(config: IMarketProfileConfig): void {
 /**
  * Calculates the market profile for a given set of candlestick data based on the specified configuration.
  *
- * The function analyses the candlestick data to construct a series of market profiles, each corresponding to a day. 
- * It calculates key market profile elements such as value area, initial balance, and various types of market observations 
+ * The function analyses the candlestick data to construct a series of market profiles, each corresponding to a day.
+ * It calculates key market profile elements such as value area, initial balance, and various types of market observations
  * (e.g., failed auctions, excess points, poor highs and lows, etc.).
  *
  * @param {IMarketProfileConfig} config - The configuration object containing the candlestick data and parameters needed for market profile calculation, such as tick size.
  * @returns {IMarketProfile} An object containing the calculated market profiles and any naked points of control (untested price levels with significant past activity).
- * 
+ *
  * Each market profile includes:
  *   - Value Area: The range of prices where a significant portion of trading activity occurred.
  *   - Initial Balance: The price range established during the first hour of trading.
@@ -61,7 +61,7 @@ function validateInput(config: IMarketProfileConfig): void {
  * // Assuming 'candles' is an array of ICandle objects representing the price data
  * // Create a market profile with a specified tick size
  * const marketProfile: IMarketProfile = MarketProfile.create({ candles, tickSize: 0.5 });
- * 
+ *
  * // 'marketProfile' contains the market profile data including value areas and market observations
  * console.log(marketProfile); // Outputs the market profile data
  */
@@ -168,11 +168,26 @@ export function check80Rule(tpo: ICandle, dOpen?: number, pdVAH?: number, pdVAL?
 /**
  * Finds excess points in the market profile.
  *
- * @param tpos An array of candlesticks.
- * @param VA The value area object.
- * @returns An array of market profile observations indicating excess points.
+ * Excess points in market profile theory are areas where the price has made a significant move away from the value area,
+ * typically indicating strong rejection or acceptance of certain price levels. They often appear at the extremes of the
+ * market profile and can signal potential market reversals or continuations.
+ *
+ * This function examines each candlestick in the provided array to identify such points of excess, based on the relation
+ * between the candle's high/low and the value area's high/low.
+ * 
+ * This function should be used with a specific set of 30-minute candlesticks for one trading day,
+ * starting from the 00:00 candle and ending with the 23:30 candle.
+ *
+ * @param {ICandle[]} tpos - An array of candlesticks to analyse for excess points. These should ideally cover a full trading period.
+ * @param {IValueArea} VA - The value area object, containing the high and low values that define the main area of trading activity.
+ * @returns {IMarketProfileObservation[]} An array of market profile observations indicating excess points.
+ *
+ * @note The significance of an excess point is determined by comparing the length of the candle's tail (upper or lower) to its overall length.
+ *       A long tail relative to the candle's body, extending beyond the value area, indicates a significant excess point.
  */
-export function findExcess(tpos: ICandle[], VA?: IValueArea): IMarketProfileObservation[] {
+export function findExcess(tpos: ICandle[], VA: IValueArea): IMarketProfileObservation[] {
+  if (!VA) return []
+
   const excess: IMarketProfileObservation[] = []
 
   for (let i = 0; i < tpos.length; i++) {
@@ -185,7 +200,7 @@ export function findExcess(tpos: ICandle[], VA?: IValueArea): IMarketProfileObse
     const klineUpperTail: number = Math.abs(close - high)
     const klineLowerTail: number = Math.abs(close - low)
 
-    if (high >= VA.high && klineUpperTail / klineLength > EXCESS_TAIL_LENGTH_SIGNIFICANCE) {
+    if (high >= VA?.high && klineUpperTail / klineLength > EXCESS_TAIL_LENGTH_SIGNIFICANCE) {
       excess.push({
         indicator: CANDLE_OBSERVATIONS.EXCESS,
         intervals: [interval],
@@ -196,7 +211,7 @@ export function findExcess(tpos: ICandle[], VA?: IValueArea): IMarketProfileObse
         troughValue: low
       })
     }
-    if (low <= VA.low && klineLowerTail / klineLength > EXCESS_TAIL_LENGTH_SIGNIFICANCE) {
+    if (low <= VA?.low && klineLowerTail / klineLength > EXCESS_TAIL_LENGTH_SIGNIFICANCE) {
       excess.push({
         indicator: CANDLE_OBSERVATIONS.EXCESS,
         intervals: [interval],
@@ -213,12 +228,22 @@ export function findExcess(tpos: ICandle[], VA?: IValueArea): IMarketProfileObse
 
 /**
  * Identifies failed auctions within a set of candlesticks based on the initial balance.
+ * A failed auction is a market profile concept that occurs when the price breaks out of the initial balance range but then fails to sustain that breakout, indicating a potential reversal.
  *
- * @param tpos An array of candlesticks to analyse.
- * @param IB The initial balance object, containing high and low values.
- * @returns An array of market profile observations indicating failed auctions.
+ * This function should be used with a specific set of 30-minute candlesticks for one trading day,
+ * starting from the 00:00 candle and ending with the 23:30 candle. The initial balance (IB) typically
+ * represents the range of the first hour of trading and is used as a reference for the rest of the day.
+ *
+ * @param {ICandle[]} tpos - An array of 30-minute candlesticks for a single trading day.
+ * @param {IInitialBalance} IB - The initial balance object, containing the high and low values of the first hour of trading.
+ * @returns {IMarketProfileObservation[]} An array of market profile observations indicating failed auctions.
+ *
+ * @note The function is based on market profile theory, which is a technique used in financial trading to analyse price movements
+ *       and trading volumes over a certain period. It helps in identifying key trading ranges and potential turning points in the market.
  */
 export function isFailedAuction(tpos: ICandle[], IB: IInitialBalance): IMarketProfileObservation[] {
+  if (!IB) return []
+
   const failedAuctions: IMarketProfileObservation[] = []
   let ibBroken = false
   for (let i = 0; i < tpos.length; i++) {
@@ -246,11 +271,27 @@ export function isFailedAuction(tpos: ICandle[], IB: IInitialBalance): IMarketPr
 /**
  * Finds poor highs and lows in the market profile.
  *
- * @param tpos An array of candlesticks to analyse.
- * @param VA The value area object, optional.
- * @returns An array of market profile observations indicating poor highs and lows.
+ * Poor highs and lows are market profile concepts that refer to price levels where the market has not effectively auctioned.
+ * These are typically identified as price levels where the market reaches a high or low point but shows a lack of conviction,
+ * often resulting in a narrow range of trading activity at these extremes. This can signal potential areas where the market
+ * might revisit due to unfinished business.
+ *
+ * The function examines each candlestick in the array to determine if its high or low qualifies as a poor high or low based
+ * on its relationship to the overall candle length and the value area.
+ * 
+ * This function should be used with a specific set of 30-minute candlesticks for one trading day,
+ * starting from the 00:00 candle and ending with the 23:30 candle.
+ *
+ * @param {ICandle[]} tpos - An array of candlesticks to analyse. These should ideally represent a complete trading period.
+ * @param {IValueArea} VA - The value area object, providing the high and low values that define the main area of trading activity.
+ * @returns {IMarketProfileObservation[]} An array of market profile observations indicating poor highs and lows.
+ *
+ * @note The significance of a poor high or low is evaluated by comparing the candle's upper or lower tail length to its overall body length.
+ *       A disproportionately small tail at the high or low end, especially at or beyond the value area boundaries, is indicative of a poor high or low.
  */
-export function findPoorHighAndLows(tpos: ICandle[], VA?: IValueArea): IMarketProfileObservation[] {
+export function findPoorHighAndLows(tpos: ICandle[], VA: IValueArea): IMarketProfileObservation[] {
+  if (!VA) return []
+
   const poorHighLow: IMarketProfileObservation[] = []
 
   for (let i = 0; i < tpos.length; i++) {
@@ -262,7 +303,7 @@ export function findPoorHighAndLows(tpos: ICandle[], VA?: IValueArea): IMarketPr
     const klineUpperTail: number = Math.abs(close - high)
     const klineLowerTail: number = Math.abs(close - low)
 
-    if (high >= VA.high && klineLength / klineUpperTail > POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE) {
+    if (high >= VA?.high && klineLength / klineUpperTail > POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE) {
       poorHighLow.push({
         indicator: CANDLE_OBSERVATIONS.POOR_HIGH_LOW,
         intervals: [INTERVALS.THIRTY_MINUTES],
@@ -273,7 +314,7 @@ export function findPoorHighAndLows(tpos: ICandle[], VA?: IValueArea): IMarketPr
         troughValue: low
       })
     }
-    if (low <= VA.low && klineLength / klineLowerTail > POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE) {
+    if (low <= VA?.low && klineLength / klineLowerTail > POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE) {
       poorHighLow.push({
         indicator: CANDLE_OBSERVATIONS.POOR_HIGH_LOW,
         intervals: [INTERVALS.THIRTY_MINUTES],
@@ -291,8 +332,21 @@ export function findPoorHighAndLows(tpos: ICandle[], VA?: IValueArea): IMarketPr
 /**
  * Identifies single prints in the market profile.
  *
- * @param tpos An array of candlesticks.
- * @returns An array of market profile observations indicating single prints.
+ * Single prints in market profile theory refer to areas on the profile where trading activity is significantly low,
+ * often represented by a single line or a very narrow range. These are considered important because they might indicate
+ * areas where the market moved too quickly, leaving potential opportunities for future trade entries or exits.
+ *
+ * The function assesses each candlestick in the array to determine if it represents a single print, based on its size relative
+ * to the average candle size and whether new high or low price levels were created.
+ * 
+ * This function should be used with a specific set of 30-minute candlesticks for one trading day,
+ * starting from the 00:00 candle and ending with the 23:30 candle.
+ *
+ * @param {ICandle[]} tpos - An array of candlesticks to analyse. These should ideally represent a full trading period.
+ * @returns {IMarketProfileObservation[]} An array of market profile observations indicating single prints.
+ *
+ * @note The function identifies single prints by looking for long candles that create new highs or lows without subsequent price retracement.
+ *       This indicates a rapid price movement with minimal trading activity at these levels, characteristic of single prints.
  */
 export function findSinglePrints(tpos: ICandle[]): IMarketProfileObservation[] {
   const singlePrints: IMarketProfileObservation[] = []
@@ -350,11 +404,13 @@ export function findSinglePrints(tpos: ICandle[]): IMarketProfileObservation[] {
  * Identifies ledges in the market profile based on a tolerance percentage.
  *
  * @param tpos An array of candlesticks.
- * @param VA The value area object, optional.
+ * @param VA The value area object.
  * @param tolerancePercent A percentage used to define the tolerance for identifying ledges.
  * @returns An array of market profile observations indicating ledges.
  */
-export function findLedges(tpos: ICandle[], VA?: IValueArea, tolerancePercent: number = 0.01): IMarketProfileObservation[] {
+export function findLedges(tpos: ICandle[], VA: IValueArea, tolerancePercent: number = 0.01): IMarketProfileObservation[] {
+  if (!VA) return []
+
   const ledges: IMarketProfileObservation[] = []
   const groupedLedges: number[][] = []
 
@@ -420,33 +476,33 @@ export function findLedges(tpos: ICandle[], VA?: IValueArea, tolerancePercent: n
  * Checks if a candlestick is within the value area boundaries.
  *
  * @param tpo A single candlestick.
- * @param VA The value area object, optional.
+ * @param VA The value area object.
  * @returns True if the candlestick is within the value area, false otherwise.
  */
-export function isInBalance(tpo: ICandle, VA?: IValueArea): boolean {
-  return tpo.high <= VA.VAH && tpo.low >= VA.VAL
+export function isInBalance(tpo: ICandle, VA: IValueArea): boolean {
+  return !VA ? false : tpo.high <= VA?.VAH && tpo.low >= VA?.VAL
 }
 
 /**
  * Determines if there is a level breakout upwards from the value area high.
  *
  * @param tpo A single candlestick.
- * @param VA The value area object, optional.
+ * @param VA The value area object.
  * @returns True if there is a breakout above the value area high, false otherwise.
  */
-export function isLevelBreakoutUp(tpo: ICandle, VA?: IValueArea): boolean {
-  return tpo.high > VA.VAH
+export function isLevelBreakoutUp(tpo: ICandle, VA: IValueArea): boolean {
+  return !VA ? false : tpo.high > VA?.VAH
 }
 
 /**
  * Determines if there is a level breakout downwards from the value area low.
  *
  * @param tpo A single candlestick.
- * @param VA The value area object, optional.
+ * @param VA The value area object.
  * @returns True if there is a breakout below the value area low, false otherwise.
  */
-export function isLevelBreakoutDown(tpo: ICandle, VA?: IValueArea): boolean {
-  return tpo.low < VA.VAL
+export function isLevelBreakoutDown(tpo: ICandle, VA: IValueArea): boolean {
+  return !VA ? false : tpo.low < VA?.VAL
 }
 
 /**
@@ -456,7 +512,7 @@ export function isLevelBreakoutDown(tpo: ICandle, VA?: IValueArea): boolean {
  * @param tpoSize The size of the Time Price Opportunity unit.
  * @param tickSize The size of a single tick.
  * @param IB The initial balance object.
- * @param pdVA The previous day's value area, optional.
+ * @param pdVA The previous day's value area.
  * @returns The type of market opening identified.
  */
 export function findOpenType(tpos: ICandle[], tpoSize: number, tickSize: number, IB: IInitialBalance, pdVA?: IValueArea): MARKET_PROFILE_OPEN {
