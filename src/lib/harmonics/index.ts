@@ -6,7 +6,7 @@ import { round } from '../../utils/math'
 /**
  * Identifies harmonic patterns from an array of zigzag points.
  *
- * @param {IZigZag[]} zigzags - An array of zigzag points to analyze.
+ * @param {IZigZag[]} zigzags - An array of zigzag points to analyse.
  * @returns {IHarmonic[]} An array of identified harmonic patterns.
  *
  * @example
