@@ -3,6 +3,16 @@ import { IHarmonic, IXABCDPattern, IXABCDRatio } from '../../types/harmonics.typ
 import { IZigZag } from '../../types/zigzags.types'
 import { round } from '../../utils/math'
 
+/**
+ * Calculates the harmonic ratios between the specified points of a zigzag pattern.
+ *
+ * @param X The starting point of the XABCD pattern.
+ * @param A The second point of the XABCD pattern.
+ * @param B The third point of the XABCD pattern.
+ * @param C The fourth point of the XABCD pattern.
+ * @param D The fifth point of the XABCD pattern.
+ * @returns An object representing the harmonic ratios and the XABCD pattern points.
+ */
 export function calcHarmonicRatios(X: IZigZag, A: IZigZag, B: IZigZag, C: IZigZag, D: IZigZag): IXABCDPattern {
   const XA: number = Math.round(Math.abs(X.price - A.price))
   const AB: number = Math.round(Math.abs(A.price - B.price))
@@ -20,6 +30,12 @@ export function calcHarmonicRatios(X: IZigZag, A: IZigZag, B: IZigZag, C: IZigZa
   return XABCD
 }
 
+/**
+ * Identifies harmonic patterns from an array of zigzag points.
+ *
+ * @param zigzags An array of zigzag points to analyse.
+ * @returns An array of identified harmonic patterns.
+ */
 export function findHarmonicPatterns(zigzags: IZigZag[]): IHarmonic[] {
   const combinations = findXABCDCombinations(zigzags)
   const harmonics: IHarmonic[] = []
@@ -39,6 +55,14 @@ export function findHarmonicPatterns(zigzags: IZigZag[]): IHarmonic[] {
   return harmonics
 }
 
+/**
+ * Checks if a given XABCD pattern matches a specific harmonic pattern type based on predefined ratios.
+ *
+ * @param type The type of harmonic pattern to check against.
+ * @param xabcdPattern The XABCD pattern to evaluate.
+ * @param ratios The expected ratios for the specified harmonic pattern type.
+ * @returns The harmonic pattern if a match is found, otherwise null.
+ */
 export function checkHarmonicPattern(type: HARMONIC_PATTERNS, xabcdPattern: IXABCDPattern, ratios: IXABCDRatio): IHarmonic | null {
   const { XAB, ABC, BCD, XAD } = xabcdPattern
   const {
@@ -70,6 +94,12 @@ export function checkHarmonicPattern(type: HARMONIC_PATTERNS, xabcdPattern: IXAB
   return null
 }
 
+/**
+ * Generates all possible combinations of five points from an array of zigzag points to form potential XABCD patterns.
+ *
+ * @param zigzags An array of zigzag points to generate combinations from.
+ * @returns An array of combinations, where each combination is an array of indices representing a potential XABCD pattern.
+ */
 export function findXABCDCombinations(zigzags: IZigZag[]): number[][] {
   const combinations: number[][] = []
 
@@ -91,6 +121,12 @@ export function findXABCDCombinations(zigzags: IZigZag[]): number[][] {
   return combinations
 }
 
+/**
+ * Determines if a combination of zigzag points can form a valid XABCD pattern.
+ *
+ * @param points An array of zigzag points to evaluate.
+ * @returns True if the combination is valid for an XABCD pattern, false otherwise.
+ */
 function isValidCombination(points: IZigZag[]): boolean {
   for (let i = 0; i < points.length - 1; i++) {
     if (points[i].direction === points[i + 1].direction) {
@@ -100,6 +136,13 @@ function isValidCombination(points: IZigZag[]): boolean {
   return true
 }
 
+/**
+ * Calculates the percentage error between a calculated value and its expected range.
+ *
+ * @param calculated The calculated value to evaluate.
+ * @param expected_range An array representing the expected minimum and maximum range for the value.
+ * @returns The percentage error of the calculated value relative to the expected range.
+ */
 function calculateError(calculated, expected_range) {
   if (calculated < expected_range[0]) {
     return Math.abs((calculated - expected_range[0]) / calculated) * 100
