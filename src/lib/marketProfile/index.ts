@@ -82,7 +82,7 @@ export function create(config: IMarketProfileConfig): IMarketProfile {
     })
     if (!_.isEmpty(tpos)) {
       const numTpos: number = TPO_SIZE * tpos.length
-      marketProfile.valueArea = ValueArea.calcKeyLevels(tpos)
+      marketProfile.valueArea = ValueArea.calculate(tpos)
       marketProfile.IB = calcInitialBalance(tpos)
 
       if (values.length > 0 && marketProfile.IB.low && marketProfile.IB.high && numTpos > 2) {
