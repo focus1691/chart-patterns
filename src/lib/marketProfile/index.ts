@@ -10,10 +10,10 @@ import { ISignal } from '../../types/signals.types'
 import { INakedPointOfControl, IValueArea } from '../../types/valueArea.types'
 import { convertTpoPeriodToLetter } from '../../utils/marketProfile'
 import { getTicksFromPrice } from '../../utils/math'
-import { ValueArea } from '../valueArea'
+import ValueArea from '../valueArea'
 import momentTimezone from 'moment-timezone'
 
-export class MarketProfile {
+export default class MarketProfile {
   private static TPO_SIZE = 1
 
   constructor() {

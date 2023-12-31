@@ -3,9 +3,9 @@ import { ICandle } from '../../types/candle.types'
 import { IPeak } from '../../types/range.types'
 import { IZigZag } from '../../types/zigzags.types'
 import { ISignalsConfig } from '../../types/peakDetector.types'
-import { PeakDetector } from '../peakDetector'
+import PeakDetector from '../peakDetector'
 
-export class ZigZags {
+export default class ZigZags {
   private static peakDetector: PeakDetector = new PeakDetector()
 
   static create(candles: ICandle[], lag: number, threshold: number, influence: number): IZigZag[] {

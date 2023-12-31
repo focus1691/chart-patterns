@@ -13,7 +13,7 @@ moment.updateLocale('en', {
  * The ValueArea class is used to calculate various technical analysis metrics related to the value area of a set of candlestick data.
  * The value area represents the range of prices where a specified percentage of the market volume has occurred.
  */
-export class ValueArea {
+export default class ValueArea {
   /**
    * The number of rows used for the histogram calculation.
    */

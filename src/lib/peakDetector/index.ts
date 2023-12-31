@@ -3,7 +3,7 @@ import { ZScoreOutput, ZScore } from '../zscores'
 import { IPeak, IPeakRange } from '../../types/range.types'
 import { ISignalsConfig } from '../../types/peakDetector.types'
 
-export class PeakDetector {
+export default class PeakDetector {
   private validateInput(config: ISignalsConfig): void {
     if (!config.lag || !config.threshold || !config.influence) throw new Error('Parameter(s) required: lag, threshold, influence')
     if (config.influence < 0 || config.influence > 1) throw new Error('\'influence\' should be between 0 - 1')

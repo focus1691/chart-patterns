@@ -7,7 +7,7 @@ import { ISignalsConfig } from '../../types/peakDetector.types'
 import { bias, ILocalRange, IPeak, IRanges } from '../../types/range.types'
 import { IZigZag } from '../../types/zigzags.types'
 import { countDecimals, round } from '../../utils/math'
-import { PeakDetector } from '../peakDetector'
+import PeakDetector from '../peakDetector'
 
 declare global {
   interface Number {
@@ -22,7 +22,7 @@ Number.prototype.between = function (a: number, b: number): boolean {
   return this >= min && this <= max
 }
 
-export class RangeBuilder {
+export default class RangeBuilder {
   private peakDetector: PeakDetector
 
   private toZigzags(this: { klines: ICandle[] }, peaks: IPeak[]): IZigZag {
