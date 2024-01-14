@@ -11,4 +11,5 @@ export interface ISignalsConfig {
   lag: number
   threshold: number
   influence: number
+  flatten?: boolean
 }

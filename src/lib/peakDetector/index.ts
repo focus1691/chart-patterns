@@ -17,15 +17,22 @@ function validateInput(config: ISignalsConfig): void {
  * Finds and groups signals representing peaks based on the provided configuration.
  *
  * @param {ISignalsConfig} config - Configuration object for peak detection.
- * @returns {IPeak[][]} An array of peak groups, where each group is an array of peaks with the same direction.
+ * @returns {IPeak[][] | IPeak[]} Peak are grouped by direction: (-1, -1, 1, 1, -1, -1) or 
+ *  a flattened version: (-1, -1, 1, 1, -1, -1) becomes -1, 1, -1
  */
-export function findSignals(config: ISignalsConfig): IPeak[][] {
+export function findSignals(config: ISignalsConfig): IPeak[][] | IPeak[] {
   validateInput(config)
   const output: ZScoreOutput = ZScore.calc(config.values, config.lag, config.threshold, config.influence)
   const signals: IPeak[] = output.signals
     .map((direction, position) => direction !== 0 && ({ position, direction } as IPeak))
     .filter(({ direction }) => Boolean(direction))
   const groupedSignals: IPeak[][] = groupSignalsByDirection(signals)
+
+  if (config.flatten) {
+    const flattenedSignals: IPeak[] = signals.map((group) => group[0]) // (-1, -1, 1, 1, -1, -1) becomes -1, 1, -1
+    return flattenedSignals
+  }
+
   return groupedSignals
 }
 
