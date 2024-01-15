@@ -1,4 +1,6 @@
-import { IEmaOutcome, MA_Periods } from 'src/types/movingAverage.types'
+import { SIGNAL_DIRECTION, TechnicalIndicators, SIGNALS, INTERVALS } from 'src/constants'
+import { ICandle } from 'src/types'
+import { EmaCrossingResult, IEmaOutcome, MA_Periods } from 'src/types/movingAverage.types'
 import { countDecimals, round } from 'src/utils/math'
 
 const PERIODS: MA_Periods[] = [MA_Periods.NINE, MA_Periods.TWENTY_ONE, MA_Periods.FIFTY, MA_Periods.ONE_HUNDRED, MA_Periods.TWO_HUNDRED]
@@ -8,7 +10,7 @@ export const calculateSMA = (data: number[]) => {
   return sma
 }
 
-export function calculateEMA(data, period: MA_Periods): number[] {
+export function calculateEMA(data: number[], period: MA_Periods): number[] {
   const numDecimals: number = data.reduce((highestNumDecimals, ema) => {
     const numDecimals: number = countDecimals(Number(ema))
     return numDecimals > highestNumDecimals ? numDecimals : highestNumDecimals
@@ -35,4 +37,57 @@ export function calculateEmas(data: number[], periods: number[] = PERIODS): IEma
   }
 
   return emaOutcome
+}
+
+export function detectCrossing(interval: string, data: ICandle[], shortPeriod: MA_Periods, longPeriod: MA_Periods): EmaCrossingResult | null {
+  // Ensure we have enough data to proceed
+  if (data.length < longPeriod + 1) {
+    return null
+  }
+
+  // Extract the closing prices from the candlestick data
+  const closePrices = data.map((row) => row.close)
+
+  // Calculate the EMA values for the chosen short and long periods
+  const shortEmaValues = calculateEMA([...closePrices], shortPeriod)
+  const longEmaValues = calculateEMA([...closePrices], longPeriod)
+
+  // Define variables to hold the time and type of the most recent crossing
+  let mostRecentCrossingTime: Date | null = null
+  let mostRecentCrossingSignal: SIGNAL_DIRECTION | null = null
+
+  // Start from the most recent data and move backward to find the most recent crossing
+  for (let i = shortEmaValues.length - 1; i >= longPeriod; i--) {
+    const currentShortEma = shortEmaValues[i]
+    const currentLongEma = longEmaValues[i]
+    const prevShortEma = shortEmaValues[i - 1]
+    const prevLongEma = longEmaValues[i - 1]
+
+    if (currentShortEma > currentLongEma && prevShortEma <= prevLongEma) {
+      mostRecentCrossingSignal = SIGNAL_DIRECTION.BULLISH
+      mostRecentCrossingTime = new Date(data[i].closeTime)
+      break // Exit the loop as we've found the most recent crossing
+    }
+
+    if (currentShortEma < currentLongEma && prevShortEma >= prevLongEma) {
+      mostRecentCrossingSignal = SIGNAL_DIRECTION.BEARISH
+      mostRecentCrossingTime = data[i].closeTime
+      break // Exit the loop as we've found the most recent crossing
+    }
+  }
+
+  // If a crossing was found, return the details
+  if (mostRecentCrossingTime && mostRecentCrossingSignal) {
+    return {
+      indicator: TechnicalIndicators.EMA_CROSSING,
+      type: SIGNALS.TRIGGER_POINT,
+      direction: mostRecentCrossingSignal,
+      time: mostRecentCrossingTime,
+      shortPeriod,
+      longPeriod,
+      intervals: [interval as INTERVALS]
+    }
+  }
+
+  return null // No crossing was found
 }
