@@ -11,17 +11,11 @@ on:
 
 jobs:
   publish-npm:
+    if: github.repository_owner == 'AlgoraGroup'
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout source code'
         uses: actions/checkout@v3
-
-      - name: Log repository owner
-        run: echo "Repository owner is ${{ github.repository_owner }}"
-
-      - name: 'Conditional Execution'
-        if: github.repository_owner == 'AlgoraGroup'
-        run: echo "Running publish steps because owner is AlgoraGroup"
 
       - uses: actions/setup-node@v3
         with:
