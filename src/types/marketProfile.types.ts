@@ -1,3 +1,4 @@
+import { TIME_PERIODS } from '../constants/candles'
 import { LEVEL_ZONE, PRICE_POSITION } from '../constants/levels'
 import { MARKET_PROFILE_DAYS, MARKET_PROFILE_OPEN } from '../constants/marketProfile'
 import { VALUE_AREA, VALUE_AREA_PERIODS, VALUE_AREA_TENSE } from '../constants/valueArea'
@@ -120,10 +121,13 @@ export interface IPriceLevels {
 /**
  * Configuration object used for calculating the market profile.
  *
+ * @property {TIME_PERIODS} period - Specifies the time period over which the market profile is calculated.
+ *                                   Can be day, week, or month.
  * @property {ICandle[]} candles - An array of candle objects representing the price data over a specific time period.
  * @property {number} tickSize - The size of a single tick, which is the smallest measurable movement in the price of the trading asset.
  */
 export interface IMarketProfileConfig {
+  period?: TIME_PERIODS
   candles: ICandle[]
   tickSize: number
 }

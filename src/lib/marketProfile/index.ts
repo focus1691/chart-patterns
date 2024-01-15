@@ -74,8 +74,9 @@ function validateInput(config: IMarketProfileConfig): void {
 export function create(config: IMarketProfileConfig): IMarketProfile {
   validateInput(config)
 
+  const period: TIME_PERIODS = config.period ?? TIME_PERIODS.DAY
   const timestamp = moment(config.candles[0].openTime)
-  const from: moment.Moment = moment(timestamp).startOf(TIME_PERIODS.DAY)
+  const from: moment.Moment = moment(timestamp).startOf(period)
   const marketProfile: IMarketProfile = { marketProfiles: null, npoc: null }
   const values: IMarketProfileFindings[] = []
   let tpos: ICandle[] = []
@@ -84,25 +85,28 @@ export function create(config: IMarketProfileConfig): IMarketProfile {
     // Filter the Klines for this period alone
     tpos = config.candles.filter((candle) => {
       const timestamp = moment(candle.openTime)
-      return moment(timestamp).isSame(from, TIME_PERIODS.DAY)
+      return moment(timestamp).isSame(from, period)
     })
     if (!_.isEmpty(tpos)) {
-      const numTpos: number = TPO_SIZE * tpos.length
       marketProfile.valueArea = ValueArea.calculate(tpos)
-      marketProfile.IB = calcInitialBalance(tpos)
 
-      if (values.length > 0 && marketProfile.IB.low && marketProfile.IB.high && numTpos > 2) {
-        marketProfile.failedAuction = isFailedAuction(tpos, marketProfile.IB)
-        marketProfile.excess = findExcess(tpos, marketProfile.valueArea)
-        marketProfile.poorHighLow = findPoorHighAndLows(tpos, marketProfile.valueArea)
-        marketProfile.singlePrints = findSinglePrints(tpos)
-        // marketProfile.ledges = findLedges(tpos, marketProfile.valueArea)
-        marketProfile.ledges = []
-        marketProfile.openType = findOpenType(tpos, TPO_SIZE, config.tickSize, marketProfile.IB, values[values.length - 1]?.valueArea)
-        // marketProfile.dayType = findDayType(tpos, tickSize, marketProfile.IB)
+      if (period === TIME_PERIODS.DAY) {
+        marketProfile.IB = calcInitialBalance(tpos)
+        const numTpos: number = TPO_SIZE * tpos.length
+
+        if (values.length > 0 && marketProfile.IB.low && marketProfile.IB.high && numTpos > 2) {
+          marketProfile.failedAuction = isFailedAuction(tpos, marketProfile.IB)
+          marketProfile.excess = findExcess(tpos, marketProfile.valueArea)
+          marketProfile.poorHighLow = findPoorHighAndLows(tpos, marketProfile.valueArea)
+          marketProfile.singlePrints = findSinglePrints(tpos)
+          // marketProfile.ledges = findLedges(tpos, marketProfile.valueArea)
+          marketProfile.ledges = []
+          marketProfile.openType = findOpenType(tpos, TPO_SIZE, config.tickSize, marketProfile.IB, values[values.length - 1]?.valueArea)
+          // marketProfile.dayType = findDayType(tpos, tickSize, marketProfile.IB)
+        }
       }
 
-      from.add(1, TIME_PERIODS.DAY) // Go to the previous day / week / month
+      from.add(1, period) // Go to the previous day / week / month
       values.push(marketProfile)
     }
   } while (!_.isEmpty(tpos))
