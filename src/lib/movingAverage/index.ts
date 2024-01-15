@@ -1,7 +1,7 @@
-import { SIGNAL_DIRECTION, TechnicalIndicators, SIGNALS, INTERVALS } from 'src/constants'
-import { ICandle } from 'src/types'
-import { EmaCrossingResult, IEmaOutcome, MA_Periods } from 'src/types/movingAverage.types'
-import { countDecimals, round } from 'src/utils/math'
+import { INTERVALS, SIGNAL_DIRECTION, SIGNALS, TechnicalIndicators } from '../../constants'
+import { ICandle } from '../../types/candle.types'
+import { EmaCrossingResult, IEmaOutcome, MA_Periods } from '../../types/movingAverage.types'
+import { countDecimals, round } from '../../utils/math'
 
 const PERIODS: MA_Periods[] = [MA_Periods.NINE, MA_Periods.TWENTY_ONE, MA_Periods.FIFTY, MA_Periods.ONE_HUNDRED, MA_Periods.TWO_HUNDRED]
 

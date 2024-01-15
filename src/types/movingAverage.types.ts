@@ -1,5 +1,5 @@
 import { ISignal } from './signals.types'
-import { PRICE_POSITION } from 'src/constants'
+import { PRICE_POSITION } from '../constants'
 
 export enum MA_Periods {
   THREE = 3,

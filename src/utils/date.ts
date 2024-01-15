@@ -1,5 +1,5 @@
-import { ICandle } from 'src/types'
-import { ITradeWindow } from 'src/types/levels.types'
+import { ICandle } from '../types/candle.types'
+import { ITradeWindow } from '../types/levels.types'
 
 export const isDST = (date: Date): boolean => {
   // DST in the UK starts on the last Sunday in March and ends on the last Sunday in October

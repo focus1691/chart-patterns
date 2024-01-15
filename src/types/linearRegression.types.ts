@@ -1,4 +1,4 @@
-import { INTERVALS } from 'src/constants/candles'
+import { INTERVALS } from '../constants/candles'
 
 export interface ILinearRegression {
   sumX: number

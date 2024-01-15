@@ -1,4 +1,4 @@
-import { CANDLE_OBSERVATIONS, SIGNAL_DIRECTION } from 'src/constants'
+import { CANDLE_OBSERVATIONS, SIGNAL_DIRECTION } from '../constants'
 
 export type KeyLevel = number
 

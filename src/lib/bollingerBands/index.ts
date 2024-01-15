@@ -1,6 +1,6 @@
+import { INTERVALS, SIGNAL_DIRECTION, SIGNALS, TechnicalIndicators } from '../../constants'
+import { IBollingerBands, IBollingerBandSignal, ICandle } from '../../types'
 import { calculateSMA } from '../movingAverage'
-import { INTERVALS, SIGNAL_DIRECTION, SIGNALS, TechnicalIndicators } from 'src/constants'
-import { IBollingerBands, IBollingerBandSignal, ICandle } from 'src/types'
 
 export function calculateBollingerBands(data: ICandle[], period: number = 20, multiplier: number = 2): IBollingerBands | null {
   if (data.length < period) {

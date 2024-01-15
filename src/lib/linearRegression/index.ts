@@ -1,8 +1,7 @@
 import moment from 'moment'
-import { TIME_PERIODS } from 'src/constants'
-import { ICandle } from 'src/types'
-import { ILinearRegression } from 'src/types/linearRegression.types'
-import { round } from 'src/utils/math'
+import { TIME_PERIODS } from '../../constants'
+import { ICandle, ILinearRegression } from '../../types'
+import { round } from '../../utils/math'
 
 export function calcLinearRegression(x: number[], y: number[]): ILinearRegression {
   const n: number = Math.min(x.length, y.length)
