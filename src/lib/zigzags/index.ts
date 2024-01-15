@@ -20,13 +20,14 @@ export function create(candles: ICandle[], lag: number, threshold: number, influ
     values: candles.map((candle) => candle.close),
     lag,
     threshold,
-    influence
+    influence,
+    flatten: false
   }
-  const groupedPeaks: IPeak[][] = PeakDetector.findSignals(config)
+  const groupedPeaks: IPeak[][] = PeakDetector.findSignals(config) as IPeak[][]
 
   for (const group of groupedPeaks) {
-    const direction = group[0].direction
-    let extremeValue = direction === 1 ? Number.MIN_SAFE_INTEGER : Number.MAX_SAFE_INTEGER
+    const direction: 1 | -1 = group[0].direction
+    let extremeValue: number = direction === 1 ? Number.MIN_SAFE_INTEGER : Number.MAX_SAFE_INTEGER
     let extremeCandle = null
 
     for (const peak of group) {
