@@ -141,39 +141,36 @@ export function calcInitialBalance(tpos: ICandle[]): IInitialBalance {
 }
 
 /**
- * Evaluates the 80% rule for market profile.
+ * Evaluates the market's opening price against the previous day's Value Area High and Low.
+ * Generates a signal based on the 80% rotation rule for market profile, specifically when
+ * the opening price is outside the previous day's value area.
  *
- * @param tpo A single candlestick data.
  * @param dOpen The day's opening price.
  * @param pdVAH Previous day's Value Area High.
  * @param pdVAL Previous day's Value Area Low.
- * @returns A signal object if the 80% rule is met, otherwise null.
+ * @returns A signal object if the opening price is outside the previous day's value area, 
+ *          indicating a potential 80% rotation, otherwise null.
  */
-export function check80Rule(tpo: ICandle, dOpen?: number, pdVAH?: number, pdVAL?: number): ISignal | null {
+export function evaluateOpeningPriceAgainstPrevDayValueArea(dOpen?: number, pdVAH?: number, pdVAL?: number): ISignal | null {
   if (!dOpen || !pdVAH || !pdVAL) {
     return null
   }
 
-  let signal: ISignal | null = null
   const openedBelowValue: boolean = dOpen < pdVAL
   const openedAboveValue: boolean = dOpen > pdVAH
 
   // Check if the market has re-entered the previous day's value area
   if (openedAboveValue || openedBelowValue) {
-    const reenteredBelowValue: boolean = openedAboveValue && tpo.low <= pdVAH
-    const reenteredAboveValue: boolean = openedBelowValue && tpo.high >= pdVAL
-
-    if (reenteredBelowValue || reenteredAboveValue) {
-      signal = {
-        indicator: TechnicalIndicators.MARKET_PROFILE_80_RULE,
-        type: SIGNALS.TRIGGER_POINT,
-        direction: reenteredBelowValue ? SIGNAL_DIRECTION.BEARISH : SIGNAL_DIRECTION.BULLISH,
-        intervals: [INTERVALS.THIRTY_MINUTES]
-      }
+    const signal: ISignal | null = {
+      indicator: TechnicalIndicators.OPEN_OUTSIDE_VALUE,
+      type: SIGNALS.TRIGGER_POINT,
+      direction: openedAboveValue ? SIGNAL_DIRECTION.BEARISH : SIGNAL_DIRECTION.BULLISH,
+      intervals: [INTERVALS.THIRTY_MINUTES]
     }
+    return signal
   }
 
-  return signal
+  return null
 }
 
 /**

@@ -12,5 +12,5 @@ export enum TechnicalIndicators {
   HARMONICS = 'harmonics',
   OPEN_INTEREST_SENTIMENT = 'openInterestSentiment',
   FUNDING_RATE_SENTIMENT = 'fundingRateSentiment',
-  MARKET_PROFILE_80_RULE = 'marketProfile80Rule'
+  OPEN_OUTSIDE_VALUE = 'openOutsideValue'
 }

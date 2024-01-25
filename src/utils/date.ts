@@ -36,9 +36,13 @@ export const isInitialBalanceFormed = (candle: ICandle): boolean => {
   return false
 }
 
-export const isWithinTimeWindow = (window: ITradeWindow): boolean => {
-  const currentTime = new Date()
-  const currentHour = currentTime.getHours()
+export const isWithinTimeWindow = (window: ITradeWindow, timestamp: number): boolean => {
+  // Create a date object using the timestamp
+  const dateFromTimestamp = new Date(timestamp)
 
-  return currentHour >= window.start && currentHour < window.end
+  // Convert it to GMT time
+  const utcHour = dateFromTimestamp.getUTCHours()
+
+  // Compare with the window hours
+  return utcHour >= window.start && utcHour < window.end
 }
