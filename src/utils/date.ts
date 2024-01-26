@@ -1,4 +1,3 @@
-import { ICandle } from '../types/candle.types'
 import { ITradeWindow } from '../types/levels.types'
 
 export const isDST = (date: Date): boolean => {
@@ -12,28 +11,6 @@ export const isDST = (date: Date): boolean => {
   const endDST = new Date(october.setDate(31 - october.getDay()))
 
   return date > startDST && date < endDST
-}
-
-export const isInitialBalanceFormed = (candle: ICandle): boolean => {
-  // Check if DST is in effect for openTime and closeTime
-  const dstAdjustment = isDST(candle.openTime) ? 60 * 60 * 1000 : 0
-
-  // Adjust openTime and closeTime for UTC+1 if DST is in effect
-  const adjustedOpenTime = new Date(candle.openTime.getTime() + dstAdjustment)
-  const adjustedCloseTime = new Date(candle.closeTime.getTime() + dstAdjustment)
-
-  // Extract hours and minutes from adjusted times
-  const openHour = adjustedOpenTime.getUTCHours()
-  const openMinutes = adjustedOpenTime.getUTCMinutes()
-  const closeHour = adjustedCloseTime.getUTCHours()
-  const closeMinutes = adjustedCloseTime.getUTCMinutes()
-
-  // Check if the candle is within the 00:30 - 01:00 UTC+1 interval
-  if (openHour === 0 && openMinutes >= 30 && closeHour === 0 && closeMinutes <= 59) {
-    return true
-  }
-
-  return false
 }
 
 export const isWithinTimeWindow = (window: ITradeWindow, timestamp: number): boolean => {
