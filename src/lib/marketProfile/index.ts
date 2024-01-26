@@ -580,31 +580,6 @@ export function findOpenType(tpos: ICandle[], tpoSize: number, tickSize: number,
 // }
 
 /**
- * Retrieves a specific price from a set of candlestick data based on the given time period.
- *
- * @param data An array of candlesticks.
- * @param timePeriod The time period to consider for the price retrieval.
- * @param key The key of the price to retrieve (e.g., 'open', 'close').
- * @param goBackByOne Indicates whether to go back by one period.
- * @returns The retrieved price value.
- */
-export function getPrice(data: ICandle[], timePeriod: TIME_PERIODS, key: string | number, goBackByOne?: boolean): number {
-  const period: moment.Moment = moment().startOf(timePeriod)
-  goBackByOne && period.subtract(1, timePeriod)
-  let price: number
-
-  // Start checking the most recent Klines first
-  for (let i = data.length - 1; i >= 0; i--) {
-    const openTime: moment.Moment = moment(data[i].openTime)
-    if (openTime.isSame(period, timePeriod)) {
-      price = data[i][key]
-    }
-    if (openTime.isBefore(period)) break // The latest Kline date is before yesterday so it can't be there
-  }
-  return price
-}
-
-/**
  * Finds naked points of control (NPOC) in a series of market profiles.
  *
  * @param marketProfiles An array of market profile findings.
