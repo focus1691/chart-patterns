@@ -17,9 +17,16 @@ export const isWithinTimeWindow = (window: ITradeWindow, timestamp: number): boo
   // Create a date object using the timestamp
   const dateFromTimestamp = new Date(timestamp)
 
-  // Convert it to GMT time
+  // Get UTC hour, minutes, and seconds
   const utcHour = dateFromTimestamp.getUTCHours()
+  const utcMinutes = dateFromTimestamp.getUTCMinutes()
+  const utcSeconds = dateFromTimestamp.getUTCSeconds()
 
-  // Compare with the window hours
-  return utcHour >= window.start && utcHour < window.end
+  // Check if the time is exactly at the start of the hour for single hour windows
+  if (window.start === window.end) {
+    return utcHour === window.start && utcMinutes === 0 && utcSeconds === 0
+  } else {
+    // Check if the hour is within the specified range for multi-hour windows
+    return utcHour >= window.start && utcHour <= window.end
+  }
 }
