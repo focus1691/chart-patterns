@@ -1,1 +1,1 @@
-export * from './kellyCriterion.ts'
+export * from './kellyCriterion'
