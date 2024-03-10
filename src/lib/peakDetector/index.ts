@@ -29,7 +29,7 @@ export function findSignals(config: ISignalsConfig): IPeak[][] | IPeak[] {
   const groupedSignals: IPeak[][] = groupSignalsByDirection(signals)
 
   if (config.flatten) {
-    const flattenedSignals: IPeak[] = signals.map((group) => group[0]) // (-1, -1, 1, 1, -1, -1) becomes -1, 1, -1
+    const flattenedSignals: IPeak[] = groupedSignals.map((group) => group[0]) // (-1, -1, 1, 1, -1, -1) becomes -1, 1, -1
     return flattenedSignals
   }
 
