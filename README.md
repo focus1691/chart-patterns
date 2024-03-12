@@ -1,3 +1,6 @@
-# Chart Patterns
+# @focus1691/trading-patterns
 
-This library provides a comprehensive toolkit for technical analysis in financial markets, focusing on chart patterns and market profiles. Below are detailed examples of how to use various modules of this library.
+[![npm version](https://badge.fury.io/js/%40focus1691%2Ftrading-patterns.svg)](https://www.npmjs.com/package/@focus1691/trading-patterns)
+[![GitHub license](https://img.shields.io/github/license/focus1691/trading-patterns.svg)](https://github.com/focus1691/trading-patterns/blob/master/LICENSE)
+
+This package is my sandbox for playing around with trading ideas and tweaking my indicators. I'm diving into stuff like harmonic patterns, shape patterns, and experimenting with Market Profile and volume-based indicators. Everything's pretty experimental.
