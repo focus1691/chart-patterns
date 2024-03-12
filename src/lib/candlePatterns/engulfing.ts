@@ -12,7 +12,7 @@ import { ISignal } from '../../types/signals.types'
  * 
  * @example
  * ```typescript
- * import { CandlestickPatterns, ISignal } from '@focus1691/chart-patterns';
+ * import { CandlestickPatterns, ISignal } from 'chart-patterns';
  * 
  * // Assuming 'candles' is an array of candle data
  * const engulfingCandle: ISignal | null = CandlestickPatterns.findEngulfingCandle({ candles, index: 10 });
