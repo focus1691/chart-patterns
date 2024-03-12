@@ -11,7 +11,6 @@ on:
 
 jobs:
   publish-npm:
-    if: github.repository_owner == 'AlgoraGroup'
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout source code'
@@ -40,11 +39,11 @@ jobs:
       - name: Bump version & push
         run: |
           git config --global user.name 'Automated publish'
-          git config --global user.email 'tiagosiebler@users.noreply.github.com'
+          git config --global user.email 'focus1691@users.noreply.github.com'
 
           # Update the version in package.json, and commit & tag the change:
           npm version patch # YMMV - you might want the semver level as a workflow input
 
           git push && git push --tags
 
-      - run: npm publish
+      - run: npm publish --access public
