@@ -10,7 +10,7 @@ import { ICandle } from '../../types/candle.types'
  * 
  * @example
  * ```typescript
- * import { CandlestickPatterns } from '@focus1691/chart-patterns';
+ * import { CandlestickPatterns } from '@focus1691/trading-patterns';
  * 
  * // Assuming 'candle' is an ICandle object
  * const isExcessCandle: boolean = CandlestickPatterns.isExcess(candle);
