@@ -58,6 +58,9 @@ export enum KEY_LEVELS {
   MONTHLY_VALUE_AREA_LOW = 'mVAL',
   PREVIOUS_MONTH_VALUE_AREA_LOW = 'pmVAL',
 
+  // High & Low
+  PREVIOUS_DAY_HIGH = 'pdHigh',
+  PREVIOUS_DAY_LOW = 'pdLow',
   HIGH = 'high',
   LOW = 'low'
 }
