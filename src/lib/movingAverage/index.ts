@@ -1,7 +1,7 @@
 import { INTERVALS, SIGNAL_DIRECTION, SIGNALS, TechnicalIndicators } from '../../constants'
 import { ICandle } from '../../types/candle.types'
 import { EmaCrossingResult, IEmaOutcome, MA_Periods } from '../../types/movingAverage.types'
-import { countDecimals, round } from '../../utils/math'
+import { round } from '../../utils/math'
 
 const PERIODS: MA_Periods[] = [MA_Periods.NINE, MA_Periods.TWENTY_ONE, MA_Periods.FIFTY, MA_Periods.ONE_HUNDRED, MA_Periods.TWO_HUNDRED]
 
@@ -10,26 +10,26 @@ export const calculateSMA = (data: number[]) => {
   return sma
 }
 
-export function calculateEMA(data: number[], period: MA_Periods): number[] {
-  const numDecimals: number = data.reduce((highestNumDecimals, ema) => {
-    const numDecimals: number = countDecimals(Number(ema))
-    return numDecimals > highestNumDecimals ? numDecimals : highestNumDecimals
-  }, 0)
-  const emas: number[] = [Number(data.shift())]
-  const smoothingFactor: number = 2 / (period + 1)
-
-  for (let i = 0; i < data.length; i++) {
-    const prevEma: number = emas[emas.length - 1]
-    const value: number = Number(data[i])
-    const ema: number = smoothingFactor * (value - prevEma) + prevEma
-    const roundedEma: number = round(ema, numDecimals)
-    emas.push(roundedEma)
+export function calculateEMA(candles: ICandle[], period: MA_Periods): number[] {
+  if (candles.length === 0) {
+    return []
   }
 
-  return emas
+  const standardPrecision = 4
+  const smoothingFactor = 2 / (period + 1)
+  const emas = new Array(candles.length).fill(0)
+  emas[0] = Number(candles[0].close)
+
+  for (let i = 1; i < candles.length; i++) {
+    const prevEma = emas[i - 1]
+    const value = Number(candles[i].close)
+    emas[i] = (value - prevEma) * smoothingFactor + prevEma
+  }
+
+  return emas.map((ema) => round(ema, standardPrecision))
 }
 
-export function calculateEmas(data: number[], periods: number[] = PERIODS): IEmaOutcome {
+export function calculateEmas(data: ICandle[], periods: number[] = PERIODS): IEmaOutcome {
   const emaOutcome: IEmaOutcome = {} as IEmaOutcome
 
   for (let i = 0; i < periods.length; i++) {
@@ -45,12 +45,8 @@ export function detectCrossing(interval: string, data: ICandle[], shortPeriod: M
     return null
   }
 
-  // Extract the closing prices from the candlestick data
-  const closePrices = data.map((row) => row.close)
-
-  // Calculate the EMA values for the chosen short and long periods
-  const shortEmaValues = calculateEMA([...closePrices], shortPeriod)
-  const longEmaValues = calculateEMA([...closePrices], longPeriod)
+  const shortEmaValues = calculateEMA(data, shortPeriod)
+  const longEmaValues = calculateEMA(data, longPeriod)
 
   // Define variables to hold the time and type of the most recent crossing
   let mostRecentCrossingTime: Date | null = null
@@ -66,17 +62,16 @@ export function detectCrossing(interval: string, data: ICandle[], shortPeriod: M
     if (currentShortEma > currentLongEma && prevShortEma <= prevLongEma) {
       mostRecentCrossingSignal = SIGNAL_DIRECTION.BULLISH
       mostRecentCrossingTime = new Date(data[i].closeTime)
-      break // Exit the loop as we've found the most recent crossing
+      break
     }
 
     if (currentShortEma < currentLongEma && prevShortEma >= prevLongEma) {
       mostRecentCrossingSignal = SIGNAL_DIRECTION.BEARISH
       mostRecentCrossingTime = data[i].closeTime
-      break // Exit the loop as we've found the most recent crossing
+      break
     }
   }
 
-  // If a crossing was found, return the details
   if (mostRecentCrossingTime && mostRecentCrossingSignal) {
     return {
       indicator: TechnicalIndicators.EMA_CROSSING,
@@ -89,5 +84,5 @@ export function detectCrossing(interval: string, data: ICandle[], shortPeriod: M
     }
   }
 
-  return null // No crossing was found
+  return null
 }

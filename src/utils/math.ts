@@ -1,12 +1,8 @@
 import { ICandle } from '../types/candle.types'
 
-export function round(number: number, precision: number = 2) {
-  if (precision < 0) {
-    const factor = Math.pow(10, precision)
-    return Math.round(number * factor) / factor
-  } else {
-    return +(Math.round(Number(number + 'e+' + precision)) + 'e-' + precision)
-  }
+export function round(number: number, decimalPlaces: number = 2) {
+  const factor = Math.pow(10, decimalPlaces)
+  return Math.round(number * factor) / factor
 }
 
 export function average(numbers: number[]) {
@@ -14,18 +10,8 @@ export function average(numbers: number[]) {
 }
 
 export const countDecimals = function (value: number): number {
-  const text: string = value.toString()
-  // verify if number 0.000005 is represented as "5e-6"
-  if (text.indexOf('e-') > -1) {
-    const [, trail] = text.split('e-')
-    const deg: number = parseInt(trail, 10)
-    return deg
-  }
-  // count decimals for number in representation like "0.123456"
-  if (Math.floor(value) !== value) {
-    return value.toString().split('.')[1].length || 0
-  }
-  return 0
+  if (Math.floor(value) === value) return 0
+  return value.toString().split('.')[1].length || 0
 }
 
 export const getTicksFromPrice = (tpo: ICandle, priceType: string | number, tickSize: number): { up: number; down: number } => {
