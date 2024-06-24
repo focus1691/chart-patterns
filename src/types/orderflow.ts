@@ -20,6 +20,15 @@ export interface Imbalance {
 }
 
 /**
+ * Represents the price range of the computed stacked imbalance.
+ */
+export interface IStackedImbalancesResult {
+  startPrice: number
+  endPrice: number
+  count: number
+}
+
+/**
  * Configuration options for detecting stacked imbalances.
  */
 export interface IStackedImbalanceConfig {
@@ -34,4 +43,10 @@ export interface IStackedImbalanceConfig {
    * Default is 3.
    */
   stackCount?: number
+
+  /**
+   * The size of the price tick.
+   * Default is 0.1.
+   */
+  tickSize?: number
 }

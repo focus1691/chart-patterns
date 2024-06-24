@@ -1,5 +1,5 @@
 import { ImbalanceType } from '../../../constants'
-import { IStackedImbalanceConfig, Imbalance, OrderFlowRow } from '../../../types/orderflow'
+import { IStackedImbalanceConfig, IStackedImbalancesResult, Imbalance, OrderFlowRow } from '../../../types/orderflow'
 
 const DEFAULT_THRESHOLD = 300.0
 const DEFAULT_STACK_COUNT = 3
@@ -28,15 +28,19 @@ export function detectImbalances(data: { [price: number]: OrderFlowRow }, thresh
 }
 
 /**
- * Adds the current stack of imbalances to the stacked imbalances if it meets the minimum stack count.
+ * Adds the current stack range to the stacked imbalances if it meets the minimum stack count.
  * 
  * @param currentStack - The current stack of imbalances.
  * @param stackCount - The minimum number of consecutive imbalances required to form a stack.
- * @param stackedImbalances - The array of stacked imbalances to add to.
+ * @param stackedImbalances - The array of stacked imbalance ranges to add to.
  */
-function addStackIfValid(currentStack: Imbalance[], stackCount: number, stackedImbalances: Imbalance[][]): void {
+function addStackRangeIfValid(currentStack: Imbalance[], stackCount: number, stackedImbalances: IStackedImbalancesResult[]): void {
   if (currentStack.length >= stackCount) {
-    stackedImbalances.push([...currentStack]);
+    stackedImbalances.push({
+      startPrice: currentStack[0].price,
+      endPrice: currentStack[currentStack.length - 1].price,
+      count: currentStack.length,
+    });
   }
 }
 
@@ -45,28 +49,29 @@ function addStackIfValid(currentStack: Imbalance[], stackCount: number, stackedI
  * 
  * @param data - The order flow data with price as key and OrderFlowRow as value.
  * @param config - The configuration for detecting stacked imbalances.
- * @returns An array of arrays of Imbalance, where each inner array represents a group of stacked imbalances.
+ * @returns An array of IStackedImbalancesResult, where each element represents the range of a stacked imbalance.
  */
 export function detectStackedImbalances(
   data: { [price: number]: OrderFlowRow },
   config: IStackedImbalanceConfig = {}
-): Imbalance[][] {
+): IStackedImbalancesResult[] {
   const threshold = config.threshold ?? DEFAULT_THRESHOLD;
   const stackCount = config.stackCount ?? DEFAULT_STACK_COUNT;
+  const tickSize = config.tickSize
   const imbalances = detectImbalances(data, threshold);
-  const stackedImbalances: Imbalance[][] = [];
+  const stackedImbalances: IStackedImbalancesResult[] = [];
   let currentStack: Imbalance[] = [];
   let lastPrice: number | null = null;
   let lastImbalanceType: ImbalanceType | null = null;
 
   for (const imbalance of imbalances) {
-    const isSameType = lastImbalanceType === null || imbalance.imbalanceType === lastImbalanceType;
-    const isConsecutivePrice = lastPrice === null || Math.abs(imbalance.price - lastPrice - 0.1) < 1e-9;
+    const isImbalanceSameSide = lastImbalanceType === null || imbalance.imbalanceType === lastImbalanceType;
+    const isConsecutivePrice = lastPrice === null || Math.abs(imbalance.price - lastPrice - tickSize) < 1e-9;
 
-    if (isSameType && isConsecutivePrice) {
+    if (isImbalanceSameSide && isConsecutivePrice) {
       currentStack.push(imbalance);
     } else {
-      addStackIfValid(currentStack, stackCount, stackedImbalances);
+      addStackRangeIfValid(currentStack, stackCount, stackedImbalances);
       currentStack = [imbalance];
     }
 
@@ -74,7 +79,7 @@ export function detectStackedImbalances(
     lastPrice = imbalance.price;
   }
 
-  addStackIfValid(currentStack, stackCount, stackedImbalances);
+  addStackRangeIfValid(currentStack, stackCount, stackedImbalances);
 
   return stackedImbalances;
 }
