@@ -66,7 +66,7 @@ export function detectStackedImbalances(
 
   for (const imbalance of imbalances) {
     const isImbalanceSameSide = lastImbalanceType === null || imbalance.imbalanceType === lastImbalanceType;
-    const isConsecutivePrice = lastPrice === null || Math.abs(imbalance.price - lastPrice - tickSize) < 1e-9;
+    const isConsecutivePrice = lastPrice === null || Math.abs(imbalance.price - lastPrice - tickSize) === 0;
 
     if (isImbalanceSameSide && isConsecutivePrice) {
       currentStack.push(imbalance);
