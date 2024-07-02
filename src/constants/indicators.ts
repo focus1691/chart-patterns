@@ -12,5 +12,9 @@ export enum TechnicalIndicators {
   HARMONICS = 'harmonics',
   OPEN_INTEREST_SENTIMENT = 'openInterestSentiment',
   FUNDING_RATE_SENTIMENT = 'fundingRateSentiment',
+  CUMULATIVE_VOLUME_DELTA = 'cumulativeVolumeDelta',
+  VOLUME_DELTA = 'volumeDelta',
+  VOLUME_DELTA_DIRECTION = 'volumeDeltaDirection',
+  CVD_DIVERGENCE = 'cvd_divergence',
   OPEN_OUTSIDE_VALUE = 'openOutsideValue'
 }
