@@ -62,5 +62,14 @@ export enum KEY_LEVELS {
   PREVIOUS_DAY_HIGH = 'pdHigh',
   PREVIOUS_DAY_LOW = 'pdLow',
   HIGH = 'high',
-  LOW = 'low'
+  LOW = 'low',
+
+  // Pivot Points
+  PIVOT_POINT = 'pivotPoint',
+  PIVOT_RESISTANCE1 = 'pivotR1',
+  PIVOT_SUPPORT1 = 'pivotS1',
+  PIVOT_RESISTANCE2 = 'pivotR2',
+  PIVOT_SUPPORT2 = 'pivotS2',
+  PIVOT_RESISTANCE3 = 'pivotR3',
+  PIVOT_SUPPORT3 = 'pivotS3'
 }
