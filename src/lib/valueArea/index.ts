@@ -1,13 +1,6 @@
-import moment from 'moment'
 import { ICandle } from '../../types/candle.types'
 import { IValueArea, IVolumeRow } from '../../types/valueArea.types'
 import { countDecimals, round } from '../../utils/math'
-
-moment.updateLocale('en', {
-  week: {
-    dow: 1 // Monday is the first day of the week.
-  }
-})
 
 /**
  * The number of rows used for the histogram calculation.

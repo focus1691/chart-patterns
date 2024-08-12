@@ -24,22 +24,6 @@ moment.updateLocale('en', {
 momentTimezone.tz.setDefault('Europe/London')
 
 /**
- * Validates the input configuration for volume profile calculations.
- *
- * @param config The volume profile configuration object.
- * @throws Error if the configuration is invalid.
- */
-function validateInput(config: IVolumeProfileConfig): void {
-  if (!config.tickSize || typeof config.tickSize !== 'number') throw new Error("You must include the symbol's Tick Size. i.e. 0.5 for BTCUSDT.")
-  if (!config?.candles?.length) throw new Error('You need to include the candles array (ICandle format).')
-  if (config.candles.length < 24) throw new Error("Not enough candles to compute the volume Profile for a day. You need a minimum of 48 TPO's of 30m candles.")
-  for (let i = 0; i < config.candles.length; i++) {
-    if (config.candles[i].interval !== INTERVALS.THIRTY_MINUTES)
-      throw new Error('Candle contains an interval other than 30m. Volume Profile Theory requires 30m candles. 1 TPO = one 30 min candle,')
-  }
-}
-
-/**
  * Calculates the volume profile for a given set of candlestick data based on the specified configuration.
  *
  * The function analyses the candlestick data to construct a series of v profiles, each corresponding to a day.
@@ -63,8 +47,6 @@ function validateInput(config: IVolumeProfileConfig): void {
  * console.log(volumeProfile); // Outputs the volume profile data
  */
 export function create(config: IVolumeProfileConfig): IVolumeProfile {
-  validateInput(config)
-
   const period: TIME_PERIODS = config.period ?? TIME_PERIODS.DAY
   const timestamp = moment(config.candles[0].openTime)
   const from: moment.Moment = moment(timestamp).startOf(period)
@@ -154,7 +136,7 @@ export function findExcess(tpos: ICandle[], VA: IValueArea): IVolumeProfileObser
   const excess: IVolumeProfileObservation[] = []
 
   for (let i = 0; i < tpos.length; i++) {
-    const { open, high, low, close, interval } = tpos[i]
+    const { open, high, low, close } = tpos[i]
 
     if (high >= VA.high || low <= VA.low) {
       const klineLength = Math.abs(close - open)
