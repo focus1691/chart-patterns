@@ -1,5 +1,4 @@
-import { ISignal } from './signals.types'
-import { PRICE_POSITION } from '../constants'
+import { INTERVALS } from '../constants/time'
 
 export enum MA_Periods {
   THREE = 3,
@@ -13,19 +12,13 @@ export enum MA_Periods {
   TWO_HUNDRED = 200
 }
 
-export interface IPriceMA {
-  position: PRICE_POSITION
-  period: MA_Periods
-  value: number
-  interval: string
-}
-
 export interface IEmaOutcome {
   [period: string]: number
 }
 
-export interface EmaCrossingResult extends ISignal {
+export interface EmaCrossingResult {
   time: Date
+  interval: INTERVALS
   shortPeriod: MA_Periods
   longPeriod: MA_Periods
 }

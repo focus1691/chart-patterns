@@ -1,13 +1,14 @@
 import _ from 'lodash'
 import moment from 'moment'
 import { from, map, toArray } from 'rxjs'
-import { FIBONACCI_NUMBERS, IFibonacciRetracement } from '../../constants/range'
+import { FIBONACCI_NUMBERS, IFibonacciRetracement } from '../../constants/fibonacci'
 import { ICandle } from '../../types/candle.types'
 import { ISignalsConfig } from '../../types/peakDetector.types'
-import { bias, ILocalRange, IPeak, IRanges } from '../../types/range.types'
+import { ILocalRange, IPeak, IRanges } from '../../types/range.types'
 import { IZigZag } from '../../types/zigzags.types'
 import { countDecimals, round } from '../../utils/math'
 import * as PeakDetector from '../peakDetector'
+import { SIGNAL_DIRECTION } from 'src/constants'
 
 declare global {
   interface Number {
@@ -42,24 +43,24 @@ export default class RangeBuilder {
     return zigzag
   }
 
-  private calculateFibonacci(range: ILocalRange, bias: bias): IFibonacciRetracement {
+  private calculateFibonacci(range: ILocalRange, direction: SIGNAL_DIRECTION): IFibonacciRetracement {
     const fibonacci = {} as IFibonacciRetracement
 
     if (!range.resistance || !range.support) return fibonacci
 
     const diff: number = Math.abs(range.resistance - range.support)
 
-    function calculateRetracement(bias: bias): Function {
+    function calculateRetracement(direction: SIGNAL_DIRECTION): Function {
       return function (fibNumber: FIBONACCI_NUMBERS): number | null {
         const numDecimals: number = Math.max(countDecimals(range.support), countDecimals(range.resistance))
 
-        if (bias === 'BULLISH') return Math.max(0, round(range.support + diff * fibNumber, numDecimals)) || null
-        else if (bias === 'BEARISH') return Math.max(0, round(range.resistance - diff * fibNumber, numDecimals)) || null
+        if (direction === SIGNAL_DIRECTION.BULLISH) return Math.max(0, round(range.support + diff * fibNumber, numDecimals)) || null
+        else if (direction === SIGNAL_DIRECTION.BEARISH) return Math.max(0, round(range.resistance - diff * fibNumber, numDecimals)) || null
         return Math.max(0, round(range.resistance - diff * fibNumber, numDecimals)) || null
       }
     }
 
-    const retracement = calculateRetracement(bias)
+    const retracement = calculateRetracement(direction)
 
     fibonacci[0] = retracement(FIBONACCI_NUMBERS.ZERO)
     fibonacci[0.236] = retracement(FIBONACCI_NUMBERS.TWO_THREE_SIX)
@@ -82,14 +83,14 @@ export default class RangeBuilder {
       range = {} as ILocalRange
       range.start = zigzag.timestamp
       range[zigzag.direction === 'PEAK' ? 'resistance' : 'support'] = zigzag.price
-      range.bias = zigzag.direction === 'PEAK' ? 'BULLISH' : 'BEARISH'
+      range.direction = zigzag.direction === 'PEAK' ? SIGNAL_DIRECTION.BULLISH : SIGNAL_DIRECTION.BEARISH
     }
 
     function closeRange(zigzag: IZigZag, continueRange: boolean): void {
       if (continueRange) {
         range.end = zigzag.timestamp
       }
-      range.bias = zigzag.direction === 'PEAK' ? 'BULLISH' : 'BEARISH'
+      range.direction = zigzag.direction === 'PEAK' ? SIGNAL_DIRECTION.BULLISH : SIGNAL_DIRECTION.BEARISH
       ranges.push(range)
       range = {} as ILocalRange
     }
@@ -98,7 +99,7 @@ export default class RangeBuilder {
       const levelType: string = zigzag.direction === 'PEAK' ? 'resistance' : 'support'
       if (!range[levelType]) range[levelType] = zigzag.price
       range.end = zigzag.timestamp
-      range.bias = zigzag.direction === 'PEAK' ? 'BULLISH' : 'BEARISH'
+      range.direction = zigzag.direction === 'PEAK' ? SIGNAL_DIRECTION.BULLISH : SIGNAL_DIRECTION.BEARISH
     }
 
     for (let i = 0; i < zigzags.length; i++) {
@@ -114,10 +115,10 @@ export default class RangeBuilder {
           if (!isFirstRange) {
             const prevSupport = ranges[ranges.length - 1].support
             const prevResistance = ranges[ranges.length - 1].resistance
-            const prevRangeBias = ranges[ranges.length - 1].bias
+            const prevRangeBias = ranges[ranges.length - 1].direction
             breakBackIntoPrevRange =
-              (prevRangeBias === 'BEARISH' && zigzags[i].direction === 'PEAK' && zigzags[i].price < prevSupport) ||
-              (prevRangeBias === 'BULLISH' && zigzags[i].direction === 'TROUGH' && zigzags[i].price < prevResistance)
+              (prevRangeBias === SIGNAL_DIRECTION.BEARISH && zigzags[i].direction === 'PEAK' && zigzags[i].price < prevSupport) ||
+              (prevRangeBias === SIGNAL_DIRECTION.BULLISH && zigzags[i].direction === 'TROUGH' && zigzags[i].price < prevResistance)
           }
 
           if (!isFirstRange && breakBackIntoPrevRange) {
@@ -132,7 +133,7 @@ export default class RangeBuilder {
       }
     }
     if (range.resistance || range.support) {
-      range.bias = zigzags[zigzags.length - 1].direction === 'PEAK' ? 'BULLISH' : 'BEARISH'
+      range.direction = zigzags[zigzags.length - 1].direction === 'PEAK' ? SIGNAL_DIRECTION.BULLISH : SIGNAL_DIRECTION.BEARISH
       ranges.push(range)
     }
     return ranges
@@ -166,8 +167,8 @@ export default class RangeBuilder {
   private appendFibs(ranges: ILocalRange[]): ILocalRange[] {
     for (let i = 0; i < ranges.length; i++) {
       ranges[i].fibs = {
-        lowHigh: this.calculateFibonacci(ranges[i], 'BEARISH'),
-        highLow: this.calculateFibonacci(ranges[i], 'BULLISH')
+        lowToHigh: this.calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BEARISH),
+        highToLow: this.calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BULLISH)
       }
     }
     return ranges
@@ -181,18 +182,18 @@ export default class RangeBuilder {
     for (let i = 1; i < ranges?.length; i++) {
       if (ranges[i].resistance > range.resistance) {
         range.resistance = ranges[i].resistance
-        range.bias = ranges[i].bias
+        range.direction = ranges[i].direction
         range.end = ranges[i].end
       }
       if (ranges[i].support < range.support) {
         range.support = ranges[i].support
-        range.bias = ranges[i].bias
+        range.direction = ranges[i].direction
         range.end = ranges[i].end
       }
     }
     range.fibs = {
-      lowHigh: this.calculateFibonacci(range, 'BEARISH'),
-      highLow: this.calculateFibonacci(range, 'BULLISH')
+      lowToHigh: this.calculateFibonacci(range, SIGNAL_DIRECTION.BEARISH),
+      highToLow: this.calculateFibonacci(range, SIGNAL_DIRECTION.BULLISH)
     }
 
     return range

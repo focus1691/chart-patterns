@@ -1,6 +1,3 @@
-/**
- * Represents a row in a volume profile histogram.
- */
 export interface IVolumeRow {
   volume: number
   low: number
@@ -8,9 +5,6 @@ export interface IVolumeRow {
   mid: number
 }
 
-/**
- * Describes the value area of a market profile.
- */
 export interface IValueArea {
   high: number
   VAH: number
@@ -20,9 +14,6 @@ export interface IValueArea {
   low: number
 }
 
-/**
- * Represents the naked points of control with resistance and support levels.
- */
 export interface INakedPointOfControl {
   resistance?: number
   support?: number

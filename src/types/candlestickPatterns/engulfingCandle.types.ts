@@ -1,4 +1,4 @@
-import { ICandle } from './candle.types'
+import { ICandle } from '../candle.types'
 
 /**
  * Configuration for finding engulfing candle patterns.

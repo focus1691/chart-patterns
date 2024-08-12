@@ -1,4 +1,4 @@
-import { INTERVALS, SIGNAL_DIRECTION, SIGNALS, TechnicalIndicators } from '../../constants'
+import { INTERVALS, SIGNAL_DIRECTION } from '../../constants'
 import { ICandle } from '../../types/candle.types'
 import { EmaCrossingResult, IEmaOutcome, MA_Periods } from '../../types/movingAverage.types'
 import { round } from '../../utils/math'
@@ -74,13 +74,10 @@ export function detectCrossing(interval: string, data: ICandle[], shortPeriod: M
 
   if (mostRecentCrossingTime && mostRecentCrossingSignal) {
     return {
-      indicator: TechnicalIndicators.EMA_CROSSING,
-      type: SIGNALS.TRIGGER_POINT,
-      direction: mostRecentCrossingSignal,
       time: mostRecentCrossingTime,
       shortPeriod,
       longPeriod,
-      intervals: [interval as INTERVALS]
+      interval: interval as INTERVALS
     }
   }
 

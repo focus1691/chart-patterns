@@ -1,14 +1,4 @@
-import { LEVEL_ZONE } from '../constants/levels'
-import { IFibonacciRetracement } from '../constants/range'
-import { VALUE_AREA, VALUE_AREA_PERIODS, VALUE_AREA_TENSE } from '../constants/valueArea'
-
-export interface ILocalRangeDescription {
-  price: number
-  level: VALUE_AREA
-  levelType: LEVEL_ZONE
-  period: VALUE_AREA_PERIODS
-  tense: VALUE_AREA_TENSE
-}
+import { SIGNAL_DIRECTION, IFibonacciRetracement } from '../constants'
 
 export interface IRanges {
   local?: ILocalRange[]
@@ -20,14 +10,12 @@ export interface ILocalRange {
   resistance?: number
   start?: number | string
   end?: number | string
-  bias?: bias
+  direction?: SIGNAL_DIRECTION
   fibs?: {
-    highLow?: IFibonacciRetracement
-    lowHigh?: IFibonacciRetracement
+    highToLow?: IFibonacciRetracement
+    lowToHigh?: IFibonacciRetracement
   }
 }
-
-export type bias = 'BULLISH' | 'BEARISH'
 
 export interface IPeak {
   position?: number
