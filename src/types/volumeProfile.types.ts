@@ -8,9 +8,9 @@ import { ICandle } from './candle.types'
  * @property {INakedPointOfControl} npoc - The naked points of control indicating untested price levels with significant past activity.
  * @property {IVolumeProfileFindings[]} volumeProfiles - An array of detailed volume profile findings for individual sessions or periods.
  */
-export interface IVolumeProfile {
+export interface IVolumeProfileResult {
   npoc?: INakedPointOfControl
-  volumeProfiles?: IVolumeProfileFindings[]
+  volumeProfiles?: IVolumeProfile[]
 }
 
 /**
@@ -25,7 +25,7 @@ export interface IVolumeProfile {
  * @property {IVolumeProfileObservation[]} singlePrints - Observations of single print areas, often suggesting strong directional moves.
  * @property {IVolumeProfileObservation[]} ledges - Observations of small areas of horizontal development (ledges).
  */
-export interface IVolumeProfileFindings {
+export interface IVolumeProfile {
   startOfDay?: number
   valueArea?: IValueArea
   IB?: IInitialBalance

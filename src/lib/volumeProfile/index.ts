@@ -9,7 +9,7 @@ import {
 } from '../../constants/marketProfile'
 import { SIGNAL_DIRECTION } from '../../constants/signals'
 import { ICandle } from '../../types/candle.types'
-import { IInitialBalance, IVolumeProfile, IVolumeProfileConfig, IVolumeProfileFindings, IVolumeProfileObservation } from '../../types/volumeProfile.types'
+import { IInitialBalance, IVolumeProfileResult, IVolumeProfileConfig, IVolumeProfile, IVolumeProfileObservation } from '../../types/volumeProfile.types'
 import { INakedPointOfControl, IValueArea } from '../../types/valueArea.types'
 import { convertTpoPeriodToLetter } from '../../utils/volumeProfile'
 import * as ValueArea from '../valueArea'
@@ -46,15 +46,15 @@ momentTimezone.tz.setDefault('Europe/London')
  * // 'volumeProfile' contains the volume profile data including value areas and market observations
  * console.log(volumeProfile); // Outputs the volume profile data
  */
-export function create(config: IVolumeProfileConfig): IVolumeProfile {
+export function create(config: IVolumeProfileConfig): IVolumeProfileResult {
   const period: TIME_PERIODS = config.period ?? TIME_PERIODS.DAY
   const timestamp = moment(config.candles[0].openTime)
   const from: moment.Moment = moment(timestamp).startOf(period)
-  const volumeProfile: IVolumeProfile = { volumeProfiles: null, npoc: null }
-  const values: IVolumeProfileFindings[] = []
+  const volumeProfileResult: IVolumeProfileResult = { volumeProfiles: null, npoc: null }
+  const volumeProfiles: IVolumeProfile[] = []
   let tpos: ICandle[] = []
   do {
-    const volumeProfile: IVolumeProfileFindings = { startOfDay: from.unix() }
+    const volumeProfile: IVolumeProfile = { startOfDay: from.unix() }
     // Filter the Klines for this period alone
     tpos = config.candles.filter((candle) => {
       const timestamp = moment(candle.openTime)
@@ -67,7 +67,7 @@ export function create(config: IVolumeProfileConfig): IVolumeProfile {
         volumeProfile.IB = calcInitialBalance(tpos)
         const numTpos: number = TPO_SIZE * tpos.length
 
-        if (values.length > 0 && volumeProfile.IB.low && volumeProfile.IB.high && numTpos > 2) {
+        if (volumeProfiles.length > 0 && volumeProfile.IB.low && volumeProfile.IB.high && numTpos > 2) {
           volumeProfile.failedAuction = isFailedAuction(tpos, volumeProfile.IB)
           volumeProfile.excess = findExcess(tpos, volumeProfile.valueArea)
           volumeProfile.poorHighLow = findPoorHighAndLows(tpos, volumeProfile.valueArea)
@@ -77,17 +77,17 @@ export function create(config: IVolumeProfileConfig): IVolumeProfile {
       }
 
       from.add(1, period) // Go to the previous day / week / month
-      values.push(volumeProfile)
+      volumeProfiles.push(volumeProfile)
     }
   } while (!_.isEmpty(tpos))
 
-  if (values) {
-    const valueAreas: IValueArea[] = values.map((finding: IVolumeProfileFindings) => finding.valueArea)
-    volumeProfile.volumeProfiles = values
-    volumeProfile.npoc = findNakedPointOfControl(valueAreas)
+  if (volumeProfiles) {
+    const valueAreas: IValueArea[] = volumeProfiles.map((finding: IVolumeProfile) => finding.valueArea)
+    volumeProfileResult.volumeProfiles = volumeProfiles
+    volumeProfileResult.npoc = findNakedPointOfControl(valueAreas)
   }
 
-  return volumeProfile
+  return volumeProfileResult
 }
 
 /**
