@@ -3,6 +3,18 @@ import { toZonedTime } from 'date-fns-tz'
 import { MARKET_PROFILE_PERIODS, TPO_LETTERS } from '../../constants'
 import { ICandle, IInitialBalance, IMarketProfile, IMarketProfileBuilderConfig, IMarketProfileStructure, ITimeFrame, IValueArea } from '../../types'
 
+
+/**
+ * Calculates the market profile for an array of candles. Typically, you use 30m candles, but you can theoretically use any timeframe.
+ *
+ * @param {IMarketProfileBuilderConfig} config - Configuration for how you want to construct the profile. The session (London / Frankfurt / New York), and the tick size & multiplier.
+ * @returns {IMarketProfile} List of generated Market Profiles.
+ *
+ * Each market profile includes:
+ *   - Value Area: The range of prices where a significant portion of time was spent.
+ *   - Initial Balance: The price range established during the first hour of trading.
+ *
+ */
 export function build(config: IMarketProfileBuilderConfig): {
   [key: string]: IMarketProfile
 } {
