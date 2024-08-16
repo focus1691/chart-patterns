@@ -1,14 +1,13 @@
 import _ from 'lodash'
 import moment from 'moment'
 import { from, map, toArray } from 'rxjs'
-import { FIBONACCI_NUMBERS, IFibonacciRetracement } from '../../constants/fibonacci'
+import { FIBONACCI_NUMBERS, IFibonacciRetracement, SIGNAL_DIRECTION } from '../../constants'
 import { ICandle } from '../../types/candle.types'
 import { ISignalsConfig } from '../../types/peakDetector.types'
 import { ILocalRange, IPeak, IRanges } from '../../types/range.types'
 import { IZigZag } from '../../types/zigzags.types'
 import { countDecimals, round } from '../../utils/math'
 import * as PeakDetector from '../peakDetector'
-import { SIGNAL_DIRECTION } from 'src/constants'
 
 declare global {
   interface Number {
