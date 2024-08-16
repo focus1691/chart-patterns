@@ -3,7 +3,9 @@ import { toZonedTime } from 'date-fns-tz'
 import { MARKET_PROFILE_PERIODS, TPO_LETTERS } from '../../constants'
 import { ICandle, IInitialBalance, IMarketProfile, IMarketProfileBuilderConfig, IMarketProfileStructure, ITimeFrame, IValueArea } from '../../types'
 
-export function build(config: IMarketProfileBuilderConfig): { [key: string]: IMarketProfile } {
+export function build(config: IMarketProfileBuilderConfig): {
+  [key: string]: IMarketProfile
+} {
   const { tickSize, tickMultiplier, timezone } = config
   const periods: ITimeFrame[] = groupCandlesByTimePeriod(config)
   const profiles: { [key: string]: IMarketProfile } = buildMarketProfiles(periods, tickSize, tickMultiplier, timezone)
@@ -76,7 +78,10 @@ export function calculateValueArea(structure: IMarketProfileStructure): IValueAr
   const high = Math.max(...prices)
   const low = Math.min(...prices)
 
-  const volumeProfile = prices.map((price) => ({ price, volume: structure[price].length }))
+  const volumeProfile = prices.map((price) => ({
+    price,
+    volume: structure[price].length
+  }))
   volumeProfile.sort((a, b) => b.volume - a.volume)
 
   const POC = volumeProfile[0].price
