@@ -1,4 +1,4 @@
-import { INTERVALS } from '../constants/time'
+import { INTERVALS, SIGNAL_DIRECTION } from '../constants'
 
 export enum MA_Periods {
   THREE = 3,
@@ -19,6 +19,7 @@ export interface IEmaOutcome {
 export interface EmaCrossingResult {
   time: Date
   interval: INTERVALS
+  direction: SIGNAL_DIRECTION
   shortPeriod: MA_Periods
   longPeriod: MA_Periods
 }

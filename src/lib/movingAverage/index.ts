@@ -77,6 +77,7 @@ export function detectCrossing(interval: string, data: ICandle[], shortPeriod: M
       time: mostRecentCrossingTime,
       shortPeriod,
       longPeriod,
+      direction: mostRecentCrossingSignal,
       interval: interval as INTERVALS
     }
   }
