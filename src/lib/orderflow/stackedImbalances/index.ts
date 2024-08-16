@@ -66,26 +66,25 @@ function addStackRangeIfValid(currentStack: Imbalance[], stackCount: number, sta
 export function detectStackedImbalances(data: { [price: number]: OrderFlowRow }, config: IStackedImbalanceConfig = {}): IStackedImbalancesResult[] {
   const threshold = config.threshold ?? DEFAULT_THRESHOLD
   const stackCount = config.stackCount ?? DEFAULT_STACK_COUNT
-  const tickSize = config.tickSize
+  const tickSize = config.tickSize ?? 1 // Default to 1 if not provided
   const imbalances = detectImbalances(data, threshold)
   const stackedImbalances: IStackedImbalancesResult[] = []
   let currentStack: Imbalance[] = []
-  let lastPrice: number | null = null
-  let lastImbalanceType: ImbalanceType | null = null
+  let lastImbalance: Imbalance | null = null
 
   for (const imbalance of imbalances) {
-    const isImbalanceSameSide = lastImbalanceType === null || imbalance.imbalanceType === lastImbalanceType
-    const isConsecutivePrice = lastPrice === null || Math.abs(imbalance.price - lastPrice - tickSize) === 0
+    const isDiagonallyConsecutive = lastImbalance === null || 
+      (Math.abs(imbalance.price - lastImbalance.price) === tickSize && 
+       imbalance.imbalanceType === lastImbalance.imbalanceType)
 
-    if (isImbalanceSameSide && isConsecutivePrice) {
+    if (isDiagonallyConsecutive) {
       currentStack.push(imbalance)
     } else {
       addStackRangeIfValid(currentStack, stackCount, stackedImbalances)
       currentStack = [imbalance]
     }
 
-    lastImbalanceType = imbalance.imbalanceType
-    lastPrice = imbalance.price
+    lastImbalance = imbalance
   }
 
   addStackRangeIfValid(currentStack, stackCount, stackedImbalances)

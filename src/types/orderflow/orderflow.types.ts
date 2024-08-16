@@ -28,7 +28,6 @@ export interface IStackedImbalanceConfig {
 
   /**
    * The size of the price tick.
-   * Default is 0.1.
    */
   tickSize?: number
 }
