@@ -2,6 +2,8 @@ export const SINGLE_PRINTS_KLINE_LENGTH_SIGNIFICANCE = 5
 export const EXCESS_TAIL_LENGTH_SIGNIFICANCE = 15
 export const POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE = 15
 
+export const TPO_LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
 export enum MARKET_PROFILE_PERIODS {
   DAILY = 'daily',
   WEEKLY = 'weekly',
