@@ -1,6 +1,5 @@
-import { TIME_PERIODS } from '../constants/time'
-import { INakedPointOfControl, IValueArea } from './valueArea.types'
-import { ICandle } from './candle.types'
+import { ICandle, INakedPointOfControl, IValueArea } from './'
+import { MARKET_PROFILE_PERIODS } from '../constants'
 
 /**
  * Represents the overall structure of the volume profile analysis for a trading session or asset.
@@ -13,20 +12,9 @@ export interface IVolumeProfileResult {
   volumeProfiles?: IVolumeProfile[]
 }
 
-/**
- * Contains detailed findings from a single session or period's volume profile analysis.
- *
- * @property {number} startOfDay - The starting timestamp of the day (or session) being analysed.
- * @property {IValueArea} valueArea - The value area containing key price levels where a significant portion of trading activity occurred.
- * @property {IInitialBalance} IB - The initial balance representing the range of the first hour of trading.
- * @property {IVolumeProfileObservation[]} failedAuction - Observations indicating failed auction scenarios.
- * @property {IVolumeProfileObservation[]} excess - Observations of excess points, typically indicating price rejection.
- * @property {IVolumeProfileObservation[]} poorHighLow - Observations of poor high and low points, indicating weak price levels.
- * @property {IVolumeProfileObservation[]} singlePrints - Observations of single print areas, often suggesting strong directional moves.
- * @property {IVolumeProfileObservation[]} ledges - Observations of small areas of horizontal development (ledges).
- */
 export interface IVolumeProfile {
-  startOfDay?: number
+  startTime: string | number | Date
+  endTime: string | number | Date
   valueArea?: IValueArea
   IB?: IInitialBalance
   failedAuction?: IVolumeProfileObservation[]
@@ -63,13 +51,14 @@ export interface IInitialBalance {
 /**
  * Configuration object used for calculating the volume profile.
  *
- * @property {TIME_PERIODS} period - Specifies the time period over which the volume profile is calculated.
+ * @property {MARKET_PROFILE_PERIODS} period - Specifies the time period over which the volume profile is calculated.
  *                                   Can be day, week, or month.
  * @property {ICandle[]} candles - An array of candle objects representing the price data over a specific time period.
  * @property {number} tickSize - The size of a single tick, which is the smallest measurable movement in the price of the trading asset.
  */
 export interface IVolumeProfileConfig {
-  period?: TIME_PERIODS
   candles: ICandle[]
+  period: MARKET_PROFILE_PERIODS
   tickSize: number
+  timezone: string
 }

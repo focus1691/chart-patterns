@@ -1,27 +1,23 @@
 import _ from 'lodash'
-import moment from 'moment'
-import momentTimezone from 'moment-timezone'
-import { INTERVALS, TIME_PERIODS } from '../../constants/time'
 import {
+  SIGNAL_DIRECTION,
   EXCESS_TAIL_LENGTH_SIGNIFICANCE,
   POOR_HIGH_LOW_KLINE_LENGTH_SIGNIFICANCE,
   SINGLE_PRINTS_KLINE_LENGTH_SIGNIFICANCE
-} from '../../constants/marketProfile'
-import { SIGNAL_DIRECTION } from '../../constants/signals'
-import { ICandle } from '../../types/candle.types'
-import { IInitialBalance, IVolumeProfileResult, IVolumeProfileConfig, IVolumeProfile, IVolumeProfileObservation } from '../../types/volumeProfile.types'
-import { INakedPointOfControl, IValueArea } from '../../types/valueArea.types'
-import { convertTpoPeriodToLetter } from '../../utils/volumeProfile'
+} from '../../constants'
+import {
+  ICandle,
+  ITimeFrame,
+  IInitialBalance,
+  INakedPointOfControl,
+  IValueArea,
+  IVolumeProfileConfig,
+  IVolumeProfile,
+  IVolumeProfileObservation
+} from '../../types'
+import { convertTpoPeriodToLetter } from '../../utils'
+import { calculateInitialBalance, groupCandlesByTimePeriod } from '../marketProfile/utils'
 import * as ValueArea from '../valueArea'
-
-const TPO_SIZE: number = 1
-
-moment.updateLocale('en', {
-  week: {
-    dow: 1 // Monday is the first day of the week.
-  }
-})
-momentTimezone.tz.setDefault('Europe/London')
 
 /**
  * Calculates the volume profile for a given set of candlestick data based on the specified configuration.
@@ -30,8 +26,8 @@ momentTimezone.tz.setDefault('Europe/London')
  * It calculates key volume profile elements such as value area, initial balance, and various types of market observations
  * (e.g., failed auctions, excess points, poor highs and lows, etc.).
  *
- * @param {IVolumeProfileConfig} config - The configuration object containing the candlestick data and parameters needed for volume profile calculation, such as tick size.
- * @returns {IVolumeProfile} An object containing the calculated volume profiles and any naked points of control (untested price levels with significant past activity).
+ * @param {IVolumeProfileConfig} config - Configuration for how you want to construct the profile. The session (London / Frankfurt / New York), and the tick size.
+ * @returns {IVolumeProfile} List of generated Volume Profiles.
  *
  * Each volume profile includes:
  *   - Value Area: The range of prices where a significant portion of trading activity occurred.
@@ -41,73 +37,42 @@ momentTimezone.tz.setDefault('Europe/London')
  * @example
  * // Assuming 'candles' is an array of ICandle objects representing the price data
  * // Create a volume profile with a specified tick size
- * const volumeProfile: IVolumeProfile = VolumeProfile.create({ candles, tickSize: 0.5 });
+ * const volumeProfile: IVolumeProfile = VolumeProfile.build({ candles, tickSize: 0.5, period: MARKET_PROFILE_PERIODS.DAILY, timezone: 'Europe/London' });
  *
- * // 'volumeProfile' contains the volume profile data including value areas and market observations
- * console.log(volumeProfile); // Outputs the volume profile data
  */
-export function create(config: IVolumeProfileConfig): IVolumeProfileResult {
-  const period: TIME_PERIODS = config.period ?? TIME_PERIODS.DAY
-  const timestamp = moment(config.candles[0].openTime)
-  const from: moment.Moment = moment(timestamp).startOf(period)
-  const volumeProfileResult: IVolumeProfileResult = { volumeProfiles: null, npoc: null }
-  const volumeProfiles: IVolumeProfile[] = []
-  let tpos: ICandle[] = []
-  do {
-    const volumeProfile: IVolumeProfile = { startOfDay: from.unix() }
-    // Filter the Klines for this period alone
-    tpos = config.candles.filter((candle) => {
-      const timestamp = moment(candle.openTime)
-      return moment(timestamp).isSame(from, period)
-    })
-    if (!_.isEmpty(tpos)) {
-      volumeProfile.valueArea = ValueArea.calculate(tpos)
 
-      if (period === TIME_PERIODS.DAY) {
-        volumeProfile.IB = calcInitialBalance(tpos)
-        const numTpos: number = TPO_SIZE * tpos.length
+export function build(config: IVolumeProfileConfig): IVolumeProfile[] {
+  const { candles, period, timezone } = config
+  const periods: ITimeFrame[] = groupCandlesByTimePeriod(candles, period, timezone)
+  const profiles: IVolumeProfile[] = buildVolumeProfiles(periods, timezone)
 
-        if (volumeProfiles.length > 0 && volumeProfile.IB.low && volumeProfile.IB.high && numTpos > 2) {
-          volumeProfile.failedAuction = isFailedAuction(tpos, volumeProfile.IB)
-          volumeProfile.excess = findExcess(tpos, volumeProfile.valueArea)
-          volumeProfile.poorHighLow = findPoorHighAndLows(tpos, volumeProfile.valueArea)
-          volumeProfile.singlePrints = findSinglePrints(tpos)
-          volumeProfile.ledges = []
-        }
-      }
-
-      from.add(1, period) // Go to the previous day / week / month
-      volumeProfiles.push(volumeProfile)
-    }
-  } while (!_.isEmpty(tpos))
-
-  if (volumeProfiles) {
-    const valueAreas: IValueArea[] = volumeProfiles.map((finding: IVolumeProfile) => finding.valueArea)
-    volumeProfileResult.volumeProfiles = volumeProfiles
-    volumeProfileResult.npoc = findNakedPointOfControl(valueAreas)
-  }
-
-  return volumeProfileResult
+  return profiles
 }
 
-/**
- * Calculates the initial balance (IB) of the volume profile.
- *
- * @param tpos An array of candlesticks to analyse.
- * @returns An object representing the initial balance with high and low values.
- */
-export function calcInitialBalance(tpos: ICandle[]): IInitialBalance {
-  const firstTPOPeriods = tpos.filter((kline) => {
-    const timestamp = moment(kline.openTime)
-    const hour: number = moment(timestamp).hour()
-    // The first 2 TPO's are the first 30 minutes
-    // The 2 candle times are between 00:00 and 01:00
-    return hour === 0
-  })
-  const low: number = _.isEmpty(firstTPOPeriods) ? null : Math.min(...firstTPOPeriods.map((kline) => kline.low))
-  const high: number = _.isEmpty(firstTPOPeriods) ? null : Math.max(...firstTPOPeriods.map((kline) => kline.high))
-  const IB: IInitialBalance = { high, low }
-  return IB
+function buildVolumeProfiles(periods: ITimeFrame[], timezone: string): IVolumeProfile[] {
+  const profiles: IVolumeProfile[] = []
+
+  for (const period of periods) {
+    const { candles, startTime, endTime, timeFrameKey } = period
+    const profile: IVolumeProfile = {
+      startTime,
+      endTime,
+      valueArea: ValueArea.calculate(candles),
+      IB: calculateInitialBalance(candles, timezone)
+    }
+
+    if (profile.IB && profile.valueArea) {
+      profile.failedAuction = isFailedAuction(candles, profile.IB)
+      profile.excess = findExcess(candles, profile.valueArea)
+      profile.poorHighLow = findPoorHighAndLows(candles, profile.valueArea)
+      profile.singlePrints = findSinglePrints(candles)
+      profile.ledges = []
+    }
+
+    profiles.push(profile)
+  }
+
+  return profiles
 }
 
 /**
@@ -131,8 +96,6 @@ export function calcInitialBalance(tpos: ICandle[]): IInitialBalance {
  *       A long tail relative to the candle's body, extending beyond the value area, indicates a significant excess point.
  */
 export function findExcess(tpos: ICandle[], VA: IValueArea): IVolumeProfileObservation[] {
-  if (!VA) return []
-
   const excess: IVolumeProfileObservation[] = []
 
   for (let i = 0; i < tpos.length; i++) {
@@ -169,8 +132,6 @@ export function findExcess(tpos: ICandle[], VA: IValueArea): IVolumeProfileObser
  *       and trading volumes over a certain period. It helps in identifying key trading ranges and potential turning points in the market.
  */
 export function isFailedAuction(tpos: ICandle[], IB: IInitialBalance): IVolumeProfileObservation[] {
-  if (!IB) return []
-
   const failedAuctions: IVolumeProfileObservation[] = []
   let ibBroken = false
   for (let i = 0; i < tpos.length; i++) {
@@ -210,9 +171,7 @@ export function isFailedAuction(tpos: ICandle[], IB: IInitialBalance): IVolumePr
  * @note The significance of a poor high or low is evaluated by comparing the candle's upper or lower tail length to its overall body length.
  *       A disproportionately small tail at the high or low end, especially at or beyond the value area boundaries, is indicative of a poor high or low.
  */
-export function findPoorHighAndLows(tpos: ICandle[], VA: IValueArea): IVolumeProfileObservation[] {
-  if (!VA) return []
-
+function findPoorHighAndLows(tpos: ICandle[], VA: IValueArea): IVolumeProfileObservation[] {
   const poorHighLow: IVolumeProfileObservation[] = []
 
   for (let i = 0; i < tpos.length; i++) {

@@ -1,10 +1,3 @@
-export enum TIME_PERIODS {
-  HOUR = 'hour',
-  DAY = 'day',
-  WEEK = 'week',
-  MONTH = 'month'
-}
-
 export enum INTERVALS {
   ONE_MINUTE = '1m',
   THREE_MINUTES = '3m',

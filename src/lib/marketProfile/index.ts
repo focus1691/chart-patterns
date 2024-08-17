@@ -1,8 +1,6 @@
-import { format, getTime, getWeek, startOfWeek } from 'date-fns'
-import { toZonedTime } from 'date-fns-tz'
-import { MARKET_PROFILE_PERIODS, TPO_LETTERS } from '../../constants'
-import { ICandle, IInitialBalance, IMarketProfile, IMarketProfileBuilderConfig, IMarketProfileStructure, ITimeFrame, IValueArea } from '../../types'
-
+import { TPO_LETTERS } from '../../constants'
+import { IMarketProfile, IMarketProfileBuilderConfig, IMarketProfileStructure, ITimeFrame, IValueArea } from '../../types'
+import { calculateInitialBalance, groupCandlesByTimePeriod } from './utils'
 
 /**
  * Calculates the market profile for an array of candles. Typically, you use 30m candles, but you can theoretically use any timeframe.
@@ -14,19 +12,22 @@ import { ICandle, IInitialBalance, IMarketProfile, IMarketProfileBuilderConfig, 
  *   - Value Area: The range of prices where a significant portion of time was spent.
  *   - Initial Balance: The price range established during the first hour of trading.
  *
+ * @example
+ * // Assuming 'candles' is an array of ICandle objects representing the price data
+ * // Create a volume profile with a specified tick size
+ * const marketProfile: IMarketProfile = MarketProfile.build({ candles, tickSize: 0.1, tickMultiplier: 100, period: MARKET_PROFILE_PERIODS.DAILY, timezone: 'Europe/London' });
+ *
  */
-export function build(config: IMarketProfileBuilderConfig): {
-  [key: string]: IMarketProfile
-} {
-  const { tickSize, tickMultiplier, timezone } = config
-  const periods: ITimeFrame[] = groupCandlesByTimePeriod(config)
-  const profiles: { [key: string]: IMarketProfile } = buildMarketProfiles(periods, tickSize, tickMultiplier, timezone)
+export function build(config: IMarketProfileBuilderConfig): IMarketProfile[] {
+  const { candles, tickSize, tickMultiplier, period, timezone } = config
+  const periods: ITimeFrame[] = groupCandlesByTimePeriod(candles, period, timezone)
+  const profiles: IMarketProfile[] = buildMarketProfiles(periods, tickSize, tickMultiplier, timezone)
 
   return profiles
 }
 
-function buildMarketProfiles(periods: ITimeFrame[], tickSize: number, tickMultiplier: number, timezone: string): { [key: string]: IMarketProfile } {
-  const profiles: { [key: string]: IMarketProfile } = {}
+function buildMarketProfiles(periods: ITimeFrame[], tickSize: number, tickMultiplier: number, timezone: string): IMarketProfile[] {
+  const profiles: IMarketProfile[] = []
   const priceStep = tickSize * tickMultiplier
 
   for (const period of periods) {
@@ -50,36 +51,10 @@ function buildMarketProfiles(periods: ITimeFrame[], tickSize: number, tickMultip
 
     profile.valueArea = calculateValueArea(profile.structure)
 
-    profiles[timeFrameKey] = profile
+    profiles.push(profile)
   }
 
   return profiles
-}
-
-function calculateInitialBalance(candles: ICandle[], timezone: string): IInitialBalance | null {
-  let ibHigh = -Infinity
-  let ibLow = Infinity
-  let ibDataFound = false
-
-  for (const candle of candles) {
-    const zonedCandleTime = toZonedTime(candle.openTime, timezone)
-    const candleHour = zonedCandleTime.getHours()
-
-    if (candleHour > 0) break
-
-    ibHigh = Math.max(ibHigh, candle.high)
-    ibLow = Math.min(ibLow, candle.low)
-    ibDataFound = true
-  }
-
-  if (ibDataFound && ibHigh !== -Infinity && ibLow !== Infinity) {
-    return {
-      high: ibHigh,
-      low: ibLow
-    }
-  }
-
-  return null
 }
 
 export function calculateValueArea(structure: IMarketProfileStructure): IValueArea {
@@ -123,60 +98,4 @@ export function calculateValueArea(structure: IMarketProfileStructure): IValueAr
     VAL,
     low
   }
-}
-
-function getTimeFrameKey(date: string | number | Date, period: MARKET_PROFILE_PERIODS, timezone: string): string {
-  const zonedDate = toZonedTime(date, timezone)
-
-  switch (period) {
-    case MARKET_PROFILE_PERIODS.DAILY:
-      return format(zonedDate, 'yyyy-MM-dd')
-    case MARKET_PROFILE_PERIODS.WEEKLY:
-      const weekStart = startOfWeek(zonedDate, { weekStartsOn: 1 })
-      return `${format(weekStart, 'yyyy')}-W${getWeek(weekStart, {
-        weekStartsOn: 1
-      })
-        .toString()
-        .padStart(2, '0')}`
-    case MARKET_PROFILE_PERIODS.MONTHLY:
-      return format(zonedDate, 'yyyy-MM')
-  }
-}
-
-function groupCandlesByTimePeriod(config: IMarketProfileBuilderConfig): ITimeFrame[] {
-  const { candles, period, timezone } = config
-
-  const periods: ITimeFrame[] = new Array(Math.ceil(candles.length / 24))
-  let timeFrameCount = 0
-
-  let currentTimeFrame: ITimeFrame | null = null
-  let currentTimeFrameKey = ''
-
-  for (const candle of candles) {
-    const timeFrameKey = getTimeFrameKey(candle.openTime, period, timezone)
-
-    if (timeFrameKey !== currentTimeFrameKey) {
-      if (currentTimeFrame) {
-        periods[timeFrameCount++] = currentTimeFrame
-      }
-      currentTimeFrame = {
-        startTime: getTime(candle.openTime),
-        endTime: getTime(candle.openTime),
-        candles: [candle],
-        timeFrameKey
-      }
-      currentTimeFrameKey = timeFrameKey
-    } else if (currentTimeFrame) {
-      currentTimeFrame.endTime = getTime(candle.openTime)
-      currentTimeFrame.candles.push(candle)
-    }
-  }
-
-  if (currentTimeFrame) {
-    periods[timeFrameCount++] = currentTimeFrame
-  }
-
-  periods.length = timeFrameCount
-
-  return periods
 }
