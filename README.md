@@ -17,12 +17,13 @@ const marketProfiles = MarketProfile.build({
   period: MARKET_PROFILE_PERIODS.DAILY,
   tickSize: 0.1,
   tickMultiplier: 100,
-  timezone: 'Europe/London',
+  timezone: 'Europe/London'
 });
 
 const volumeProfiles: IVolumeProfile = VolumeProfile.create({
   candles,
-  tickSize,
-  period: TIME_PERIODS.DAY
+  tickSize: 0.1,
+  period: MARKET_PROFILE_PERIODS.DAY,
+  timezone: 'Europe/London'
 })
 ```
