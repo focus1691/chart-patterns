@@ -1,3 +1,4 @@
+import { round } from '../../utils'
 import { ICandle, IPivotPoints } from '../../types'
 
 /**
@@ -5,38 +6,37 @@ import { ICandle, IPivotPoints } from '../../types'
  * If an array is passed, the function calculates high, low, and close values
  * from all candles to compute the pivot points.
  *
- * @param {ICandle | ICandle[]} candles - A single candle or an array of candles.
+ * @param {ICandle | ICandle} candles - A single candle or an array of candles.
+ * @param {number} pricePrecision - The price precision of the asset.
  * @returns {IPivotPoints} The calculated pivot points.
  *
  * @example
  * // Assuming 'dailyCandles' is an array of ICandle objects from a single day
- * const pivotPoints: IPivotPoints = calculatePivotPoints(dailyCandles);
+ * const pivotPoints: IPivotPoints = calculatePivotPoints(dailyCandles, 2);
  *
  * // Assuming 'yesterdayCandle' is a single ICandle object representing yesterday's day candle
- * const pivotPoints: IPivotPoints = calculatePivotPoints(yesterdayCandle);
+ * const pivotPoints: IPivotPoints = calculatePivotPoints(yesterdayCandle, 2);
  */
-export function calculatePivotPoints(candles: ICandle | ICandle[]): IPivotPoints {
-  let high, low, close: number;
+export function calculatePivotPoints(candles: ICandle | ICandle[], pricePrecision: number): IPivotPoints {
+  let high, low, close: number
 
   if (Array.isArray(candles)) {
-    // If an array of candles is provided, calculate the high, low and close from the array
-    high = Math.max(...candles.map(c => c.high));
-    low = Math.min(...candles.map(c => c.low));
-    close = candles[candles.length - 1].close; // The close of the last candle is used
+    high = Math.max(...candles.map((c) => c.high))
+    low = Math.min(...candles.map((c) => c.low))
+    close = candles[candles.length - 1].close
   } else {
-    // If a single candle is provided, use its values directly
-    high = candles.high;
-    low = candles.low;
-    close = candles.close;
+    high = candles.high
+    low = candles.low
+    close = candles.close
   }
 
-  const pivot = (high + low + close) / 3;
-  const resistance1 = 2 * pivot - low;
-  const support1 = 2 * pivot - high;
-  const resistance2 = pivot + (high - low);
-  const support2 = pivot - (high - low);
-  const resistance3 = resistance1 + (high - low);
-  const support3 = support1 - (high - low);
+  const pivot = round((high + low + close) / 3, pricePrecision)
+  const resistance1 = round(2 * pivot - low, pricePrecision)
+  const support1 = round(2 * pivot - high, pricePrecision)
+  const resistance2 = round(pivot + (high - low), pricePrecision)
+  const support2 = round(pivot - (high - low), pricePrecision)
+  const resistance3 = round(resistance1 + (high - low), pricePrecision)
+  const support3 = round(support1 - (high - low), pricePrecision)
 
   return {
     pivot,
@@ -46,5 +46,5 @@ export function calculatePivotPoints(candles: ICandle | ICandle[]): IPivotPoints
     support2,
     resistance3,
     support3
-  };
+  }
 }
