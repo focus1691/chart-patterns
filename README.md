@@ -7,7 +7,8 @@ I am building various technical indicators not available elsewhere. These includ
 
 - Market Profile - A distribution to identify value in relation to time.
 - Volume Profile - A distribution to identify value in relation to volume.
-- Stacked Imbalances - Orderflow data to identify stacks of buying/selling discrepancies at certain prices.
+- Stacked Imbalances - Identify stacks of buying/selling imbalances on the price level (needs orderflow data).
+- High Volume Node - Identify nodes where a large trade volume occurred (needs orderflow data).
 
 ```ts
 import { MarketProfile, VolumeProfile } from 'chart-patterns'
