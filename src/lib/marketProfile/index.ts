@@ -57,7 +57,7 @@ function buildMarketProfiles(periods: ITimeFrame[], tickSize: number, tickMultip
   return profiles
 }
 
-export function calculateValueArea(structure: IMarketProfileStructure): IValueArea {
+function calculateValueArea(structure: IMarketProfileStructure): IValueArea {
   const prices = Object.keys(structure)
     .map(Number)
     .sort((a, b) => a - b)

@@ -95,7 +95,7 @@ function buildVolumeProfiles(periods: ITimeFrame[], timezone: string): IVolumePr
  * @note The significance of an excess point is determined by comparing the length of the candle's tail (upper or lower) to its overall length.
  *       A long tail relative to the candle's body, extending beyond the value area, indicates a significant excess point.
  */
-export function findExcess(tpos: ICandle[], VA: IValueArea): IVolumeProfileObservation[] {
+function findExcess(tpos: ICandle[], VA: IValueArea): IVolumeProfileObservation[] {
   const excess: IVolumeProfileObservation[] = []
 
   for (let i = 0; i < tpos.length; i++) {
@@ -131,7 +131,7 @@ export function findExcess(tpos: ICandle[], VA: IValueArea): IVolumeProfileObser
  * @note The function is based on volume profile theory, which is a technique used in financial trading to analyse price movements
  *       and trading volumes over a certain period. It helps in identifying key trading ranges and potential turning points in the market.
  */
-export function isFailedAuction(tpos: ICandle[], IB: IInitialBalance): IVolumeProfileObservation[] {
+function isFailedAuction(tpos: ICandle[], IB: IInitialBalance): IVolumeProfileObservation[] {
   const failedAuctions: IVolumeProfileObservation[] = []
   let ibBroken = false
   for (let i = 0; i < tpos.length; i++) {
@@ -212,7 +212,7 @@ function findPoorHighAndLows(tpos: ICandle[], VA: IValueArea): IVolumeProfileObs
  * @note The function identifies single prints by looking for long candles that create new highs or lows without subsequent price retracement.
  *       This indicates a rapid price movement with minimal trading activity at these levels, characteristic of single prints.
  */
-export function findSinglePrints(tpos: ICandle[]): IVolumeProfileObservation[] {
+function findSinglePrints(tpos: ICandle[]): IVolumeProfileObservation[] {
   const singlePrints: IVolumeProfileObservation[] = []
   const numTpos: number = tpos.length
 
