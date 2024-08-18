@@ -65,21 +65,21 @@ function calculateValueArea(structure: IMarketProfileStructure): IValueArea {
   const high = Math.max(...prices)
   const low = Math.min(...prices)
 
-  const volumeProfile = prices.map((price) => ({
+  const marketProfile = prices.map((price) => ({
     price,
     volume: structure[price].length
   }))
-  volumeProfile.sort((a, b) => b.volume - a.volume)
+  marketProfile.sort((a, b) => b.volume - a.volume)
 
-  const POC = volumeProfile[0].price
+  const POC = marketProfile[0].price
 
-  const totalVolume = volumeProfile.reduce((sum, { volume }) => sum + volume, 0)
+  const totalVolume = marketProfile.reduce((sum, { volume }) => sum + volume, 0)
   const valueAreaVolume = totalVolume * 0.7
 
   let cumulativeVolume = 0
   let valueAreaPrices = []
 
-  for (const { price, volume } of volumeProfile) {
+  for (const { price, volume } of marketProfile) {
     cumulativeVolume += volume
     valueAreaPrices.push(price)
     if (cumulativeVolume >= valueAreaVolume) break
