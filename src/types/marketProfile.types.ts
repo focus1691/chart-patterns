@@ -27,10 +27,10 @@ export interface IMarketProfileBuilderConfig {
   tickSize: number
   tickMultiplier: number
   timezone: string
+  pricePrecision: number
 }
 
 export interface ITimeFrame {
-  timeFrameKey?: string
   startTime: string | number | Date
   endTime: string | number | Date
   candles: ICandle[]

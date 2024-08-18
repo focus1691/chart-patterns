@@ -64,8 +64,7 @@ export function groupCandlesByTimePeriod(candles: ICandle[], period: MARKET_PROF
       currentTimeFrame = {
         startTime: getTime(candle.openTime),
         endTime: getTime(candle.openTime),
-        candles: [candle],
-        timeFrameKey
+        candles: [candle]
       }
       currentTimeFrameKey = timeFrameKey
     } else if (currentTimeFrame) {

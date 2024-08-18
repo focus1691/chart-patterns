@@ -1,3 +1,4 @@
+import { round } from '../../utils'
 import { TPO_LETTERS } from '../../constants'
 import { IMarketProfile, IMarketProfileBuilderConfig, IMarketProfileStructure, ITimeFrame, IValueArea } from '../../types'
 import { calculateInitialBalance, groupCandlesByTimePeriod } from './utils'
@@ -19,19 +20,19 @@ import { calculateInitialBalance, groupCandlesByTimePeriod } from './utils'
  *
  */
 export function build(config: IMarketProfileBuilderConfig): IMarketProfile[] {
-  const { candles, tickSize, tickMultiplier, period, timezone } = config
+  const { candles, tickSize, tickMultiplier, period, timezone, pricePrecision } = config
   const periods: ITimeFrame[] = groupCandlesByTimePeriod(candles, period, timezone)
-  const profiles: IMarketProfile[] = buildMarketProfiles(periods, tickSize, tickMultiplier, timezone)
+  const profiles: IMarketProfile[] = buildMarketProfiles(periods, tickSize, tickMultiplier, timezone, pricePrecision)
 
   return profiles
 }
 
-function buildMarketProfiles(periods: ITimeFrame[], tickSize: number, tickMultiplier: number, timezone: string): IMarketProfile[] {
+function buildMarketProfiles(periods: ITimeFrame[], tickSize: number, tickMultiplier: number, timezone: string, pricePrecision: number): IMarketProfile[] {
   const profiles: IMarketProfile[] = []
   const priceStep = tickSize * tickMultiplier
 
   for (const period of periods) {
-    const { candles, startTime, endTime, timeFrameKey } = period
+    const { candles, startTime, endTime } = period
     const profile: IMarketProfile = {
       startTime,
       endTime,
@@ -44,7 +45,7 @@ function buildMarketProfiles(periods: ITimeFrame[], tickSize: number, tickMultip
       const tpoLetter = TPO_LETTERS[i % TPO_LETTERS.length]
 
       for (let price = candle.low; price <= candle.high; price += priceStep) {
-        const roundedPrice = Math.round(price / priceStep) * priceStep
+        const roundedPrice = round((price / priceStep) * priceStep, pricePrecision)
         profile.structure[roundedPrice] = (profile.structure[roundedPrice] || '') + tpoLetter
       }
     }

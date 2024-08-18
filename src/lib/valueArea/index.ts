@@ -169,9 +169,9 @@ export function calculate(candles: ICandle[]): IValueArea {
   // We need to start at the start of the (day / week / month), in order to filter all the klines for the VA calculations for that period
   // current day vs previous day, current week vs previous week, current month vs previous month
   const { V_TOTAL, high, low }: { V_TOTAL: number; high: number; low: number } = sumVolumes(candles)
-  const nDecimals: number = Math.max(countDecimals(high), countDecimals(low))
-  const EQ: number = round(low + (high - low) / 2, nDecimals)
-  const { histogram, POC, POC_ROW }: { histogram: IVolumeRow[]; POC: number; POC_ROW: number } = buildHistogram(candles, high, low, nDecimals)
+  const maxDecimals: number = Math.max(countDecimals(high), countDecimals(low))
+  const EQ: number = round(low + (high - low) / 2, maxDecimals)
+  const { histogram, POC, POC_ROW }: { histogram: IVolumeRow[]; POC: number; POC_ROW: number } = buildHistogram(candles, high, low, maxDecimals)
   const { VAH, VAL }: { VAH: number; VAL: number } = findValueAreas(POC_ROW, histogram, V_TOTAL)
 
   return { VAH, VAL, POC, EQ, low, high }

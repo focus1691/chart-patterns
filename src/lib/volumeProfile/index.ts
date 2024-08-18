@@ -53,7 +53,7 @@ function buildVolumeProfiles(periods: ITimeFrame[], timezone: string): IVolumePr
   const profiles: IVolumeProfile[] = []
 
   for (const period of periods) {
-    const { candles, startTime, endTime, timeFrameKey } = period
+    const { candles, startTime, endTime } = period
     const profile: IVolumeProfile = {
       startTime,
       endTime,
