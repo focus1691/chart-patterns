@@ -1,3 +1,3 @@
-export * as HighVolumeNode from './highVolumeNode'
-export * as OrderflowUtils from './utils'
-export * as StackedImbalances from './stackedImbalances'
+export * from './highVolumeNode'
+export * from './utils'
+export * from './stackedImbalances'
