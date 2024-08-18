@@ -1,33 +1,19 @@
-import { ImbalanceType } from '../../constants'
-
-export interface Imbalance {
-  price: number
-  imbalanceType: ImbalanceType
+export interface OrderFlowRow {
   volSumAsk: number
   volSumBid: number
 }
 
-export interface IStackedImbalancesResult {
-  startPrice: number
-  endPrice: number
-  count: number
-}
-
-export interface IStackedImbalanceConfig {
-  /**
-   * The threshold percentage to determine an imbalance.
-   * Default is 300.
-   */
-  threshold?: number
-
-  /**
-   * The minimum number of consecutive imbalances required to form a stack.
-   * Default is 3.
-   */
-  stackCount?: number
-
-  /**
-   * The size of the price tick.
-   */
-  tickSize?: number
+export interface IFootPrintCandle {
+  symbol: string
+  interval: string
+  openTime: Date
+  openTimeMs: number
+  closeTimeMs: number
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+  closeTime: Date
+  trades: Record<string, OrderFlowRow>
 }
