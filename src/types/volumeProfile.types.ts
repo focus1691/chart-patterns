@@ -51,10 +51,13 @@ export interface IInitialBalance {
 /**
  * Configuration object used for calculating the volume profile.
  *
- * @property {MARKET_PROFILE_PERIODS} period - Specifies the time period over which the volume profile is calculated.
- *                                   Can be day, week, or month.
- * @property {ICandle[]} candles - An array of candle objects representing the price data over a specific time period.
+ * @interface IVolumeProfileConfig
+ * @property {ICandle[]} candles - An array of candle objects.
+ * @property {MARKET_PROFILE_PERIODS} period - Specifies the time period over which the Volume Profile is calculated.
  * @property {number} tickSize - The size of a single tick, which is the smallest measurable movement in the price of the trading asset.
+ *   This determines the granularity of the price levels in the volume profile.
+ * @property {string} timezone - The timezone to use for time-based calculations, e.g., 'Europe/London'.
+ *   This ensures consistent time handling across different market sessions and is crucial for accurate period-based calculations.
  */
 export interface IVolumeProfileConfig {
   candles: ICandle[]

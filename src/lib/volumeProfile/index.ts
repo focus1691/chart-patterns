@@ -30,9 +30,9 @@ import * as ValueArea from '../valueArea'
  * @returns {IVolumeProfile} List of generated Volume Profiles.
  *
  * Each volume profile includes:
- *   - Value Area: The range of prices where a significant portion of trading activity occurred.
+ *   - Value Area: The range of prices where a significant portion of volume occurred.
  *   - Initial Balance: The price range established during the first hour of trading.
- *   - Various observations: Insights into market behavior such as failed auctions, excess, poor highs and lows, single prints, and ledges.
+ *   - Various observations: Failed Auction, Excess, Poor High / low, Single Print.
  *
  * @example
  * // Assuming 'candles' is an array of ICandle objects representing the price data

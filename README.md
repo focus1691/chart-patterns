@@ -17,6 +17,7 @@ const marketProfiles = MarketProfile.build({
   candles,
   period: MARKET_PROFILE_PERIODS.DAILY,
   tickSize: 0.1,
+  pricePrecision: 2,
   tickMultiplier: 100,
   timezone: 'Europe/London'
 });

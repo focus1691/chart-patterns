@@ -16,7 +16,7 @@ import { calculateInitialBalance, groupCandlesByTimePeriod } from './utils'
  * @example
  * // Assuming 'candles' is an array of ICandle objects representing the price data
  * // Create a volume profile with a specified tick size
- * const marketProfile: IMarketProfile = MarketProfile.build({ candles, tickSize: 0.1, tickMultiplier: 100, period: MARKET_PROFILE_PERIODS.DAILY, timezone: 'Europe/London' });
+ * const marketProfile: IMarketProfile = MarketProfile.build({ candles, tickSize: 0.1, tickMultiplier: 100, pricePrecision: 2, period: MARKET_PROFILE_PERIODS.DAILY, timezone: 'Europe/London' });
  *
  */
 export function build(config: IMarketProfileBuilderConfig): IMarketProfile[] {
