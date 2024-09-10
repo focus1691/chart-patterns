@@ -9,7 +9,11 @@ export class ZScoreOutput {
 }
 
 export class ZScore {
-  public static calc(input: number[], lag: number, threshold: number, influence: number): ZScoreOutput {
+  public static calc(input: number[], lag: number, threshold: number, influence: number, normaliseData?: boolean): ZScoreOutput {
+    if (normaliseData) {
+      input = ZScore.normaliseData(input);
+    }
+
     const result: ZScoreOutput = new ZScoreOutput()
     const signals: number[] = Array(input.length).fill(0)
     const filteredY: number[] = input.slice(0)
@@ -87,5 +91,11 @@ export class ZScore {
     }
 
     return round(stdDev)
+  }
+
+  private static normaliseData(data: number[]): number[] {
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    return data.map(value => (value - min) / (max - min));
   }
 }
