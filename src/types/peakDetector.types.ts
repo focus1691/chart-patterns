@@ -12,4 +12,5 @@ export interface ISignalsConfig {
   threshold: number
   influence: number
   flatten?: boolean
+  normaliseData?: boolean
 }

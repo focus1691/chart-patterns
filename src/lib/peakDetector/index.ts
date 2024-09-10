@@ -22,7 +22,7 @@ function validateInput(config: ISignalsConfig): void {
  */
 export function findSignals(config: ISignalsConfig): IPeak[][] | IPeak[] {
   validateInput(config)
-  const output: ZScoreOutput = ZScore.calc(config.values, config.lag, config.threshold, config.influence)
+  const output: ZScoreOutput = ZScore.calc(config.values, config.lag, config.threshold, config.influence, config.normaliseData)
   const signals: IPeak[] = output.signals
     .map((direction, position) => direction !== 0 && ({ position, direction } as IPeak))
     .filter(({ direction }) => Boolean(direction))

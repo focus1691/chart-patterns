@@ -11,6 +11,7 @@ export class ZScoreOutput {
 export class ZScore {
   public static calc(input: number[], lag: number, threshold: number, influence: number, normaliseData?: boolean): ZScoreOutput {
     if (normaliseData) {
+      // For input with negative values
       input = ZScore.normaliseData(input);
     }
 
