@@ -1,226 +1,187 @@
-import _ from 'lodash'
 import moment from 'moment'
 import { from, map, toArray } from 'rxjs'
 import { FIBONACCI_NUMBERS, IFibonacciRetracement, SIGNAL_DIRECTION } from '../../constants'
 import { ICandle } from '../../types/candle.types'
 import { ISignalsConfig } from '../../types/peakDetector.types'
-import { ILocalRange, IPeak, IRanges } from '../../types/range.types'
+import { ILocalRange, IPeak } from '../../types/range.types'
 import { IZigZag } from '../../types/zigzags.types'
-import { countDecimals, round } from '../../utils/math'
+import { countDecimals, isBetween, round } from '../../utils/math'
 import * as PeakDetector from '../peakDetector'
 
-declare global {
-  interface Number {
-    between: (a: number, b: number) => boolean
+function toZigzags(klines: ICandle[], peaks: IPeak[]): IZigZag {
+  const zigzag: IZigZag = {} as IZigZag;
+  for (let i = 0; i < peaks.length; i++) {
+    const { position, direction }: IPeak = peaks[i];
+    const close: number = Number(klines[position!]?.close);
+    if (!zigzag.price) {
+      zigzag.direction = direction === 1 ? 'PEAK' : 'TROUGH';
+      zigzag.price = close;
+      zigzag.timestamp = moment(klines[position!].openTime).unix();
+    } else {
+      if ((zigzag.direction === 'PEAK' && close > zigzag.price) || (zigzag.direction === 'TROUGH' && close < zigzag.price)) {
+        zigzag.price = close;
+        zigzag.timestamp = moment(klines[position!].openTime).unix();
+      }
+    }
+  }
+  return zigzag;
+}
+
+function calculateFibonacci(range: ILocalRange, direction: SIGNAL_DIRECTION): IFibonacciRetracement {
+  const fibonacci: IFibonacciRetracement = {} as IFibonacciRetracement;
+
+  if (!range.resistance || !range.support) return fibonacci;
+
+  const diff: number = Math.abs(range.resistance - range.support);
+
+  function calculateRetracement(direction: SIGNAL_DIRECTION): Function {
+    return function (fibNumber: FIBONACCI_NUMBERS): number | null {
+      if (!range.support || !range.resistance) return null;
+
+      const numDecimals: number = Math.max(countDecimals(range.support), countDecimals(range.resistance));
+
+      if (direction === SIGNAL_DIRECTION.BULLISH) return Math.max(0, round(range.support + diff * fibNumber, numDecimals));
+      else if (direction === SIGNAL_DIRECTION.BEARISH) return Math.max(0, round(range.resistance - diff * fibNumber, numDecimals));
+      return Math.max(0, round(range.resistance - diff * fibNumber, numDecimals)) || null;
+    };
+  }
+
+  const retracement = calculateRetracement(direction);
+
+  for (const [, value] of Object.entries(FIBONACCI_NUMBERS)) {
+    fibonacci[value as keyof IFibonacciRetracement] = retracement(value);
+  }
+
+  return fibonacci;
+}
+
+function toRanges(zigzags: IZigZag[], candles: ICandle[]): ILocalRange[] {
+  const ranges: ILocalRange[] = [];
+  let currentRange: ILocalRange | null = null;
+
+  for (let i = 0; i < zigzags.length - 1; i++) {
+    const currentZigzag = zigzags[i];
+    const nextZigzag = zigzags[i + 1];
+
+    if (!currentRange) {
+      const startCandle = findRangeStartCandle(candles, currentZigzag, nextZigzag);
+
+      if (startCandle) {
+        currentRange = {
+          start: moment(startCandle.openTime).unix(),
+          [currentZigzag.direction === 'PEAK' ? 'resistance' : 'support']: currentZigzag.price,
+          direction: currentZigzag.direction === 'PEAK' ? SIGNAL_DIRECTION.BULLISH : SIGNAL_DIRECTION.BEARISH
+        };
+      }
+    } else {
+      if (currentZigzag.direction === 'PEAK') {
+        currentRange.resistance = Math.max(currentRange.resistance || 0, currentZigzag.price);
+      } else {
+        currentRange.support = Math.min(currentRange.support || Infinity, currentZigzag.price);
+      }
+
+      const breakoutCandle = findBreakoutCandle(currentRange, candles, currentZigzag.timestamp, nextZigzag.timestamp);
+
+      if (breakoutCandle) {
+        currentRange.end = moment(breakoutCandle.openTime).unix();
+        ranges.push(currentRange);
+
+        currentRange = null;
+      }
+    }
+  }
+
+  if (currentRange && !currentRange.end) {
+    const lastBreakout = findBreakoutCandle(currentRange, candles, zigzags[zigzags.length - 2].timestamp, zigzags[zigzags.length - 1].timestamp);
+    currentRange.end = lastBreakout ? moment(lastBreakout.openTime).unix() : zigzags[zigzags.length - 1].timestamp;
+    ranges.push(currentRange);
+  }
+
+  return ranges;
+}
+
+function findRangeStartCandle(candles: ICandle[], currentZigzag: IZigZag, nextZigzag: IZigZag): ICandle | null {
+  const relevantCandles = candles.filter((c) => moment(c.openTime).unix() >= currentZigzag.timestamp && moment(c.openTime).unix() <= nextZigzag.timestamp);
+
+  if (currentZigzag.direction === 'PEAK') {
+    return relevantCandles.find((c) => Number(c.close) < currentZigzag.price) || null;
+  } else {
+    return relevantCandles.find((c) => Number(c.close) > currentZigzag.price) || null;
   }
 }
 
-// eslint-disable-next-line no-extend-native
-Number.prototype.between = function (a: number, b: number): boolean {
-  const min = Math.min(a, b)
-  const max = Math.max(a, b)
-  return this >= min && this <= max
+function findBreakoutCandle(range: ILocalRange, candles: ICandle[], startTime: number, endTime: number): ICandle | null {
+  const relevantCandles = candles.filter((c) => moment(c.openTime).unix() >= startTime && moment(c.openTime).unix() <= endTime);
+
+  for (const candle of relevantCandles) {
+    if (range.resistance && Number(candle.close) > range.resistance) {
+      return candle;
+    }
+    if (range.support && Number(candle.close) < range.support) {
+      return candle;
+    }
+  }
+
+  return null;
 }
 
-export default class RangeBuilder {
-  private toZigzags(this: { klines: ICandle[] }, peaks: IPeak[]): IZigZag {
-    const zigzag: IZigZag = {} as IZigZag
-    for (let i = 0; i < peaks.length; i++) {
-      const { position, direction }: IPeak = peaks[i]
-      const close: number = Number(this.klines[position]?.close)
-      if (!zigzag.price) {
-        zigzag.direction = direction === 1 ? 'PEAK' : 'TROUGH'
-        zigzag.price = close
-        zigzag.timestamp = moment(this.klines[position].openTime).unix()
-      } else {
-        if ((zigzag.direction === 'PEAK' && close > zigzag.price) || (zigzag.direction === 'TROUGH' && close < zigzag.price)) {
-          zigzag.price = close
-          zigzag.timestamp = moment(this.klines[position].openTime).unix()
-        }
-      }
+function mergeRanges(ranges: ILocalRange[]): ILocalRange[] {
+  if (!ranges) return [];
+  const fullExtendedRanges: ILocalRange[] = [ranges[0]];
+
+  for (let i = 1; i < ranges.length; i++) {
+    const { resistance, support, start, end } = fullExtendedRanges[fullExtendedRanges.length - 1];
+    const nextResistance = ranges[i].resistance;
+    const nextSupport = ranges[i].support;
+    const isInPrevRange = isBetween(support!)(resistance!);
+
+    if (!nextResistance || !nextSupport) {
+      fullExtendedRanges.push(ranges[i]);
+    } else if (isInPrevRange(nextResistance) || isInPrevRange(nextSupport)) {
+      const beginning: number = Math.min(moment(start).valueOf(), moment(end).valueOf(), moment(ranges[i].start).valueOf(), moment(ranges[i].end).valueOf());
+      const ending: number = Math.max(moment(start).valueOf(), moment(end).valueOf(), moment(ranges[i].start).valueOf(), moment(ranges[i].end).valueOf());
+      fullExtendedRanges[fullExtendedRanges.length - 1].resistance = Math.max(resistance ?? nextResistance, nextResistance);
+      fullExtendedRanges[fullExtendedRanges.length - 1].support = Math.min(support ?? nextSupport, nextSupport);
+      fullExtendedRanges[fullExtendedRanges.length - 1].start = beginning;
+      fullExtendedRanges[fullExtendedRanges.length - 1].end = ending;
+    } else {
+      fullExtendedRanges.push(ranges[i]);
     }
-    return zigzag
   }
+  return fullExtendedRanges;
+}
 
-  private calculateFibonacci(range: ILocalRange, direction: SIGNAL_DIRECTION): IFibonacciRetracement {
-    const fibonacci = {} as IFibonacciRetracement
-
-    if (!range.resistance || !range.support) return fibonacci
-
-    const diff: number = Math.abs(range.resistance - range.support)
-
-    function calculateRetracement(direction: SIGNAL_DIRECTION): Function {
-      return function (fibNumber: FIBONACCI_NUMBERS): number | null {
-        const numDecimals: number = Math.max(countDecimals(range.support), countDecimals(range.resistance))
-
-        if (direction === SIGNAL_DIRECTION.BULLISH) return Math.max(0, round(range.support + diff * fibNumber, numDecimals)) || null
-        else if (direction === SIGNAL_DIRECTION.BEARISH) return Math.max(0, round(range.resistance - diff * fibNumber, numDecimals)) || null
-        return Math.max(0, round(range.resistance - diff * fibNumber, numDecimals)) || null
-      }
-    }
-
-    const retracement = calculateRetracement(direction)
-
-    fibonacci[0] = retracement(FIBONACCI_NUMBERS.ZERO)
-    fibonacci[0.236] = retracement(FIBONACCI_NUMBERS.TWO_THREE_SIX)
-    fibonacci[0.382] = retracement(FIBONACCI_NUMBERS.THREE_EIGHT_TWO)
-    fibonacci[0.5] = retracement(FIBONACCI_NUMBERS.FIVE)
-    fibonacci[0.618] = retracement(FIBONACCI_NUMBERS.SIX_ONE_EIGHT)
-    fibonacci[0.66] = retracement(FIBONACCI_NUMBERS.SIX_SIX)
-    fibonacci[0.786] = retracement(FIBONACCI_NUMBERS.SEVEN_EIGHT_SIX)
-    fibonacci[1] = retracement(FIBONACCI_NUMBERS.ONE)
-    fibonacci[1.618] = retracement(FIBONACCI_NUMBERS.ONE_SIX_EIGHT)
-
-    return fibonacci
+function appendFibs(ranges: ILocalRange[]): ILocalRange[] {
+  for (let i = 0; i < ranges.length; i++) {
+    ranges[i].fibs = {
+      lowToHigh: calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BEARISH),
+      highToLow: calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BULLISH)
+    };
   }
+  return ranges;
+}
 
-  private toRanges(zigzags: IZigZag[]): ILocalRange[] {
-    const ranges = [] as ILocalRange[]
-    let range: ILocalRange = {} as ILocalRange
+export function findRanges(candles: ICandle[], lag: number, threshold: number, influence: number): ILocalRange[] {
+  let ranges: ILocalRange[] = [];
 
-    function openRange(zigzag: IZigZag): void {
-      range = {} as ILocalRange
-      range.start = zigzag.timestamp
-      range[zigzag.direction === 'PEAK' ? 'resistance' : 'support'] = zigzag.price
-      range.direction = zigzag.direction === 'PEAK' ? SIGNAL_DIRECTION.BULLISH : SIGNAL_DIRECTION.BEARISH
-    }
+  const config: ISignalsConfig = {
+    values: candles.map((candle) => (Number(candle.high) + Number(candle.low) + Number(candle.close)) / 3),
+    lag,
+    threshold,
+    influence
+  };
 
-    function closeRange(zigzag: IZigZag, continueRange: boolean): void {
-      if (continueRange) {
-        range.end = zigzag.timestamp
-      }
-      range.direction = zigzag.direction === 'PEAK' ? SIGNAL_DIRECTION.BULLISH : SIGNAL_DIRECTION.BEARISH
-      ranges.push(range)
-      range = {} as ILocalRange
-    }
+  from(PeakDetector.findSignals(config))
+    .pipe(
+      map((peaks) => toZigzags(candles, peaks as IPeak[])),
+      toArray(),
+      map((zigzags) => toRanges(zigzags, candles)),
+      map(mergeRanges),
+      map(appendFibs)
+    )
+    .subscribe((result: ILocalRange[]) => {
+      ranges = result;
+    });
 
-    function updateRange(zigzag: IZigZag): void {
-      const levelType: string = zigzag.direction === 'PEAK' ? 'resistance' : 'support'
-      if (!range[levelType]) range[levelType] = zigzag.price
-      range.end = zigzag.timestamp
-      range.direction = zigzag.direction === 'PEAK' ? SIGNAL_DIRECTION.BULLISH : SIGNAL_DIRECTION.BEARISH
-    }
-
-    for (let i = 0; i < zigzags.length; i++) {
-      if (!range.resistance && !range.support) {
-        openRange(zigzags[i])
-      } else if (range.resistance && range.support) {
-        if (zigzags[i].price.between(range.resistance, range.support)) {
-          updateRange(zigzags[i])
-        } else {
-          const isFirstRange = ranges.length <= 0
-          let breakBackIntoPrevRange = false
-
-          if (!isFirstRange) {
-            const prevSupport = ranges[ranges.length - 1].support
-            const prevResistance = ranges[ranges.length - 1].resistance
-            const prevRangeBias = ranges[ranges.length - 1].direction
-            breakBackIntoPrevRange =
-              (prevRangeBias === SIGNAL_DIRECTION.BEARISH && zigzags[i].direction === 'PEAK' && zigzags[i].price < prevSupport) ||
-              (prevRangeBias === SIGNAL_DIRECTION.BULLISH && zigzags[i].direction === 'TROUGH' && zigzags[i].price < prevResistance)
-          }
-
-          if (!isFirstRange && breakBackIntoPrevRange) {
-            updateRange(zigzags[i])
-          } else {
-            closeRange(zigzags[i], !isFirstRange)
-            openRange(zigzags[i])
-          }
-        }
-      } else {
-        updateRange(zigzags[i])
-      }
-    }
-    if (range.resistance || range.support) {
-      range.direction = zigzags[zigzags.length - 1].direction === 'PEAK' ? SIGNAL_DIRECTION.BULLISH : SIGNAL_DIRECTION.BEARISH
-      ranges.push(range)
-    }
-    return ranges
-  }
-
-  private mergeRanges(ranges: ILocalRange[]): ILocalRange[] {
-    if (_.isEmpty(ranges)) return []
-    const fullExtendedRanges: ILocalRange[] = [ranges[0]]
-
-    for (let i = 1; i < ranges.length; i++) {
-      const { resistance, support, start, end } = fullExtendedRanges[fullExtendedRanges.length - 1]
-      const nextRes: number = ranges[i].resistance
-      const nextSup: number = ranges[i].support
-
-      if (!nextRes || !nextSup) {
-        fullExtendedRanges.push(ranges[i])
-      } else if (nextRes.between(resistance, support) || nextSup.between(resistance, support)) {
-        const beginning: number = Math.min(moment(start).valueOf(), moment(end).valueOf(), moment(ranges[i].start).valueOf(), moment(ranges[i].end).valueOf())
-        const ending: number = Math.max(moment(start).valueOf(), moment(end).valueOf(), moment(ranges[i].start).valueOf(), moment(ranges[i].end).valueOf())
-        fullExtendedRanges[fullExtendedRanges.length - 1].resistance = Math.max(resistance, nextRes)
-        fullExtendedRanges[fullExtendedRanges.length - 1].support = Math.min(support, nextSup)
-        fullExtendedRanges[fullExtendedRanges.length - 1].start = beginning
-        fullExtendedRanges[fullExtendedRanges.length - 1].end = ending
-      } else {
-        fullExtendedRanges.push(ranges[i])
-      }
-    }
-    return fullExtendedRanges
-  }
-
-  private appendFibs(ranges: ILocalRange[]): ILocalRange[] {
-    for (let i = 0; i < ranges.length; i++) {
-      ranges[i].fibs = {
-        lowToHigh: this.calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BEARISH),
-        highToLow: this.calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BULLISH)
-      }
-    }
-    return ranges
-  }
-
-  private findGlobalRange(ranges: ILocalRange[]): ILocalRange {
-    if (ranges === null || !ranges?.length) return {}
-
-    const range: ILocalRange = ranges[0] as ILocalRange
-
-    for (let i = 1; i < ranges?.length; i++) {
-      if (ranges[i].resistance > range.resistance) {
-        range.resistance = ranges[i].resistance
-        range.direction = ranges[i].direction
-        range.end = ranges[i].end
-      }
-      if (ranges[i].support < range.support) {
-        range.support = ranges[i].support
-        range.direction = ranges[i].direction
-        range.end = ranges[i].end
-      }
-    }
-    range.fibs = {
-      lowToHigh: this.calculateFibonacci(range, SIGNAL_DIRECTION.BEARISH),
-      highToLow: this.calculateFibonacci(range, SIGNAL_DIRECTION.BULLISH)
-    }
-
-    return range
-  }
-
-  public findRanges(candles: ICandle[], lag: number, threshold: number, influence: number): IRanges {
-    let local: ILocalRange[] = []
-
-    const config: ISignalsConfig = {
-      values: candles.map((candle) => candle.close),
-      lag,
-      threshold,
-      influence
-    }
-
-    from(PeakDetector.findSignals(config))
-      .pipe(
-        map(this.toZigzags.bind({ candles })),
-        toArray(),
-        map(this.toRanges.bind(this)),
-        map(this.mergeRanges),
-        map(this.appendFibs.bind(this))
-      )
-      .subscribe((result: ILocalRange[]) => {
-        local = result
-      })
-    const global: ILocalRange = this.findGlobalRange(local)
-
-    return { local, global }
-  }
+  return ranges;
 }

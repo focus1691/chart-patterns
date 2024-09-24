@@ -7,3 +7,11 @@ export const countDecimals = function (value: number): number {
   if (Math.floor(value) === value) return 0
   return value.toString().split('.')[1].length || 0
 }
+
+export const isBetween =
+  (a: number) =>
+  (b: number) =>
+  (num: number): boolean => {
+    const [min, max] = [a, b].sort((x, y) => x - y)
+    return num >= min && num <= max
+  }

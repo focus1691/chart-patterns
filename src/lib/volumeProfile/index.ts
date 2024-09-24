@@ -1,4 +1,3 @@
-import _ from 'lodash'
 import {
   SIGNAL_DIRECTION,
   EXCESS_TAIL_LENGTH_SIGNIFICANCE,
@@ -263,7 +262,7 @@ function findSinglePrints(tpos: ICandle[]): IVolumeProfileObservation[] {
  * @returns An object containing support and resistance levels of naked points of control.
  */
 export function findNakedPointOfControl(valueAreas: IValueArea[]): INakedPointOfControl {
-  if (_.isEmpty(valueAreas) || valueAreas.length <= 1) return null
+  if (!valueAreas || valueAreas.length <= 1) return null
 
   const npoc: INakedPointOfControl = { support: null, resistance: null }
   let high: number = valueAreas[valueAreas.length - 1].high

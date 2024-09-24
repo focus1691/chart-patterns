@@ -1,10 +1,5 @@
 import { SIGNAL_DIRECTION, IFibonacciRetracement } from '../constants'
 
-export interface IRanges {
-  local?: ILocalRange[]
-  global?: ILocalRange
-}
-
 export interface ILocalRange {
   support?: number
   resistance?: number
