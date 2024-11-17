@@ -11,9 +11,11 @@ I am building various technical indicators not available elsewhere. These includ
 - High Volume Node - Identify nodes where a large trade volume occurred (needs orderflow data).
 
 ```ts
-import { MarketProfile, VolumeProfile } from 'chart-patterns'
+import { MarketProfile, VolumeProfile, RangeBuilder } from 'chart-patterns';
+import { IVolumeProfile, IMarketProfile, ILocalRange } from 'chart-patterns/dist/types';
+import { MARKET_PROFILE_PERIODS } from 'chart-patterns/dist/constants';
 
-const marketProfiles = MarketProfile.build({
+const marketProfiles: IMarketProfile[] = MarketProfile.build({
   candles,
   period: MARKET_PROFILE_PERIODS.DAILY,
   tickSize: 0.1,
@@ -22,10 +24,23 @@ const marketProfiles = MarketProfile.build({
   timezone: 'Europe/London'
 });
 
-const volumeProfiles: IVolumeProfile = VolumeProfile.create({
+const volumeProfiles: IVolumeProfile[] = VolumeProfile.build({
   candles,
   tickSize: 0.1,
-  period: MARKET_PROFILE_PERIODS.DAY,
+  period: MARKET_PROFILE_PERIODS.DAILY,
   timezone: 'Europe/London'
-})
+});
+
+const LAG = 2;
+const threshold = 0.1;
+const influence = 1;
+const ranges: ILocalRange[] = RangeBuilder.findRanges(candles, LAG, THRESHOLD, INFLUENCE);
 ```
+
+- Maket Profile
+![image](https://github.com/user-attachments/assets/4b5f81a9-7d55-42f1-ad95-023b47ecfc2a)
+
+- Ranges
+![rr_fullsize](https://github.com/user-attachments/assets/22077a58-ed1c-422c-946d-b9d25e586f7e)
+
+
