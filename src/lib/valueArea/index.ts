@@ -57,21 +57,27 @@ function buildHistogram(klines: ICandle[], highest: number, lowest: number, nDec
   let POC: number = 0
   let highestVolumeRow: number = 0
   while (histogram.length < N_ROWS) {
+    const low = Math.max(lowest, round(lowest + stepSize * row, nDecimals))
+    const high = Math.min(highest, round(lowest + stepSize * row + stepSize, nDecimals))
+    const mid = round((low + high) / 2, nDecimals)
+
     histogram.push({
       volume: 0,
-      low: round(lowest + stepSize * row, nDecimals),
-      mid: round(lowest + stepSize * row + stepSize / 2, nDecimals),
-      high: round(lowest + stepSize * row + stepSize, nDecimals)
+      low,
+      mid,
+      high
     } as IVolumeRow)
+
     row++
   }
 
   for (let i = 0; i < klines.length; i++) {
     const volume: number = Number(klines[i].volume)
+    const open: number = Number(klines[i].open)
     const high: number = Number(klines[i].high)
     const low: number = Number(klines[i].low)
     const close: number = Number(klines[i].close)
-    const typicalPrice: number = round((high + low + close) / 3, nDecimals)
+    const typicalPrice: number = round((open + high + low + close) / 4, nDecimals)
     const ROW: number = stepSize === 0 ? 0 : Math.min(N_ROWS - 1, Math.floor((typicalPrice - lowest) / stepSize))
 
     histogram[ROW].volume += volume
@@ -94,69 +100,40 @@ function buildHistogram(klines: ICandle[], highest: number, lowest: number, nDec
  * @returns An object containing the Value Area High (VAH) and Value Area Low (VAL).
  */
 function findValueAreas(POC_ROW: number, histogram: IVolumeRow[], V_TOTAL: number) {
-  if (!POC_ROW || !histogram || !V_TOTAL) return { VAH: null, VAL: null }
-  // 70% of the total volume
-  const VA_VOL: number = V_TOTAL * VA_VOL_PERCENT
+  const VALUE_AREA_PERCENTAGE = 0.7 // 70% for the value area
+  const VALUE_AREA_VOLUME = VALUE_AREA_PERCENTAGE * V_TOTAL
 
-  // Set the upper / lower indices to the POC row to begin with
-  // They will move up / down the histogram when adding the volumes
-  let lowerIndex: number = POC_ROW
-  let upperIndex: number = POC_ROW
+  let currentVolume = histogram[POC_ROW].volume
+  let lowerIndex = POC_ROW
+  let upperIndex = POC_ROW
 
-  // The histogram bars
-  const bars: number = histogram.length - 1
+  while (currentVolume < VALUE_AREA_VOLUME) {
+    const lowerVolume = lowerIndex > 0 ? histogram[lowerIndex - 1].volume : 0
+    const upperVolume = upperIndex < histogram.length - 1 ? histogram[upperIndex + 1].volume : 0
 
-  // The volume area starts with the POC volume
-  let volumeArea: number = histogram[POC_ROW].volume
-
-  function isTargetVolumeReached(): boolean {
-    return volumeArea >= VA_VOL
-  }
-
-  function getNextLowerBar(): number {
-    return lowerIndex > 0 ? histogram[--lowerIndex].volume : 0
-  }
-
-  function getNextHigherBar(): number {
-    return upperIndex < bars ? histogram[++upperIndex].volume : 0
-  }
-
-  function getDualPrices(goUp: boolean): number {
-    return goUp ? getNextHigherBar() + getNextHigherBar() : getNextLowerBar() + getNextLowerBar()
-  }
-
-  function isAtBottomOfHistogram(): boolean {
-    return lowerIndex <= 0
-  }
-
-  function isAtTopOfHistogram(): boolean {
-    return upperIndex >= bars
-  }
-
-  do {
-    const remainingLowerBars: number = Math.min(Math.abs(0 - lowerIndex), 2)
-    const remainingUpperBars: number = Math.min(Math.abs(bars - upperIndex), 2)
-    const lowerDualPrices: number = getDualPrices(false)
-    const higherDualPrices: number = getDualPrices(true)
-
-    if (lowerDualPrices > higherDualPrices) {
-      volumeArea += lowerDualPrices
-      if (!isAtTopOfHistogram() || remainingUpperBars) {
-        // Upper dual prices aren't used, go back to original position
-        upperIndex = Math.min(bars, upperIndex - remainingUpperBars)
-      }
-    } else if (higherDualPrices > lowerDualPrices) {
-      volumeArea += higherDualPrices
-      if (!isAtBottomOfHistogram() || remainingLowerBars) {
-        // Lower dual prices aren't used, go back to original position
-        lowerIndex = Math.max(0, lowerIndex + remainingLowerBars)
-      }
+    if (lowerVolume === 0 && lowerIndex > 0) {
+      // If lower volume is 0, skip to the next lower row
+      lowerIndex--
+    } else if (upperVolume === 0 && upperIndex < histogram.length - 1) {
+      // If upper volume is 0, skip to the next upper row
+      upperIndex++
+    } else if (lowerVolume > upperVolume && lowerIndex > 0) {
+      // Expand to the side with higher volume
+      lowerIndex--
+      currentVolume += histogram[lowerIndex].volume
+    } else if (upperIndex < histogram.length - 1) {
+      upperIndex++
+      currentVolume += histogram[upperIndex].volume
+    } else {
+      break // Stop if no more rows to expand
     }
-  } while (!isTargetVolumeReached() && !(isAtBottomOfHistogram() && isAtTopOfHistogram()))
+  }
 
-  const VAL: number = histogram[lowerIndex].low
-  const VAH: number = histogram[upperIndex].high
-  return { VAH, VAL }
+  // Determine VAL and VAH
+  const VAL = histogram[lowerIndex].high
+  const VAH = histogram[upperIndex].low
+
+  return { VAL, VAH }
 }
 
 /**
