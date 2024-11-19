@@ -130,8 +130,8 @@ function findValueAreas(POC_ROW: number, histogram: IVolumeRow[], V_TOTAL: numbe
   }
 
   // Determine VAL and VAH
-  const VAL = histogram[lowerIndex].high
-  const VAH = histogram[upperIndex].low
+  const VAL = histogram[lowerIndex].low
+  const VAH = histogram[upperIndex].high
 
   return { VAL, VAH }
 }
