@@ -1,1 +1,1 @@
-export * from './engulfingCandle.types'
+export * from './engulfingCandle.types';

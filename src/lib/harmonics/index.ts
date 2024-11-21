@@ -1,7 +1,7 @@
-import { HARMONIC_PATTERNS, harmonicRatios } from '../../constants/harmonics'
-import { IHarmonic, IXABCDPattern, IXABCDRatio } from '../../types/harmonics.types'
-import { IZigZag } from '../../types/zigzags.types'
-import { round } from '../../utils/math'
+import { HARMONIC_PATTERNS, harmonicRatios } from '../../constants/harmonics';
+import { IHarmonic, IXABCDPattern, IXABCDRatio } from '../../types/harmonics.types';
+import { IZigZag } from '../../types/zigzags.types';
+import { round } from '../../utils/math';
 
 /**
  * Identifies harmonic patterns from an array of zigzag points.
@@ -26,22 +26,22 @@ import { round } from '../../utils/math'
  * console.log(harmonics); // Outputs the identified harmonic patterns
  */
 export function findPatterns(zigzags: IZigZag[]): IHarmonic[] {
-  const combinations = findXABCDCombinations(zigzags)
-  const harmonics: IHarmonic[] = []
+  const combinations = findXABCDCombinations(zigzags);
+  const harmonics: IHarmonic[] = [];
 
   for (const combination of combinations) {
-    const [x, a, b, c, d] = combination.map((index) => zigzags[index])
-    const xabcdPattern = calcHarmonicRatios(x, a, b, c, d)
+    const [x, a, b, c, d] = combination.map((index) => zigzags[index]);
+    const xabcdPattern = calcHarmonicRatios(x, a, b, c, d);
 
     for (const patternType of Object.values(HARMONIC_PATTERNS)) {
-      const harmonic = checkHarmonicPattern(patternType, xabcdPattern, harmonicRatios[patternType])
+      const harmonic = checkHarmonicPattern(patternType, xabcdPattern, harmonicRatios[patternType]);
       if (harmonic) {
-        harmonics.push(harmonic)
+        harmonics.push(harmonic);
       }
     }
   }
 
-  return harmonics
+  return harmonics;
 }
 
 /**
@@ -51,10 +51,10 @@ export function findPatterns(zigzags: IZigZag[]): IHarmonic[] {
  * @returns An array of combinations, where each combination is an array of indices representing a potential XABCD pattern.
  */
 export function findXABCDCombinations(zigzags: IZigZag[]): number[][] {
-  const combinations: number[][] = []
+  const combinations: number[][] = [];
 
   for (let i = 0; i < zigzags.length - 4; i++) {
-    const potentialCombination = [i, i + 1, i + 2, i + 3, i + 4]
+    const potentialCombination = [i, i + 1, i + 2, i + 3, i + 4];
     if (
       isValidCombination([
         zigzags[potentialCombination[0]],
@@ -64,11 +64,11 @@ export function findXABCDCombinations(zigzags: IZigZag[]): number[][] {
         zigzags[potentialCombination[4]]
       ])
     ) {
-      combinations.push(potentialCombination)
+      combinations.push(potentialCombination);
     }
   }
 
-  return combinations
+  return combinations;
 }
 
 /**
@@ -82,20 +82,20 @@ export function findXABCDCombinations(zigzags: IZigZag[]): number[][] {
  * @returns An object representing the harmonic ratios and the XABCD pattern points.
  */
 function calcHarmonicRatios(X: IZigZag, A: IZigZag, B: IZigZag, C: IZigZag, D: IZigZag): IXABCDPattern {
-  const XA: number = Math.round(Math.abs(X.price - A.price))
-  const AB: number = Math.round(Math.abs(A.price - B.price))
-  const BC: number = Math.round(Math.abs(B.price - C.price))
-  const CD: number = Math.round(Math.abs(C.price - D.price))
-  const XD: number = Math.round(Math.abs(X.price - D.price))
+  const XA: number = Math.round(Math.abs(X.price - A.price));
+  const AB: number = Math.round(Math.abs(A.price - B.price));
+  const BC: number = Math.round(Math.abs(B.price - C.price));
+  const CD: number = Math.round(Math.abs(C.price - D.price));
+  const XD: number = Math.round(Math.abs(X.price - D.price));
 
-  const XAB: number = round(AB / XA)
-  const ABC: number = round(BC / AB)
-  const BCD: number = round(CD / BC)
-  const XAD: number = round(XD / XA)
+  const XAB: number = round(AB / XA);
+  const ABC: number = round(BC / AB);
+  const BCD: number = round(CD / BC);
+  const XAD: number = round(XD / XA);
 
-  const XABCD = { X, A, B, C, D, XAB, ABC, BCD, XAD } as IXABCDPattern
+  const XABCD = { X, A, B, C, D, XAB, ABC, BCD, XAD } as IXABCDPattern;
 
-  return XABCD
+  return XABCD;
 }
 
 /**
@@ -107,23 +107,23 @@ function calcHarmonicRatios(X: IZigZag, A: IZigZag, B: IZigZag, C: IZigZag, D: I
  * @returns The harmonic pattern if a match is found, otherwise null.
  */
 function checkHarmonicPattern(type: HARMONIC_PATTERNS, xabcdPattern: IXABCDPattern, ratios: IXABCDRatio): IHarmonic | null {
-  const { XAB, ABC, BCD, XAD } = xabcdPattern
+  const { XAB, ABC, BCD, XAD } = xabcdPattern;
   const {
     XAB: [minXAB, maxXAB],
     ABC: [minABC, maxABC],
     BCD: [minBCD, maxBCD],
     XAD: [minXAD, maxXAD]
-  } = ratios
+  } = ratios;
 
-  const XAB_ERROR: number = round(calculateError(XAB, [minXAB, maxXAB]))
-  const ABC_ERROR: number = round(calculateError(ABC, [minABC, maxABC]))
-  const BCD_ERROR: number = round(calculateError(BCD, [minBCD, maxBCD]))
-  const XAD_ERROR: number = round(calculateError(XAD, [minXAD, maxXAD]))
+  const XAB_ERROR: number = round(calculateError(XAB, [minXAB, maxXAB]));
+  const ABC_ERROR: number = round(calculateError(ABC, [minABC, maxABC]));
+  const BCD_ERROR: number = round(calculateError(BCD, [minBCD, maxBCD]));
+  const XAD_ERROR: number = round(calculateError(XAD, [minXAD, maxXAD]));
 
-  const totalError: number = round(XAB_ERROR + ABC_ERROR + BCD_ERROR + XAD_ERROR)
-  const isComplete: boolean = typeof XAB === 'number' && typeof ABC === 'number' && typeof BCD === 'number' && typeof XAD === 'number'
-  const isDeveloping: boolean = !isComplete && typeof XAB === 'number' && typeof ABC === 'number' && typeof BCD === 'number'
-  const lastTimestamp: number = isDeveloping ? xabcdPattern.C.timestamp : xabcdPattern.D?.timestamp ?? null
+  const totalError: number = round(XAB_ERROR + ABC_ERROR + BCD_ERROR + XAD_ERROR);
+  const isComplete: boolean = typeof XAB === 'number' && typeof ABC === 'number' && typeof BCD === 'number' && typeof XAD === 'number';
+  const isDeveloping: boolean = !isComplete && typeof XAB === 'number' && typeof ABC === 'number' && typeof BCD === 'number';
+  const lastTimestamp: number = isDeveloping ? xabcdPattern.C.timestamp : xabcdPattern.D?.timestamp ?? null;
 
   if ((totalError < 50 && isComplete) || isDeveloping) {
     return {
@@ -132,9 +132,9 @@ function checkHarmonicPattern(type: HARMONIC_PATTERNS, xabcdPattern: IXABCDPatte
       type,
       isDeveloping,
       lastTimestamp
-    }
+    };
   }
-  return null
+  return null;
 }
 
 /**
@@ -146,10 +146,10 @@ function checkHarmonicPattern(type: HARMONIC_PATTERNS, xabcdPattern: IXABCDPatte
 function isValidCombination(points: IZigZag[]): boolean {
   for (let i = 0; i < points.length - 1; i++) {
     if (points[i].direction === points[i + 1].direction) {
-      return false
+      return false;
     }
   }
-  return true
+  return true;
 }
 
 /**
@@ -161,10 +161,10 @@ function isValidCombination(points: IZigZag[]): boolean {
  */
 function calculateError(calculated: number, expected_range: [number, number]) {
   if (calculated < expected_range[0]) {
-    return Math.abs((calculated - expected_range[0]) / calculated) * 100
+    return Math.abs((calculated - expected_range[0]) / calculated) * 100;
   } else if (calculated > expected_range[1]) {
-    return Math.abs((calculated - expected_range[1]) / calculated) * 100
+    return Math.abs((calculated - expected_range[1]) / calculated) * 100;
   } else {
-    return 0
+    return 0;
   }
 }

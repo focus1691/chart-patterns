@@ -1,5 +1,5 @@
-import { ICandle, INakedPointOfControl, IValueArea } from './'
-import { MARKET_PROFILE_PERIODS } from '../constants'
+import { ICandle, INakedPointOfControl, IValueArea } from './';
+import { MARKET_PROFILE_PERIODS } from '../constants';
 
 /**
  * Represents the overall structure of the volume profile analysis for a trading session or asset.
@@ -8,20 +8,20 @@ import { MARKET_PROFILE_PERIODS } from '../constants'
  * @property {IVolumeProfileFindings[]} volumeProfiles - An array of detailed volume profile findings for individual sessions or periods.
  */
 export interface IVolumeProfileResult {
-  npoc?: INakedPointOfControl
-  volumeProfiles?: IVolumeProfile[]
+  npoc?: INakedPointOfControl;
+  volumeProfiles?: IVolumeProfile[];
 }
 
 export interface IVolumeProfile {
-  startTime: string | number | Date
-  endTime: string | number | Date
-  valueArea?: IValueArea
-  IB?: IInitialBalance
-  failedAuction?: IVolumeProfileObservation[]
-  excess?: IVolumeProfileObservation[]
-  poorHighLow?: IVolumeProfileObservation[]
-  singlePrints?: IVolumeProfileObservation[]
-  ledges?: IVolumeProfileObservation[]
+  startTime: string | number | Date;
+  endTime: string | number | Date;
+  valueArea?: IValueArea;
+  IB?: IInitialBalance;
+  failedAuction?: IVolumeProfileObservation[];
+  excess?: IVolumeProfileObservation[];
+  poorHighLow?: IVolumeProfileObservation[];
+  singlePrints?: IVolumeProfileObservation[];
+  ledges?: IVolumeProfileObservation[];
 }
 
 /**
@@ -32,9 +32,9 @@ export interface IVolumeProfile {
  * @property {number} troughValue - The trough or lowest value associated with the observation.
  */
 export interface IVolumeProfileObservation {
-  period?: string
-  peakValue?: number
-  troughValue?: number
+  period?: string;
+  peakValue?: number;
+  troughValue?: number;
 }
 
 /**
@@ -44,8 +44,8 @@ export interface IVolumeProfileObservation {
  * @property {number} low - The lowest price within the initial balance period.
  */
 export interface IInitialBalance {
-  high: number
-  low: number
+  high: number;
+  low: number;
 }
 
 /**
@@ -60,10 +60,10 @@ export interface IInitialBalance {
  * @property {number} valueAreaVolume - The Value Area percentage.
  */
 export interface IVolumeProfileConfig {
-  candles: ICandle[]
-  period: MARKET_PROFILE_PERIODS
-  tickSize: number
-  timezone: string
+  candles: ICandle[];
+  period: MARKET_PROFILE_PERIODS;
+  tickSize: number;
+  timezone: string;
   valueAreaRowSize?: number;
   valueAreaVolume?: number;
 }

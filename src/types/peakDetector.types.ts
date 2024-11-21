@@ -7,10 +7,10 @@
  * @property {number} influence - A factor that determines the influence of signals on subsequent calculations, affecting how strongly the identified signals affect the moving average.
  */
 export interface ISignalsConfig {
-  values: number[]
-  lag: number
-  threshold: number
-  influence: number
-  flatten?: boolean
-  normaliseData?: boolean
+  values: number[];
+  lag: number;
+  threshold: number;
+  influence: number;
+  flatten?: boolean;
+  normaliseData?: boolean;
 }

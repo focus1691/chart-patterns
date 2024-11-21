@@ -1,6 +1,6 @@
-import { SIGNAL_DIRECTION } from '../../constants/signals'
-import { ICandle } from '../../types'
-import { IEngulfingCandleConfig } from '../../types/candlestickPatterns/engulfingCandle.types'
+import { SIGNAL_DIRECTION } from '../../constants/signals';
+import { ICandle } from '../../types';
+import { IEngulfingCandleConfig } from '../../types/candlestickPatterns/engulfingCandle.types';
 
 /**
  * Finds engulfing candle patterns in a given set of candles.
@@ -17,27 +17,27 @@ import { IEngulfingCandleConfig } from '../../types/candlestickPatterns/engulfin
  * ```
  */
 export const findEngulfingCandle = (config: IEngulfingCandleConfig): SIGNAL_DIRECTION | null => {
-  const candles: ICandle[] = config.candles
+  const candles: ICandle[] = config.candles;
   if (candles.length < 2) {
-    return null
+    return null;
   }
 
-  const index = config.index ?? candles.length - 1
-  if (!candles[index] || !candles[index - 1]) return null // Ensures there's a previous candle
+  const index = config.index ?? candles.length - 1;
+  if (!candles[index] || !candles[index - 1]) return null; // Ensures there's a previous candle
 
-  const prevCandle: ICandle = candles[index - 1]
-  const currCandle: ICandle = candles[index]
+  const prevCandle: ICandle = candles[index - 1];
+  const currCandle: ICandle = candles[index];
 
-  const isPreviousBullish: boolean = prevCandle.close > prevCandle.open
-  const isPreviousBearish: boolean = prevCandle.close < prevCandle.open
-  const isCurrentBullish: boolean = currCandle.close > currCandle.open
-  const isCurrentBearish: boolean = currCandle.close < currCandle.open
+  const isPreviousBullish: boolean = prevCandle.close > prevCandle.open;
+  const isPreviousBearish: boolean = prevCandle.close < prevCandle.open;
+  const isCurrentBullish: boolean = currCandle.close > currCandle.open;
+  const isCurrentBearish: boolean = currCandle.close < currCandle.open;
 
-  const isBullishEngulfing: boolean = isPreviousBearish && isCurrentBullish && currCandle.open <= prevCandle.close && currCandle.close >= prevCandle.open
-  const isBearishEngulfing: boolean = isPreviousBullish && isCurrentBearish && currCandle.open >= prevCandle.close && currCandle.close <= prevCandle.open
+  const isBullishEngulfing: boolean = isPreviousBearish && isCurrentBullish && currCandle.open <= prevCandle.close && currCandle.close >= prevCandle.open;
+  const isBearishEngulfing: boolean = isPreviousBullish && isCurrentBearish && currCandle.open >= prevCandle.close && currCandle.close <= prevCandle.open;
 
-  if (isBullishEngulfing) return SIGNAL_DIRECTION.BULLISH
-  if (isBearishEngulfing) return SIGNAL_DIRECTION.BEARISH
+  if (isBullishEngulfing) return SIGNAL_DIRECTION.BULLISH;
+  if (isBearishEngulfing) return SIGNAL_DIRECTION.BEARISH;
 
-  return null
-}
+  return null;
+};

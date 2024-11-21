@@ -1,12 +1,12 @@
-import moment from 'moment'
-import { from, map, toArray } from 'rxjs'
-import { FIBONACCI_NUMBERS, IFibonacciRetracement, SIGNAL_DIRECTION } from '../../constants'
-import { ICandle } from '../../types/candle.types'
-import { ISignalsConfig } from '../../types/peakDetector.types'
-import { ILocalRange, IPeak } from '../../types/range.types'
-import { IZigZag } from '../../types/zigzags.types'
-import { countDecimals, isBetween, round } from '../../utils/math'
-import * as PeakDetector from '../peakDetector'
+import moment from 'moment';
+import { from, map, toArray } from 'rxjs';
+import { FIBONACCI_NUMBERS, IFibonacciRetracement, SIGNAL_DIRECTION } from '../../constants';
+import { ICandle } from '../../types/candle.types';
+import { ISignalsConfig } from '../../types/peakDetector.types';
+import { ILocalRange, IPeak } from '../../types/range.types';
+import { IZigZag } from '../../types/zigzags.types';
+import { countDecimals, isBetween, round } from '../../utils/math';
+import * as PeakDetector from '../peakDetector';
 
 function toZigzags(klines: ICandle[], peaks: IPeak[]): IZigZag {
   const zigzag: IZigZag = {} as IZigZag;

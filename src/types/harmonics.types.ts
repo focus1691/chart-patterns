@@ -1,5 +1,5 @@
-import { IZigZag } from './zigzags.types'
-import { HARMONIC_PATTERNS } from '../constants/harmonics'
+import { IZigZag } from './zigzags.types';
+import { HARMONIC_PATTERNS } from '../constants/harmonics';
 
 /**
  * Represents a harmonic pattern extended from an XABCD pattern with additional properties.
@@ -9,9 +9,9 @@ import { HARMONIC_PATTERNS } from '../constants/harmonics'
  * @property {number} lastTimestamp - The timestamp of the last point in the pattern, useful for tracking the pattern's progression over time.
  */
 export interface IHarmonic extends IXABCDPattern {
-  type: HARMONIC_PATTERNS
-  isDeveloping: boolean
-  lastTimestamp?: number
+  type: HARMONIC_PATTERNS;
+  isDeveloping: boolean;
+  lastTimestamp?: number;
 }
 
 /**
@@ -29,16 +29,16 @@ export interface IHarmonic extends IXABCDPattern {
  * @property {number} error - The error rate in the pattern recognition process.
  */
 export interface IXABCDPattern {
-  X: IZigZag
-  A: IZigZag
-  B: IZigZag
-  C: IZigZag
-  D?: IZigZag
-  XAB: number
-  ABC: number
-  BCD: number
-  XAD: number
-  error?: number
+  X: IZigZag;
+  A: IZigZag;
+  B: IZigZag;
+  C: IZigZag;
+  D?: IZigZag;
+  XAB: number;
+  ABC: number;
+  BCD: number;
+  XAD: number;
+  error?: number;
 }
 
 /**
@@ -50,8 +50,8 @@ export interface IXABCDPattern {
  * @property {[number, number]} XAD - The acceptable minimum and maximum ratio range for the XD segment relative to the XA segment.
  */
 export interface IXABCDRatio {
-  XAB: [number, number]
-  ABC: [number, number]
-  BCD: [number, number]
-  XAD: [number, number]
+  XAB: [number, number];
+  ABC: [number, number];
+  BCD: [number, number];
+  XAD: [number, number];
 }

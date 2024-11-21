@@ -1,7 +1,7 @@
-export type zigzagType = 'PEAK' | 'TROUGH'
+export type zigzagType = 'PEAK' | 'TROUGH';
 
 export interface IZigZag {
-  price: number
-  direction: zigzagType
-  timestamp: number
+  price: number;
+  direction: zigzagType;
+  timestamp: number;
 }

@@ -1,5 +1,5 @@
-import { round } from '../../utils'
-import { ICandle, IPivotPoints } from '../../types'
+import { round } from '../../utils';
+import { ICandle, IPivotPoints } from '../../types';
 
 /**
  * Calculates pivot points from a single ICandle or an array of ICandles.
@@ -18,25 +18,25 @@ import { ICandle, IPivotPoints } from '../../types'
  * const pivotPoints: IPivotPoints = calculatePivotPoints(yesterdayCandle, 2);
  */
 export function calculatePivotPoints(candles: ICandle | ICandle[], pricePrecision: number): IPivotPoints {
-  let high, low, close: number
+  let high, low, close: number;
 
   if (Array.isArray(candles)) {
-    high = Math.max(...candles.map((c) => c.high))
-    low = Math.min(...candles.map((c) => c.low))
-    close = candles[candles.length - 1].close
+    high = Math.max(...candles.map((c) => c.high));
+    low = Math.min(...candles.map((c) => c.low));
+    close = candles[candles.length - 1].close;
   } else {
-    high = candles.high
-    low = candles.low
-    close = candles.close
+    high = candles.high;
+    low = candles.low;
+    close = candles.close;
   }
 
-  const pivot = round((high + low + close) / 3, pricePrecision)
-  const resistance1 = round(2 * pivot - low, pricePrecision)
-  const support1 = round(2 * pivot - high, pricePrecision)
-  const resistance2 = round(pivot + (high - low), pricePrecision)
-  const support2 = round(pivot - (high - low), pricePrecision)
-  const resistance3 = round(resistance1 + (high - low), pricePrecision)
-  const support3 = round(support1 - (high - low), pricePrecision)
+  const pivot = round((high + low + close) / 3, pricePrecision);
+  const resistance1 = round(2 * pivot - low, pricePrecision);
+  const support1 = round(2 * pivot - high, pricePrecision);
+  const resistance2 = round(pivot + (high - low), pricePrecision);
+  const support2 = round(pivot - (high - low), pricePrecision);
+  const resistance3 = round(resistance1 + (high - low), pricePrecision);
+  const support3 = round(support1 - (high - low), pricePrecision);
 
   return {
     pivot,
@@ -46,5 +46,5 @@ export function calculatePivotPoints(candles: ICandle | ICandle[], pricePrecisio
     support2,
     resistance3,
     support3
-  }
+  };
 }

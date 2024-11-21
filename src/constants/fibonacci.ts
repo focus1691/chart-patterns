@@ -1,13 +1,13 @@
 export interface IFibonacciRetracement {
-  0: number | null
-  0.236: number | null
-  0.382: number | null
-  0.5: number | null
-  0.618: number | null
-  0.66: number | null
-  0.786: number | null
-  1: number | null
-  1.618: number | null
+  0: number | null;
+  0.236: number | null;
+  0.382: number | null;
+  0.5: number | null;
+  0.618: number | null;
+  0.66: number | null;
+  0.786: number | null;
+  1: number | null;
+  1.618: number | null;
 }
 
 export enum FIBONACCI_NUMBERS {

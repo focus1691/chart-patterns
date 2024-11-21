@@ -1,7 +1,7 @@
-import { round } from '../../utils'
-import { TPO_LETTERS } from '../../constants'
-import { IMarketProfile, IMarketProfileBuilderConfig, IMarketProfileStructure, ITimeFrame, IValueArea } from '../../types'
-import { calculateInitialBalance, groupCandlesByTimePeriod } from './utils'
+import { round } from '../../utils';
+import { TPO_LETTERS } from '../../constants';
+import { IMarketProfile, IMarketProfileBuilderConfig, IMarketProfileStructure, ITimeFrame, IValueArea } from '../../types';
+import { calculateInitialBalance, groupCandlesByTimePeriod } from './utils';
 
 /**
  * Calculates the market profile for an array of candles. Typically, you use 30m candles, but you can theoretically use any timeframe.
@@ -20,76 +20,76 @@ import { calculateInitialBalance, groupCandlesByTimePeriod } from './utils'
  *
  */
 export function build(config: IMarketProfileBuilderConfig): IMarketProfile[] {
-  const { candles, tickSize, tickMultiplier, period, timezone, pricePrecision } = config
-  const periods: ITimeFrame[] = groupCandlesByTimePeriod(candles, period, timezone)
-  const profiles: IMarketProfile[] = buildMarketProfiles(periods, tickSize, tickMultiplier, timezone, pricePrecision)
+  const { candles, tickSize, tickMultiplier, period, timezone, pricePrecision } = config;
+  const periods: ITimeFrame[] = groupCandlesByTimePeriod(candles, period, timezone);
+  const profiles: IMarketProfile[] = buildMarketProfiles(periods, tickSize, tickMultiplier, timezone, pricePrecision);
 
-  return profiles
+  return profiles;
 }
 
 function buildMarketProfiles(periods: ITimeFrame[], tickSize: number, tickMultiplier: number, timezone: string, pricePrecision: number): IMarketProfile[] {
-  const profiles: IMarketProfile[] = []
-  const priceStep = tickSize * tickMultiplier
+  const profiles: IMarketProfile[] = [];
+  const priceStep = tickSize * tickMultiplier;
 
   for (const period of periods) {
-    const { candles, startTime, endTime } = period
+    const { candles, startTime, endTime } = period;
     const profile: IMarketProfile = {
       startTime,
       endTime,
       structure: {} as IMarketProfileStructure,
       IB: calculateInitialBalance(candles, timezone)
-    }
+    };
 
     for (let i = 0; i < candles.length; i++) {
-      const candle = candles[i]
-      const tpoLetter = TPO_LETTERS[i % TPO_LETTERS.length]
+      const candle = candles[i];
+      const tpoLetter = TPO_LETTERS[i % TPO_LETTERS.length];
 
       for (let price = candle.low; price <= candle.high; price += priceStep) {
-        const roundedPrice = round((price / priceStep) * priceStep, pricePrecision)
-        profile.structure[roundedPrice] = (profile.structure[roundedPrice] || '') + tpoLetter
+        const roundedPrice = round((price / priceStep) * priceStep, pricePrecision);
+        profile.structure[roundedPrice] = (profile.structure[roundedPrice] || '') + tpoLetter;
       }
     }
 
-    profile.valueArea = calculateValueArea(profile.structure)
+    profile.valueArea = calculateValueArea(profile.structure);
 
-    profiles.push(profile)
+    profiles.push(profile);
   }
 
-  return profiles
+  return profiles;
 }
 
 function calculateValueArea(structure: IMarketProfileStructure): IValueArea {
   const prices = Object.keys(structure)
     .map(Number)
-    .sort((a, b) => a - b)
+    .sort((a, b) => a - b);
 
-  const high = Math.max(...prices)
-  const low = Math.min(...prices)
+  const high = Math.max(...prices);
+  const low = Math.min(...prices);
 
   const marketProfile = prices.map((price) => ({
     price,
     volume: structure[price].length
-  }))
-  marketProfile.sort((a, b) => b.volume - a.volume)
+  }));
+  marketProfile.sort((a, b) => b.volume - a.volume);
 
-  const POC = marketProfile[0].price
+  const POC = marketProfile[0].price;
 
-  const totalVolume = marketProfile.reduce((sum, { volume }) => sum + volume, 0)
-  const valueAreaVolume = totalVolume * 0.7
+  const totalVolume = marketProfile.reduce((sum, { volume }) => sum + volume, 0);
+  const valueAreaVolume = totalVolume * 0.7;
 
-  let cumulativeVolume = 0
-  let valueAreaPrices = []
+  let cumulativeVolume = 0;
+  let valueAreaPrices = [];
 
   for (const { price, volume } of marketProfile) {
-    cumulativeVolume += volume
-    valueAreaPrices.push(price)
-    if (cumulativeVolume >= valueAreaVolume) break
+    cumulativeVolume += volume;
+    valueAreaPrices.push(price);
+    if (cumulativeVolume >= valueAreaVolume) break;
   }
 
-  const VAH = Math.max(...valueAreaPrices)
-  const VAL = Math.min(...valueAreaPrices)
+  const VAH = Math.max(...valueAreaPrices);
+  const VAL = Math.min(...valueAreaPrices);
 
-  const EQ = (VAH + VAL) / 2
+  const EQ = (VAH + VAL) / 2;
 
   return {
     high,
@@ -98,5 +98,5 @@ function calculateValueArea(structure: IMarketProfileStructure): IValueArea {
     EQ,
     VAL,
     low
-  }
+  };
 }

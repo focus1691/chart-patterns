@@ -1,9 +1,9 @@
-import moment from 'moment'
-import { ICandle } from '../../types/candle.types'
-import { IPeak } from '../../types/range.types'
-import { IZigZag } from '../../types/zigzags.types'
-import { ISignalsConfig } from '../../types/peakDetector.types'
-import * as PeakDetector from '../peakDetector'
+import moment from 'moment';
+import { ICandle } from '../../types/candle.types';
+import { IPeak } from '../../types/range.types';
+import { IZigZag } from '../../types/zigzags.types';
+import { ISignalsConfig } from '../../types/peakDetector.types';
+import * as PeakDetector from '../peakDetector';
 
 /**
  * Creates an array of ZigZag points based on the provided candlestick data and peak detection configuration.
@@ -15,29 +15,29 @@ import * as PeakDetector from '../peakDetector'
  * @returns {IZigZag[]} An array of ZigZag points representing significant price changes.
  */
 export function create(candles: ICandle[], lag: number, threshold: number, influence: number): IZigZag[] {
-  const zigzags: IZigZag[] = []
+  const zigzags: IZigZag[] = [];
   const config: ISignalsConfig = {
     values: candles.map((candle) => candle.close),
     lag,
     threshold,
     influence,
     flatten: false
-  }
-  const groupedPeaks: IPeak[][] = PeakDetector.findSignals(config) as IPeak[][]
+  };
+  const groupedPeaks: IPeak[][] = PeakDetector.findSignals(config) as IPeak[][];
 
   for (const group of groupedPeaks) {
-    const direction: 1 | -1 = group[0].direction
-    let extremeValue: number = direction === 1 ? Number.MIN_SAFE_INTEGER : Number.MAX_SAFE_INTEGER
-    let extremeCandle = null
+    const direction: 1 | -1 = group[0].direction;
+    let extremeValue: number = direction === 1 ? Number.MIN_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
+    let extremeCandle = null;
 
     for (const peak of group) {
-      const candle = candles[peak.position]
+      const candle = candles[peak.position];
       if (direction === 1 && candle.high > extremeValue) {
-        extremeValue = candle.high
-        extremeCandle = candle
+        extremeValue = candle.high;
+        extremeCandle = candle;
       } else if (direction === -1 && candle.low < extremeValue) {
-        extremeValue = candle.low
-        extremeCandle = candle
+        extremeValue = candle.low;
+        extremeCandle = candle;
       }
     }
 
@@ -46,9 +46,9 @@ export function create(candles: ICandle[], lag: number, threshold: number, influ
         direction: direction === 1 ? 'PEAK' : 'TROUGH',
         price: extremeValue,
         timestamp: moment(extremeCandle.openTime).unix()
-      }
-      zigzags.push(zigzag)
+      };
+      zigzags.push(zigzag);
     }
   }
-  return zigzags
+  return zigzags;
 }
