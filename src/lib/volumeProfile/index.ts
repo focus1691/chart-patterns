@@ -41,14 +41,14 @@ import * as ValueArea from '../valueArea'
  */
 
 export function build(config: IVolumeProfileConfig): IVolumeProfile[] {
-  const { candles, period, timezone } = config
+  const { candles, period, timezone, valueAreaRowSize, valueAreaVolume } = config
   const periods: ITimeFrame[] = groupCandlesByTimePeriod(candles, period, timezone)
-  const profiles: IVolumeProfile[] = buildVolumeProfiles(periods, timezone)
+  const profiles: IVolumeProfile[] = buildVolumeProfiles(periods, timezone, valueAreaRowSize, valueAreaVolume)
 
   return profiles
 }
 
-function buildVolumeProfiles(periods: ITimeFrame[], timezone: string): IVolumeProfile[] {
+function buildVolumeProfiles(periods: ITimeFrame[], timezone: string, valueAreaRowSize: number, valueAreaVolume: number): IVolumeProfile[] {
   const profiles: IVolumeProfile[] = []
 
   for (const period of periods) {
@@ -56,7 +56,7 @@ function buildVolumeProfiles(periods: ITimeFrame[], timezone: string): IVolumePr
     const profile: IVolumeProfile = {
       startTime,
       endTime,
-      valueArea: ValueArea.calculate(candles),
+      valueArea: ValueArea.calculate(candles, valueAreaRowSize, valueAreaVolume),
       IB: calculateInitialBalance(candles, timezone)
     }
 

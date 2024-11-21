@@ -49,19 +49,21 @@ export interface IInitialBalance {
 }
 
 /**
- * Configuration object used for calculating the volume profile.
+ * Configuration used for building Volume Profile.
  *
  * @interface IVolumeProfileConfig
- * @property {ICandle[]} candles - An array of candle objects.
+ * @property {ICandle[]} candles - Candle Array.
  * @property {MARKET_PROFILE_PERIODS} period - Specifies the time period over which the Volume Profile is calculated.
- * @property {number} tickSize - The size of a single tick, which is the smallest measurable movement in the price of the trading asset.
- *   This determines the granularity of the price levels in the volume profile.
+ * @property {number} tickSize - The minimum price increment defining price level resolution, e.g., 0.1 for BTCUSDT.
  * @property {string} timezone - The timezone to use for time-based calculations, e.g., 'Europe/London'.
- *   This ensures consistent time handling across different market sessions and is crucial for accurate period-based calculations.
+ * @property {number} valueAreaRowSize - The number of Value Area rows.
+ * @property {number} valueAreaVolume - The Value Area percentage.
  */
 export interface IVolumeProfileConfig {
   candles: ICandle[]
   period: MARKET_PROFILE_PERIODS
   tickSize: number
   timezone: string
+  valueAreaRowSize?: number;
+  valueAreaVolume?: number;
 }

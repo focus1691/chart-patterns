@@ -3,16 +3,6 @@ import { IValueArea, IVolumeRow } from '../../types/valueArea.types'
 import { countDecimals, round } from '../../utils/math'
 
 /**
- * The number of rows used for the histogram calculation.
- */
-const N_ROWS: number = 24
-
-/**
- * The percentage of total volume that defines the value area.
- */
-const VA_VOL_PERCENT: number = 0.7
-
-/**
  * Calculates the total volume, highest price, and lowest price from an array of candlesticks.
  *
  * @param klines An array of candlesticks to analyse.
@@ -45,10 +35,10 @@ function sumVolumes(klines: ICandle[]) {
  * @param nDecimals The number of decimal places to consider in calculations.
  * @returns An object containing the histogram, the price of the Point of Control (POC), and the row of the POC.
  */
-function buildHistogram(klines: ICandle[], highest: number, lowest: number, nDecimals: number) {
+function buildHistogram(klines: ICandle[], highest: number, lowest: number, nDecimals: number, valueAreaRowSize: number) {
   let row = 0
   const range: number = highest - lowest
-  const stepSize: number = round(range / N_ROWS, nDecimals)
+  const stepSize: number = round(range / valueAreaRowSize, nDecimals)
 
   if (range <= 0) return { histogram: null, POC: null, POC_ROW: null }
 
@@ -56,7 +46,7 @@ function buildHistogram(klines: ICandle[], highest: number, lowest: number, nDec
   let POC_ROW: number = 0
   let POC: number = 0
   let highestVolumeRow: number = 0
-  while (histogram.length < N_ROWS) {
+  while (histogram.length < valueAreaRowSize) {
     const low = Math.max(lowest, round(lowest + stepSize * row, nDecimals))
     const high = Math.min(highest, round(lowest + stepSize * row + stepSize, nDecimals))
     const mid = round((low + high) / 2, nDecimals)
@@ -78,7 +68,7 @@ function buildHistogram(klines: ICandle[], highest: number, lowest: number, nDec
     const low: number = Number(klines[i].low)
     const close: number = Number(klines[i].close)
     const typicalPrice: number = round((open + high + low + close) / 4, nDecimals)
-    const ROW: number = stepSize === 0 ? 0 : Math.min(N_ROWS - 1, Math.floor((typicalPrice - lowest) / stepSize))
+    const ROW: number = stepSize === 0 ? 0 : Math.min(valueAreaRowSize - 1, Math.floor((typicalPrice - lowest) / stepSize))
 
     histogram[ROW].volume += volume
 
@@ -99,9 +89,8 @@ function buildHistogram(klines: ICandle[], highest: number, lowest: number, nDec
  * @param V_TOTAL The total volume of the candlesticks.
  * @returns An object containing the Value Area High (VAH) and Value Area Low (VAL).
  */
-function findValueAreas(POC_ROW: number, histogram: IVolumeRow[], V_TOTAL: number) {
-  const VALUE_AREA_PERCENTAGE = 0.7 // 70% for the value area
-  const VALUE_AREA_VOLUME = VALUE_AREA_PERCENTAGE * V_TOTAL
+function findValueAreas(POC_ROW: number, histogram: IVolumeRow[], V_TOTAL: number, valueAreaVolume: number) {
+  const VALUE_AREA_VOLUME = valueAreaVolume * V_TOTAL
 
   let currentVolume = histogram[POC_ROW].volume
   let lowerIndex = POC_ROW
@@ -137,19 +126,21 @@ function findValueAreas(POC_ROW: number, histogram: IVolumeRow[], V_TOTAL: numbe
 }
 
 /**
- * analyses a set of candlesticks to calculate the value area and related metrics for a specific period.
+ * Calculate the Value Area for given candles.
  *
- * @param candles An array of candlesticks for the period to analyse.
- * @returns An object representing the value area metrics, including VAH, VAL, POC, EQ (Equilibrium), and the low and high prices.
+ * @param candles Candle Array.
+ * @property {number} valueAreaRowSize - The number of Value Area rows.
+ * @property {number} valueAreaVolume - The Value Area percentage.
+ * @returns Value Area Object.
  */
-export function calculate(candles: ICandle[]): IValueArea {
+export function calculate(candles: ICandle[], valueAreaRowSize: number = 24, valueAreaVolume: number = 0.7): IValueArea {
   // We need to start at the start of the (day / week / month), in order to filter all the klines for the VA calculations for that period
   // current day vs previous day, current week vs previous week, current month vs previous month
   const { V_TOTAL, high, low }: { V_TOTAL: number; high: number; low: number } = sumVolumes(candles)
   const maxDecimals: number = Math.max(countDecimals(high), countDecimals(low))
   const EQ: number = round(low + (high - low) / 2, maxDecimals)
-  const { histogram, POC, POC_ROW }: { histogram: IVolumeRow[]; POC: number; POC_ROW: number } = buildHistogram(candles, high, low, maxDecimals)
-  const { VAH, VAL }: { VAH: number; VAL: number } = findValueAreas(POC_ROW, histogram, V_TOTAL)
+  const { histogram, POC, POC_ROW }: { histogram: IVolumeRow[]; POC: number; POC_ROW: number } = buildHistogram(candles, high, low, maxDecimals, valueAreaRowSize)
+  const { VAH, VAL }: { VAH: number; VAL: number } = findValueAreas(POC_ROW, histogram, V_TOTAL, valueAreaVolume)
 
   return { VAH, VAL, POC, EQ, low, high }
 }
