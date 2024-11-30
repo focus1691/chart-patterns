@@ -1,16 +1,17 @@
-import { ImbalanceType } from '../../constants';
+import { ImbalanceSide } from '../../constants';
 
 export interface Imbalance {
   price: number;
-  imbalanceType: ImbalanceType;
+  imbalanceSide: ImbalanceSide;
   volSumAsk: number;
   volSumBid: number;
 }
 
 export interface IStackedImbalancesResult {
-  startPrice: number;
-  endPrice: number;
-  count: number;
+  imbalanceStartAt: number;
+  imbalanceEndAt: number;
+  stackedCount: number;
+  imbalanceSide: ImbalanceSide;
 }
 
 export interface IStackedImbalanceConfig {

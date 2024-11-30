@@ -1,4 +1,4 @@
-export enum ImbalanceType {
-  SELLING_IMBALANCE = 0,
-  BUYING_IMBALANCE = 1
+export enum ImbalanceSide {
+  SELLING_IMBALANCE = 'sell',
+  BUYING_IMBALANCE = 'buy'
 }

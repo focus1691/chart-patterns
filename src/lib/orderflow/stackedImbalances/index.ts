@@ -1,4 +1,4 @@
-import { ImbalanceType } from '../../../constants';
+import { ImbalanceSide } from '../../../constants';
 import { IStackedImbalanceConfig, IStackedImbalancesResult, Imbalance, OrderFlowRow } from '../../../types/orderflow';
 
 const DEFAULT_THRESHOLD = 300.0;
@@ -22,14 +22,14 @@ export function detectImbalances(data: { [price: number]: OrderFlowRow }, thresh
     if (orderFlowRow.volSumBid >= (threshold / 100) * orderFlowRow.volSumAsk) {
       imbalances.push({
         price: priceNumber,
-        imbalanceType: ImbalanceType.SELLING_IMBALANCE,
+        imbalanceSide: ImbalanceSide.SELLING_IMBALANCE,
         volSumAsk: orderFlowRow.volSumAsk,
         volSumBid: orderFlowRow.volSumBid
       });
     } else if (orderFlowRow.volSumAsk >= (threshold / 100) * orderFlowRow.volSumBid) {
       imbalances.push({
         price: priceNumber,
-        imbalanceType: ImbalanceType.BUYING_IMBALANCE,
+        imbalanceSide: ImbalanceSide.BUYING_IMBALANCE,
         volSumAsk: orderFlowRow.volSumAsk,
         volSumBid: orderFlowRow.volSumBid
       });
@@ -46,12 +46,13 @@ export function detectImbalances(data: { [price: number]: OrderFlowRow }, thresh
  * @param stackCount - The minimum number of consecutive imbalances required to form a stack.
  * @param stackedImbalances - The array of stacked imbalance ranges to add to.
  */
-function addStackRangeIfValid(currentStack: Imbalance[], stackCount: number, stackedImbalances: IStackedImbalancesResult[]): void {
+function addStackRangeIfValid(currentStack: Imbalance[], stackCount: number, stackedImbalances: IStackedImbalancesResult[], imbalanceSide: ImbalanceSide): void {
   if (currentStack.length >= stackCount) {
     stackedImbalances.push({
-      startPrice: currentStack[0].price,
-      endPrice: currentStack[currentStack.length - 1].price,
-      count: currentStack.length
+      imbalanceStartAt: currentStack[0].price,
+      imbalanceEndAt: currentStack[currentStack.length - 1].price,
+      stackedCount: currentStack.length,
+      imbalanceSide
     });
   }
 }
@@ -73,20 +74,21 @@ export function detectStackedImbalances(data: { [price: number]: OrderFlowRow },
   let lastImbalance: Imbalance | null = null;
 
   for (const imbalance of imbalances) {
+    const { price: imbalancePrice, imbalanceSide } = imbalance;
     const isDiagonallyConsecutive =
-      lastImbalance === null || (Math.abs(imbalance.price - lastImbalance.price) === tickSize && imbalance.imbalanceType === lastImbalance.imbalanceType);
+      lastImbalance === null || (Math.abs(imbalancePrice - lastImbalance.price) === tickSize && imbalance.imbalanceSide === lastImbalance.imbalanceSide);
 
     if (isDiagonallyConsecutive) {
       currentStack.push(imbalance);
     } else {
-      addStackRangeIfValid(currentStack, stackCount, stackedImbalances);
+      addStackRangeIfValid(currentStack, stackCount, stackedImbalances, imbalanceSide);
       currentStack = [imbalance];
     }
 
     lastImbalance = imbalance;
   }
 
-  addStackRangeIfValid(currentStack, stackCount, stackedImbalances);
+  addStackRangeIfValid(currentStack, stackCount, stackedImbalances, currentStack[0]?.imbalanceSide);
 
   return stackedImbalances;
 }
