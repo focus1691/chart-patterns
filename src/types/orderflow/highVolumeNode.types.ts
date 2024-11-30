@@ -1,8 +1,9 @@
 export interface IHighVolumeNode {
-  price: number;
+  nodePrice: number;
   totalVolume: number;
-  askVolume: number;
-  bidVolume: number;
+  sellVolume: number;
+  buyVolume: number;
+  nodeVolumePercent: number;
 }
 
 export interface IFindHighVolumeNodeConfig {

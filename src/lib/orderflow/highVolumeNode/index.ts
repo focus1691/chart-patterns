@@ -1,3 +1,4 @@
+import { round } from '../../../utils';
 import { OrderFlowRow, IHighVolumeNode, IFindHighVolumeNodeConfig } from '../../../types';
 
 /**
@@ -23,26 +24,28 @@ import { OrderFlowRow, IHighVolumeNode, IFindHighVolumeNodeConfig } from '../../
  * const highVolNodes = findHighVolumeNodes(trades, totalVol, config);
  * // Returns: [{ price: 100.5, totalVolume: 1100, askVolume: 500, bidVolume: 600 }]
  */
-export function findHighVolumeNodes(
-  orderflowTrades: { [price: number]: OrderFlowRow },
-  totalVolume: number,
-  config: IFindHighVolumeNodeConfig
-): IHighVolumeNode[] {
+export function findHighVolumeNodes(orderflowTrades: { [price: number]: OrderFlowRow }, config: IFindHighVolumeNodeConfig): IHighVolumeNode[] {
   const { threshold } = config;
 
   const nodes: IHighVolumeNode[] = [];
 
+  let totalVolume = 0;
+  for (const row of Object.values(orderflowTrades)) {
+    totalVolume += row.volSumAsk + row.volSumBid;
+  }
+
   const effectiveThreshold = totalVolume * threshold;
 
   for (const [price, row] of Object.entries(orderflowTrades)) {
-    const totalVolume = row.volSumAsk + row.volSumBid;
+    const rowVolume = row.volSumAsk + row.volSumBid;
 
-    if (totalVolume >= effectiveThreshold) {
+    if (rowVolume >= effectiveThreshold) {
       nodes.push({
-        price: parseFloat(price),
+        nodePrice: parseFloat(price),
         totalVolume,
-        askVolume: row.volSumAsk,
-        bidVolume: row.volSumBid
+        sellVolume: row.volSumAsk,
+        buyVolume: row.volSumBid,
+        nodeVolumePercent: round((row.volSumAsk + row.volSumBid) / totalVolume)
       });
     }
   }
