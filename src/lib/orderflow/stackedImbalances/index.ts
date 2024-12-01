@@ -22,14 +22,14 @@ export function detectImbalances(data: { [price: number]: OrderFlowRow }, thresh
     if (orderFlowRow.volSumBid >= (threshold / 100) * orderFlowRow.volSumAsk) {
       imbalances.push({
         price: priceNumber,
-        imbalanceSide: ImbalanceSide.SELLING_IMBALANCE,
+        imbalanceSide: ImbalanceSide.BUYING_IMBALANCE,
         volSumAsk: orderFlowRow.volSumAsk,
         volSumBid: orderFlowRow.volSumBid
       });
     } else if (orderFlowRow.volSumAsk >= (threshold / 100) * orderFlowRow.volSumBid) {
       imbalances.push({
         price: priceNumber,
-        imbalanceSide: ImbalanceSide.BUYING_IMBALANCE,
+        imbalanceSide: ImbalanceSide.SELLING_IMBALANCE,
         volSumAsk: orderFlowRow.volSumAsk,
         volSumBid: orderFlowRow.volSumBid
       });
