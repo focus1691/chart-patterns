@@ -34,23 +34,18 @@ function calculateFibonacci(range: ILocalRange, direction: SIGNAL_DIRECTION): IF
 
   const diff: number = Math.abs(range.resistance - range.support);
 
-  function calculateRetracement(direction: SIGNAL_DIRECTION): Function {
-    return function (fibNumber: FIBONACCI_NUMBERS): number | null {
-      if (!range.support || !range.resistance) return null;
+  const retracement = (fibNumber: number): number | null => {
+    const decimals = Math.max(countDecimals(range.support), countDecimals(range.resistance));
+    return direction === SIGNAL_DIRECTION.BULLISH
+      ? round(range.support + diff * fibNumber, decimals) // Low to High
+      : round(range.resistance - diff * fibNumber, decimals); // High to Low
+  };
 
-      const numDecimals: number = Math.max(countDecimals(range.support), countDecimals(range.resistance));
-
-      if (direction === SIGNAL_DIRECTION.BULLISH) return Math.max(0, round(range.support + diff * fibNumber, numDecimals));
-      else if (direction === SIGNAL_DIRECTION.BEARISH) return Math.max(0, round(range.resistance - diff * fibNumber, numDecimals));
-      return Math.max(0, round(range.resistance - diff * fibNumber, numDecimals)) || null;
-    };
-  }
-
-  const retracement = calculateRetracement(direction);
-
-  for (const [, value] of Object.entries(FIBONACCI_NUMBERS)) {
-    fibonacci[value as keyof IFibonacciRetracement] = retracement(value);
-  }
+  Object.values(FIBONACCI_NUMBERS)
+    .filter((fib): fib is number => typeof fib === 'number') // Ensure only numeric values
+    .forEach((fib) => {
+      fibonacci[fib as keyof IFibonacciRetracement] = retracement(fib);
+    });
 
   return fibonacci;
 }
