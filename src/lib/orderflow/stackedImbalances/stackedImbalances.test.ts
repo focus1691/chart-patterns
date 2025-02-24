@@ -1,4 +1,4 @@
-import { detectImbalances, detectStackedImbalances } from './';
+import { detectImbalances } from './';
 import { ImbalanceSide } from '../../../constants';
 
 describe('Order Flow Imbalance Detection', () => {
