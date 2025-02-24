@@ -19,10 +19,7 @@ export function detectImbalances(data: { [price: number]: OrderFlowRow }, thresh
 
   for (const price of sortedPrices) {
     const orderFlowRow = data[price.toString()];
-
-    if (!orderFlowRow) {
-      continue;
-    }
+    if (!orderFlowRow) continue;
 
     const EPSILON = 0.01;
     // When volSumBid dominates (more limit sells) = SELLING pressure
@@ -43,25 +40,26 @@ export function detectImbalances(data: { [price: number]: OrderFlowRow }, thresh
         volSumBid: orderFlowRow.volSumBid
       });
     } else {
-      const ratio = threshold / 100;
+      // Compare ratios for non-zero values
+      if (orderFlowRow.volSumAsk > 0 && orderFlowRow.volSumBid > 0) {
+        const askToBidRatio = orderFlowRow.volSumAsk / orderFlowRow.volSumBid;
+        const bidToAskRatio = orderFlowRow.volSumBid / orderFlowRow.volSumAsk;
 
-      // When volSumBid dominates = SELLING pressure
-      if (orderFlowRow.volSumBid > orderFlowRow.volSumAsk * ratio) {
-        imbalances.push({
-          price,
-          imbalanceSide: ImbalanceSide.SELLING_IMBALANCE,
-          volSumAsk: orderFlowRow.volSumAsk,
-          volSumBid: orderFlowRow.volSumBid
-        });
-      } 
-      // When volSumAsk dominates = BUYING pressure
-      else if (orderFlowRow.volSumAsk > orderFlowRow.volSumBid * ratio) {
-        imbalances.push({
-          price,
-          imbalanceSide: ImbalanceSide.BUYING_IMBALANCE,
-          volSumAsk: orderFlowRow.volSumAsk,
-          volSumBid: orderFlowRow.volSumBid
-        });
+        if (askToBidRatio >= threshold / 100) {
+          imbalances.push({
+            price,
+            imbalanceSide: ImbalanceSide.BUYING_IMBALANCE,
+            volSumAsk: orderFlowRow.volSumAsk,
+            volSumBid: orderFlowRow.volSumBid
+          });
+        } else if (bidToAskRatio >= threshold / 100) {
+          imbalances.push({
+            price,
+            imbalanceSide: ImbalanceSide.SELLING_IMBALANCE,
+            volSumAsk: orderFlowRow.volSumAsk,
+            volSumBid: orderFlowRow.volSumBid
+          });
+        }
       }
     }
   }
@@ -112,18 +110,16 @@ export function detectStackedImbalances(data: { [price: number]: OrderFlowRow },
   for (const imbalance of imbalances) {
     const { price: imbalancePrice, imbalanceSide } = imbalance;
 
-    if (lastImbalance) {
-      const priceDiff = Math.abs(imbalancePrice - lastImbalance.price);
-    }
-
-    const isDiagonallyConsecutive =
-      lastImbalance === null || (Math.abs(imbalancePrice - lastImbalance.price) <= tickSize * 3 && imbalance.imbalanceSide === lastImbalance.imbalanceSide);
+    const isDiagonallyConsecutive = lastImbalance === null || (
+      Math.abs(imbalancePrice - lastImbalance.price) <= tickSize * 2 && // Allow for some gap
+      imbalance.imbalanceSide === lastImbalance.imbalanceSide
+    );
 
     if (isDiagonallyConsecutive) {
       currentStack.push(imbalance);
     } else {
-      if (currentStack.length > 0) {
-        addStackRangeIfValid(currentStack, stackCount, stackedImbalances, lastImbalance!.imbalanceSide);
+      if (currentStack.length >= stackCount) {
+        addStackRangeIfValid(currentStack, stackCount, stackedImbalances, currentStack[0].imbalanceSide);
       }
       currentStack = [imbalance];
     }
@@ -131,7 +127,7 @@ export function detectStackedImbalances(data: { [price: number]: OrderFlowRow },
     lastImbalance = imbalance;
   }
 
-  if (currentStack.length > 0) {
+  if (currentStack.length >= stackCount) {
     addStackRangeIfValid(currentStack, stackCount, stackedImbalances, currentStack[0].imbalanceSide);
   }
 
