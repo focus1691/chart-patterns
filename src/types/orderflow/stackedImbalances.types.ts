@@ -1,15 +1,15 @@
 import { ImbalanceSide } from '../../constants';
 
 export interface Imbalance {
-  price: number;
+  price: string;
   imbalanceSide: ImbalanceSide;
   volSumAsk: number;
   volSumBid: number;
 }
 
 export interface IStackedImbalancesResult {
-  imbalanceStartAt: number;
-  imbalanceEndAt: number;
+  imbalanceStartAt: string;
+  imbalanceEndAt: string;
   stackedCount: number;
   imbalanceSide: ImbalanceSide;
 }
@@ -30,5 +30,5 @@ export interface IStackedImbalanceConfig {
   /**
    * The size of the price tick.
    */
-  tickSize?: number;
+  tickSize: number;
 }

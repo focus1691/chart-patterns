@@ -1,5 +1,6 @@
 import { ImbalanceSide } from '../../../constants';
 import { IStackedImbalanceConfig, IStackedImbalancesResult, Imbalance, OrderFlowRow } from '../../../types/orderflow';
+import Decimal from 'decimal.js';
 
 const DEFAULT_THRESHOLD = 300.0;
 const DEFAULT_STACK_COUNT = 3;
@@ -13,9 +14,7 @@ const DEFAULT_STACK_COUNT = 3;
  */
 export function detectImbalances(data: { [price: number]: OrderFlowRow }, threshold: number = DEFAULT_THRESHOLD): Imbalance[] {
   const imbalances: Imbalance[] = [];
-  const sortedPrices = Object.keys(data)
-    .map(Number)
-    .sort((a, b) => a - b);
+  const sortedPrices = Object.keys(data).sort((a, b) => Number(a) - Number(b));
 
   for (const price of sortedPrices) {
     const orderFlowRow = data[price.toString()];
@@ -24,45 +23,22 @@ export function detectImbalances(data: { [price: number]: OrderFlowRow }, thresh
       continue;
     }
 
-    const EPSILON = 0.01;
-    // When volSumBid dominates (more limit sells) = SELLING pressure
-    if (orderFlowRow.volSumAsk <= EPSILON && orderFlowRow.volSumBid > EPSILON) {
+    const thresholdFactor = 1 + threshold / 100;
+
+    if (orderFlowRow.volSumBid > thresholdFactor * orderFlowRow.volSumAsk) {
       imbalances.push({
         price,
         imbalanceSide: ImbalanceSide.SELLING_IMBALANCE,
         volSumAsk: orderFlowRow.volSumAsk,
         volSumBid: orderFlowRow.volSumBid
       });
-    } 
-    // When volSumAsk dominates (more limit buys) = BUYING pressure
-    else if (orderFlowRow.volSumBid <= EPSILON && orderFlowRow.volSumAsk > EPSILON) {
+    } else if (orderFlowRow.volSumAsk > thresholdFactor * orderFlowRow.volSumBid) {
       imbalances.push({
         price,
         imbalanceSide: ImbalanceSide.BUYING_IMBALANCE,
         volSumAsk: orderFlowRow.volSumAsk,
         volSumBid: orderFlowRow.volSumBid
       });
-    } else {
-      const ratio = threshold / 100;
-
-      // When volSumBid dominates = SELLING pressure
-      if (orderFlowRow.volSumBid > orderFlowRow.volSumAsk * ratio) {
-        imbalances.push({
-          price,
-          imbalanceSide: ImbalanceSide.SELLING_IMBALANCE,
-          volSumAsk: orderFlowRow.volSumAsk,
-          volSumBid: orderFlowRow.volSumBid
-        });
-      } 
-      // When volSumAsk dominates = BUYING pressure
-      else if (orderFlowRow.volSumAsk > orderFlowRow.volSumBid * ratio) {
-        imbalances.push({
-          price,
-          imbalanceSide: ImbalanceSide.BUYING_IMBALANCE,
-          volSumAsk: orderFlowRow.volSumAsk,
-          volSumBid: orderFlowRow.volSumBid
-        });
-      }
     }
   }
 
@@ -99,41 +75,36 @@ function addStackRangeIfValid(
  * @param config - The configuration for detecting stacked imbalances.
  * @returns An array of IStackedImbalancesResult, where each element represents the range of a stacked imbalance.
  */
-export function detectStackedImbalances(data: { [price: number]: OrderFlowRow }, config: IStackedImbalanceConfig = {}): IStackedImbalancesResult[] {
-  const threshold = config.threshold ?? DEFAULT_THRESHOLD;
-  const stackCount = config.stackCount ?? DEFAULT_STACK_COUNT;
-  const tickSize = config.tickSize ?? 1;
+export function detectStackedImbalances(data: { [price: number]: OrderFlowRow }, config: IStackedImbalanceConfig): IStackedImbalancesResult[] {
+  const threshold = config.threshold || DEFAULT_THRESHOLD;
+  const stackCount = config.stackCount || DEFAULT_STACK_COUNT;
+  const tickSize = config.tickSize;
 
   const imbalances = detectImbalances(data, threshold);
   const stackedImbalances: IStackedImbalancesResult[] = [];
-  let currentStack: Imbalance[] = [];
-  let lastImbalance: Imbalance | null = null;
 
-  for (const imbalance of imbalances) {
-    const { price: imbalancePrice, imbalanceSide } = imbalance;
+  if (imbalances.length === 0) return stackedImbalances;
 
-    if (lastImbalance) {
-      const priceDiff = Math.abs(imbalancePrice - lastImbalance.price);
-    }
+  imbalances.sort((a, b) => Number(a.price) - Number(b.price));
 
-    const isDiagonallyConsecutive =
-      lastImbalance === null || (Math.abs(imbalancePrice - lastImbalance.price) <= tickSize * 3 && imbalance.imbalanceSide === lastImbalance.imbalanceSide);
+  let currentStack: Imbalance[] = [imbalances[0]];
 
-    if (isDiagonallyConsecutive) {
-      currentStack.push(imbalance);
+  for (let i = 1; i < imbalances.length; i++) {
+    const prev = imbalances[i - 1];
+    const curr = imbalances[i];
+
+    const priceDiff = new Decimal(curr.price).minus(new Decimal(prev.price));
+    const isNextTick = priceDiff.equals(new Decimal(tickSize));
+
+    if (isNextTick && curr.imbalanceSide === prev.imbalanceSide) {
+      currentStack.push(curr);
     } else {
-      if (currentStack.length > 0) {
-        addStackRangeIfValid(currentStack, stackCount, stackedImbalances, lastImbalance!.imbalanceSide);
-      }
-      currentStack = [imbalance];
+      addStackRangeIfValid(currentStack, stackCount, stackedImbalances, currentStack[0].imbalanceSide);
+      currentStack = [curr];
     }
-
-    lastImbalance = imbalance;
   }
 
-  if (currentStack.length > 0) {
-    addStackRangeIfValid(currentStack, stackCount, stackedImbalances, currentStack[0].imbalanceSide);
-  }
+  addStackRangeIfValid(currentStack, stackCount, stackedImbalances, currentStack[0].imbalanceSide);
 
   return stackedImbalances;
 }
