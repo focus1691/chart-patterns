@@ -14,27 +14,51 @@ const DEFAULT_STACK_COUNT = 3;
 export function detectImbalances(data: { [price: number]: OrderFlowRow }, threshold: number = DEFAULT_THRESHOLD): Imbalance[] {
   const imbalances: Imbalance[] = [];
   const sortedPrices = Object.keys(data)
-    .map(parseFloat)
+    .map(Number)
     .sort((a, b) => a - b);
 
-  sortedPrices.forEach((priceNumber) => {
-    const orderFlowRow = data[priceNumber];
-    if (orderFlowRow.volSumBid >= (threshold / 100) * orderFlowRow.volSumAsk) {
+  for (const price of sortedPrices) {
+    const orderFlowRow = data[price.toString()];
+
+    if (!orderFlowRow) {
+      continue;
+    }
+
+    const EPSILON = 0.01;
+    if (orderFlowRow.volSumAsk <= EPSILON && orderFlowRow.volSumBid > EPSILON) {
       imbalances.push({
-        price: priceNumber,
-        imbalanceSide: ImbalanceSide.BUYING_IMBALANCE,
-        volSumAsk: orderFlowRow.volSumAsk,
-        volSumBid: orderFlowRow.volSumBid
-      });
-    } else if (orderFlowRow.volSumAsk >= (threshold / 100) * orderFlowRow.volSumBid) {
-      imbalances.push({
-        price: priceNumber,
+        price,
         imbalanceSide: ImbalanceSide.SELLING_IMBALANCE,
         volSumAsk: orderFlowRow.volSumAsk,
         volSumBid: orderFlowRow.volSumBid
       });
+    } else if (orderFlowRow.volSumBid <= EPSILON && orderFlowRow.volSumAsk > EPSILON) {
+      imbalances.push({
+        price,
+        imbalanceSide: ImbalanceSide.BUYING_IMBALANCE,
+        volSumAsk: orderFlowRow.volSumAsk,
+        volSumBid: orderFlowRow.volSumBid
+      });
+    } else {
+      const ratio = threshold / 100;
+
+      if (orderFlowRow.volSumBid > orderFlowRow.volSumAsk * ratio) {
+        imbalances.push({
+          price,
+          imbalanceSide: ImbalanceSide.SELLING_IMBALANCE,
+          volSumAsk: orderFlowRow.volSumAsk,
+          volSumBid: orderFlowRow.volSumBid
+        });
+      } else if (orderFlowRow.volSumAsk > orderFlowRow.volSumBid * ratio) {
+        imbalances.push({
+          price,
+          imbalanceSide: ImbalanceSide.BUYING_IMBALANCE,
+          volSumAsk: orderFlowRow.volSumAsk,
+          volSumBid: orderFlowRow.volSumBid
+        });
+      }
     }
-  });
+  }
 
   return imbalances;
 }
@@ -46,7 +70,12 @@ export function detectImbalances(data: { [price: number]: OrderFlowRow }, thresh
  * @param stackCount - The minimum number of consecutive imbalances required to form a stack.
  * @param stackedImbalances - The array of stacked imbalance ranges to add to.
  */
-function addStackRangeIfValid(currentStack: Imbalance[], stackCount: number, stackedImbalances: IStackedImbalancesResult[], imbalanceSide: ImbalanceSide): void {
+function addStackRangeIfValid(
+  currentStack: Imbalance[],
+  stackCount: number,
+  stackedImbalances: IStackedImbalancesResult[],
+  imbalanceSide: ImbalanceSide
+): void {
   if (currentStack.length >= stackCount) {
     stackedImbalances.push({
       imbalanceStartAt: currentStack[0].price,
@@ -67,7 +96,8 @@ function addStackRangeIfValid(currentStack: Imbalance[], stackCount: number, sta
 export function detectStackedImbalances(data: { [price: number]: OrderFlowRow }, config: IStackedImbalanceConfig = {}): IStackedImbalancesResult[] {
   const threshold = config.threshold ?? DEFAULT_THRESHOLD;
   const stackCount = config.stackCount ?? DEFAULT_STACK_COUNT;
-  const tickSize = config.tickSize ?? 1; // Default to 1 if not provided
+  const tickSize = config.tickSize ?? 1;
+
   const imbalances = detectImbalances(data, threshold);
   const stackedImbalances: IStackedImbalancesResult[] = [];
   let currentStack: Imbalance[] = [];
@@ -75,20 +105,29 @@ export function detectStackedImbalances(data: { [price: number]: OrderFlowRow },
 
   for (const imbalance of imbalances) {
     const { price: imbalancePrice, imbalanceSide } = imbalance;
+
+    if (lastImbalance) {
+      const priceDiff = Math.abs(imbalancePrice - lastImbalance.price);
+    }
+
     const isDiagonallyConsecutive =
-      lastImbalance === null || (Math.abs(imbalancePrice - lastImbalance.price) === tickSize && imbalance.imbalanceSide === lastImbalance.imbalanceSide);
+      lastImbalance === null || (Math.abs(imbalancePrice - lastImbalance.price) <= tickSize * 3 && imbalance.imbalanceSide === lastImbalance.imbalanceSide);
 
     if (isDiagonallyConsecutive) {
       currentStack.push(imbalance);
     } else {
-      addStackRangeIfValid(currentStack, stackCount, stackedImbalances, imbalanceSide);
+      if (currentStack.length > 0) {
+        addStackRangeIfValid(currentStack, stackCount, stackedImbalances, lastImbalance!.imbalanceSide);
+      }
       currentStack = [imbalance];
     }
 
     lastImbalance = imbalance;
   }
 
-  addStackRangeIfValid(currentStack, stackCount, stackedImbalances, currentStack[0]?.imbalanceSide);
+  if (currentStack.length > 0) {
+    addStackRangeIfValid(currentStack, stackCount, stackedImbalances, currentStack[0].imbalanceSide);
+  }
 
   return stackedImbalances;
 }
