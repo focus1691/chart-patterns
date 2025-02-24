@@ -25,6 +25,7 @@ export function detectImbalances(data: { [price: number]: OrderFlowRow }, thresh
     }
 
     const EPSILON = 0.01;
+    // When volSumBid dominates (more limit sells) = SELLING pressure
     if (orderFlowRow.volSumAsk <= EPSILON && orderFlowRow.volSumBid > EPSILON) {
       imbalances.push({
         price,
@@ -32,7 +33,9 @@ export function detectImbalances(data: { [price: number]: OrderFlowRow }, thresh
         volSumAsk: orderFlowRow.volSumAsk,
         volSumBid: orderFlowRow.volSumBid
       });
-    } else if (orderFlowRow.volSumBid <= EPSILON && orderFlowRow.volSumAsk > EPSILON) {
+    } 
+    // When volSumAsk dominates (more limit buys) = BUYING pressure
+    else if (orderFlowRow.volSumBid <= EPSILON && orderFlowRow.volSumAsk > EPSILON) {
       imbalances.push({
         price,
         imbalanceSide: ImbalanceSide.BUYING_IMBALANCE,
@@ -42,6 +45,7 @@ export function detectImbalances(data: { [price: number]: OrderFlowRow }, thresh
     } else {
       const ratio = threshold / 100;
 
+      // When volSumBid dominates = SELLING pressure
       if (orderFlowRow.volSumBid > orderFlowRow.volSumAsk * ratio) {
         imbalances.push({
           price,
@@ -49,7 +53,9 @@ export function detectImbalances(data: { [price: number]: OrderFlowRow }, thresh
           volSumAsk: orderFlowRow.volSumAsk,
           volSumBid: orderFlowRow.volSumBid
         });
-      } else if (orderFlowRow.volSumAsk > orderFlowRow.volSumBid * ratio) {
+      } 
+      // When volSumAsk dominates = BUYING pressure
+      else if (orderFlowRow.volSumAsk > orderFlowRow.volSumBid * ratio) {
         imbalances.push({
           price,
           imbalanceSide: ImbalanceSide.BUYING_IMBALANCE,
