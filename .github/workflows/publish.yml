@@ -1,15 +1,12 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://help.github.com/actions/language-and-framework-guides/publishing-nodejs-packages
-# https://httptoolkit.com/blog/automatic-npm-publish-gha/
-
 name: Publish to NPM
 
 on:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (semver: patch, minor, major, or exact version e.g., 1.0.5)'
+        required: true
+        default: 'patch'
 
 jobs:
   publish-npm:
@@ -29,23 +26,27 @@ jobs:
         env:
           NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
-      - name: Install
+      - name: Install dependencies
         run: yarn
 
-      - name: Build
+      - name: Build project
         run: yarn build
 
-      - name: Test
+      - name: Run tests
         run: yarn test
 
-      - name: Bump version & push
+      - name: Configure Git
         run: |
           git config --global user.name ${{ secrets.GIT_USER_NAME }}
           git config --global user.email ${{ secrets.GIT_USER_EMAIL }}
 
-          # Update the version in package.json, and commit & tag the change:
-          npm version patch # YMMV - you might want the semver level as a workflow input
+      - name: Set new package version
+        run: |
+          npm version ${{ github.event.inputs.version }}
 
-          git push && git push --tags
+      - name: Push changes and tags
+        run: |
+          git push origin HEAD:master --tags
 
-      - run: npm publish --access public
+      - name: Publish to NPM
+        run: npm publish --access public
