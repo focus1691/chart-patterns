@@ -4,11 +4,11 @@ import { IValueArea } from './valueArea.types';
 import { IInitialBalance, IVolumeProfileObservation } from './volumeProfile.types';
 
 export interface IMarketProfile {
-  structure: IMarketProfileStructure;
+  profileDistribution?: Record<string, string>;
   startTime: string | number | Date;
   endTime: string | number | Date;
   valueArea?: IValueArea;
-  IB?: IInitialBalance;
+  initialBalance?: IInitialBalance;
   failedAuction?: IVolumeProfileObservation[];
   excess?: IVolumeProfileObservation[];
   poorHighLow?: IVolumeProfileObservation[];
@@ -16,17 +16,12 @@ export interface IMarketProfile {
   ledges?: IVolumeProfileObservation[];
 }
 
-export interface IMarketProfileStructure {
-  startTime: string | number | Date;
-  endTime: string | number | Date;
-}
-
 /**
  * Configuration interface for building a Market Profile.
  *
  * @interface IMarketProfileBuilderConfig
  * @property {ICandle[]} candles - An array of candle objects.
- * @property {MARKET_PROFILE_PERIODS} period - The time period for which to generate the market profile.
+ * @property {MARKET_PROFILE_PERIODS} candleGroupingPeriod - Group candles into specific timeframe (daily, weekly, monthly).
  * @property {number} tickSize - The size of each price tick. This determines the granularity
  *   of the price levels in the market profile.
  * @property {number} tickMultiplier - A multiplier applied to the tick size. This can be used
@@ -35,14 +30,17 @@ export interface IMarketProfileStructure {
  *   This ensures consistent time handling across different market sessions.
  * @property {number} pricePrecision - The number of decimal places to use when rounding prices.
  *   This affects the precision of price levels in the resulting market profile.
+ * @property {boolean} [includeProfileDistribution=false] - Optional flag to include the full profile distribution data in the returned profiles.
+ * @default false
  */
 export interface IMarketProfileBuilderConfig {
   candles: ICandle[];
-  period: MARKET_PROFILE_PERIODS;
+  candleGroupingPeriod: MARKET_PROFILE_PERIODS;
   tickSize: number;
   tickMultiplier: number;
   timezone: string;
   pricePrecision: number;
+  includeProfileDistribution?: boolean;
 }
 
 export interface ITimeFrame {

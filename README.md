@@ -17,7 +17,7 @@ import { MARKET_PROFILE_PERIODS } from 'chart-patterns/dist/constants';
 
 const marketProfiles: IMarketProfile[] = MarketProfile.build({
   candles,
-  period: MARKET_PROFILE_PERIODS.DAILY,
+  candleGroupingPeriod: MARKET_PROFILE_PERIODS.DAILY,
   tickSize: 0.1,
   pricePrecision: 2,
   tickMultiplier: 100,

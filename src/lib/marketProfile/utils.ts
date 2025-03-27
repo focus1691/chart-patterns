@@ -29,10 +29,10 @@ export function calculateInitialBalance(candles: ICandle[], timezone: string): I
   return null;
 }
 
-export function getTimeFrameKey(date: string | number | Date, period: MARKET_PROFILE_PERIODS, timezone: string): string {
+export function getTimeFrameKey(date: string | number | Date, candleGroupingPeriod: MARKET_PROFILE_PERIODS, timezone: string): string {
   const zonedDate = toZonedTime(date, timezone);
 
-  switch (period) {
+  switch (candleGroupingPeriod) {
     case MARKET_PROFILE_PERIODS.DAILY:
       return format(zonedDate, 'yyyy-MM-dd');
     case MARKET_PROFILE_PERIODS.WEEKLY:
@@ -47,7 +47,7 @@ export function getTimeFrameKey(date: string | number | Date, period: MARKET_PRO
   }
 }
 
-export function groupCandlesByTimePeriod(candles: ICandle[], period: MARKET_PROFILE_PERIODS, timezone: string): ITimeFrame[] {
+export function groupCandlesByTimePeriod(candles: ICandle[], candleGroupingPeriod: MARKET_PROFILE_PERIODS, timezone: string): ITimeFrame[] {
   const periods: ITimeFrame[] = new Array(Math.ceil(candles.length / 24));
   let timeFrameCount = 0;
 
@@ -55,7 +55,7 @@ export function groupCandlesByTimePeriod(candles: ICandle[], period: MARKET_PROF
   let currentTimeFrameKey = '';
 
   for (const candle of candles) {
-    const timeFrameKey = getTimeFrameKey(candle.openTime, period, timezone);
+    const timeFrameKey = getTimeFrameKey(candle.openTime, candleGroupingPeriod, timezone);
 
     if (timeFrameKey !== currentTimeFrameKey) {
       if (currentTimeFrame) {
