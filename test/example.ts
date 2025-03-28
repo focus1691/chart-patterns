@@ -34,7 +34,7 @@ const main = async () => {
   console.log('\nTesting Market Profile with daily data...');
   const marketProfiles = MarketProfile.build({
     candles: thirtyMinCandles,
-    period: MARKET_PROFILE_PERIODS.DAILY,
+    candleGroupingPeriod: MARKET_PROFILE_PERIODS.DAILY,
     tickSize: 0.1,
     pricePrecision: 2,
     tickMultiplier: 100,
