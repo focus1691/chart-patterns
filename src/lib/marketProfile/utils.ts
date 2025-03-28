@@ -48,36 +48,23 @@ export function getTimeFrameKey(date: string | number | Date, candleGroupingPeri
 }
 
 export function groupCandlesByTimePeriod(candles: ICandle[], candleGroupingPeriod: MARKET_PROFILE_PERIODS, timezone: string): ITimeFrame[] {
-  const periods: ITimeFrame[] = new Array(Math.ceil(candles.length / 24));
-  let timeFrameCount = 0;
-
-  let currentTimeFrame: ITimeFrame | null = null;
-  let currentTimeFrameKey = '';
+  const periodsMap: Record<string, ITimeFrame> = {};
 
   for (const candle of candles) {
     const timeFrameKey = getTimeFrameKey(candle.openTime, candleGroupingPeriod, timezone);
 
-    if (timeFrameKey !== currentTimeFrameKey) {
-      if (currentTimeFrame) {
-        periods[timeFrameCount++] = currentTimeFrame;
-      }
-      currentTimeFrame = {
+    if (!periodsMap[timeFrameKey]) {
+      periodsMap[timeFrameKey] = {
         startTime: getTime(candle.openTime),
         endTime: getTime(candle.openTime),
         candles: [candle]
       };
-      currentTimeFrameKey = timeFrameKey;
-    } else if (currentTimeFrame) {
-      currentTimeFrame.endTime = getTime(candle.openTime);
-      currentTimeFrame.candles.push(candle);
+    } else {
+      const currentPeriod = periodsMap[timeFrameKey];
+      currentPeriod.endTime = getTime(candle.openTime);
+      currentPeriod.candles.push(candle);
     }
   }
 
-  if (currentTimeFrame) {
-    periods[timeFrameCount++] = currentTimeFrame;
-  }
-
-  periods.length = timeFrameCount;
-
-  return periods;
+  return Object.values(periodsMap).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 }

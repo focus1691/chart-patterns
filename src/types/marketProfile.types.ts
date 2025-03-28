@@ -8,7 +8,7 @@ export interface IMarketProfile {
   startTime: string | number | Date;
   endTime: string | number | Date;
   valueArea?: IValueArea;
-  initialBalance?: IInitialBalance;
+  initialBalance: IInitialBalance | null;
   failedAuction?: IVolumeProfileObservation[];
   excess?: IVolumeProfileObservation[];
   poorHighLow?: IVolumeProfileObservation[];

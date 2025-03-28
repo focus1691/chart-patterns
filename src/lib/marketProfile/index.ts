@@ -86,7 +86,7 @@ function calculateValueArea(profileDistribution: Record<string, string>): IValue
   const valueAreaVolume = totalVolume * 0.7;
 
   let cumulativeVolume = 0;
-  let valueAreaPrices = [];
+  let valueAreaPrices: number[] = [];
 
   for (const { price, volume } of marketProfile) {
     cumulativeVolume += volume;
