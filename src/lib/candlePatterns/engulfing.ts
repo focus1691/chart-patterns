@@ -1,6 +1,6 @@
 import { SIGNAL_DIRECTION } from '../../constants/signals';
 import { ICandle } from '../../types';
-import { IEngulfingCandleConfig } from '../../types/candlestickPatterns/engulfingCandle.types';
+import { IEngulfingPatternConfig } from '../../types/candlestickPatterns';
 
 /**
  * Finds engulfing candle patterns in a given set of candles.
@@ -12,11 +12,11 @@ import { IEngulfingCandleConfig } from '../../types/candlestickPatterns/engulfin
  * ```typescript
  * import * as ta from 'chart-patterns';
  *
- * const engulfingCandle: SIGNAL_DIRECTION | null = ta.CandlestickPatterns.isEngulfingPattern({ candles, index: 10 });
+ * const direction: SIGNAL_DIRECTION | null = ta.CandlestickPatterns.getEngulfingPatternDirection({ candles, index: 10 });
  * ```
  */
-export const isEngulfingPattern = (config: IEngulfingCandleConfig): SIGNAL_DIRECTION => {
-  const { candles, index } = config;
+export const getEngulfingPatternDirection = (candles: ICandle[], config: IEngulfingPatternConfig): SIGNAL_DIRECTION => {
+  const { index } = config;
   if (candles.length < 2) {
     return SIGNAL_DIRECTION.NONE;
   }

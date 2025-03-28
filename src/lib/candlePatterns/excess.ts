@@ -21,10 +21,10 @@ import { ICandle } from '../../types/candle.types';
  * ```typescript
  * import * as ta from 'chart-patterns';
  *
- * const direction: SIGNAL_DIRECTION = CandlestickPatterns.isExcess(candle);
+ * const direction: SIGNAL_DIRECTION = CandlestickPatterns.getCandleExcessDirection(candle);
  * ```
  */
-export const isExcess = (candle: ICandle): SIGNAL_DIRECTION => {
+export const getCandleExcessDirection = (candle: ICandle): SIGNAL_DIRECTION => {
   const { open, high, low, close } = candle;
 
   const klineLength = Math.abs(close - open);
