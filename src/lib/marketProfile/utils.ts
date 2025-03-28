@@ -3,30 +3,25 @@ import { format, toZonedTime } from 'date-fns-tz';
 import { MARKET_PROFILE_PERIODS } from '../../constants';
 import { ICandle, IInitialBalance, ITimeFrame } from '../../types';
 
-export function calculateInitialBalance(candles: ICandle[], timezone: string): IInitialBalance | null {
+export function calculateInitialBalance(profileDistribution: Record<string, string>): IInitialBalance | null {
   let ibHigh = -Infinity;
   let ibLow = Infinity;
-  let ibDataFound = false;
 
-  for (const candle of candles) {
-    const zonedCandleTime = toZonedTime(candle.openTime, timezone);
-    const candleHour = zonedCandleTime.getHours();
+  for (const priceStr in profileDistribution) {
+    const letters = profileDistribution[priceStr];
 
-    if (candleHour > 0) break;
+    // Periods 'A' and 'B' form the IB
+    if (letters.includes('A') || letters.includes('B')) {
+      const price = parseFloat(priceStr);
 
-    ibHigh = Math.max(ibHigh, candle.high);
-    ibLow = Math.min(ibLow, candle.low);
-    ibDataFound = true;
+      if (price > ibHigh) ibHigh = price;
+      if (price < ibLow) ibLow = price;
+    }
   }
 
-  if (ibDataFound && ibHigh !== -Infinity && ibLow !== Infinity) {
-    return {
-      high: ibHigh,
-      low: ibLow
-    };
-  }
+  if (ibHigh === -Infinity || ibLow === Infinity) return null;
 
-  return null;
+  return { high: ibHigh, low: ibLow };
 }
 
 export function getTimeFrameKey(date: string | number | Date, candleGroupingPeriod: MARKET_PROFILE_PERIODS, timezone: string): string {

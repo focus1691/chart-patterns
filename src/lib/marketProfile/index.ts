@@ -48,12 +48,8 @@ function buildMarketProfiles(
       const tpoLetter = TPO_LETTERS[i % TPO_LETTERS.length];
 
       for (let price = candle.low; price <= candle.high; price += priceStep) {
-        const roundedPrice = round(
-          Math.round(price / priceStep) * priceStep,
-          pricePrecision
-        );
-        profileDistribution[roundedPrice] =
-          (profileDistribution[roundedPrice] || '') + tpoLetter;
+        const roundedPrice = round(Math.round(price / priceStep) * priceStep, pricePrecision);
+        profileDistribution[roundedPrice] = (profileDistribution[roundedPrice] || '') + tpoLetter;
 
         tpoCount++;
       }
@@ -62,11 +58,9 @@ function buildMarketProfiles(
     const profile: IMarketProfile = {
       startTime,
       endTime,
-      initialBalance: calculateInitialBalance(candles, timezone),
+      initialBalance: calculateInitialBalance(profileDistribution),
       valueArea: calculateValueArea(profileDistribution),
-      profileDistribution: includeProfileDistribution
-        ? profileDistribution
-        : undefined,
+      profileDistribution: includeProfileDistribution ? profileDistribution : undefined,
       tpoCount
     };
 
