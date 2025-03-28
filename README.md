@@ -11,20 +11,20 @@ I am building various technical indicators not available elsewhere. These includ
 - High Volume Node - Identify nodes where a large trade volume occurred (needs orderflow data).
 
 ```ts
-import { MarketProfile, VolumeProfile, RangeBuilder } from 'chart-patterns';
+import * as ta from 'chart-patterns';
 import { IVolumeProfile, IMarketProfile, ILocalRange } from 'chart-patterns/dist/types';
 import { MARKET_PROFILE_PERIODS } from 'chart-patterns/dist/constants';
 
-const marketProfiles: IMarketProfile[] = MarketProfile.build({
+const marketProfiles: IMarketProfile[] = ta.MarketProfile.build({
   candles,
-  period: MARKET_PROFILE_PERIODS.DAILY,
+  candleGroupingPeriod: MARKET_PROFILE_PERIODS.DAILY,
   tickSize: 0.1,
   pricePrecision: 2,
   tickMultiplier: 100,
   timezone: 'Europe/London'
 });
 
-const volumeProfiles: IVolumeProfile[] = VolumeProfile.build({
+const volumeProfiles: IVolumeProfile[] = ta.VolumeProfile.build({
   candles,
   tickSize: 0.1,
   period: MARKET_PROFILE_PERIODS.DAILY,
@@ -34,7 +34,7 @@ const volumeProfiles: IVolumeProfile[] = VolumeProfile.build({
 const LAG = 2;
 const threshold = 0.1;
 const influence = 1;
-const ranges: ILocalRange[] = RangeBuilder.findRanges(candles, LAG, THRESHOLD, INFLUENCE);
+const ranges: ILocalRange[] = ta.RangeBuilder.findRanges(candles, LAG, THRESHOLD, INFLUENCE);
 ```
 
 - Maket Profile
@@ -42,5 +42,3 @@ const ranges: ILocalRange[] = RangeBuilder.findRanges(candles, LAG, THRESHOLD, I
 
 - Ranges
 ![rr_fullsize](https://github.com/user-attachments/assets/22077a58-ed1c-422c-946d-b9d25e586f7e)
-
-

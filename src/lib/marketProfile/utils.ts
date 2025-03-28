@@ -3,36 +3,31 @@ import { format, toZonedTime } from 'date-fns-tz';
 import { MARKET_PROFILE_PERIODS } from '../../constants';
 import { ICandle, IInitialBalance, ITimeFrame } from '../../types';
 
-export function calculateInitialBalance(candles: ICandle[], timezone: string): IInitialBalance | null {
+export function calculateInitialBalance(profileDistribution: Record<string, string>): IInitialBalance | null {
   let ibHigh = -Infinity;
   let ibLow = Infinity;
-  let ibDataFound = false;
 
-  for (const candle of candles) {
-    const zonedCandleTime = toZonedTime(candle.openTime, timezone);
-    const candleHour = zonedCandleTime.getHours();
+  for (const priceStr in profileDistribution) {
+    const letters = profileDistribution[priceStr];
 
-    if (candleHour > 0) break;
+    // Periods 'A' and 'B' form the IB
+    if (letters.includes('A') || letters.includes('B')) {
+      const price = parseFloat(priceStr);
 
-    ibHigh = Math.max(ibHigh, candle.high);
-    ibLow = Math.min(ibLow, candle.low);
-    ibDataFound = true;
+      if (price > ibHigh) ibHigh = price;
+      if (price < ibLow) ibLow = price;
+    }
   }
 
-  if (ibDataFound && ibHigh !== -Infinity && ibLow !== Infinity) {
-    return {
-      high: ibHigh,
-      low: ibLow
-    };
-  }
+  if (ibHigh === -Infinity || ibLow === Infinity) return null;
 
-  return null;
+  return { high: ibHigh, low: ibLow };
 }
 
-export function getTimeFrameKey(date: string | number | Date, period: MARKET_PROFILE_PERIODS, timezone: string): string {
+export function getTimeFrameKey(date: string | number | Date, candleGroupingPeriod: MARKET_PROFILE_PERIODS, timezone: string): string {
   const zonedDate = toZonedTime(date, timezone);
 
-  switch (period) {
+  switch (candleGroupingPeriod) {
     case MARKET_PROFILE_PERIODS.DAILY:
       return format(zonedDate, 'yyyy-MM-dd');
     case MARKET_PROFILE_PERIODS.WEEKLY:
@@ -47,37 +42,24 @@ export function getTimeFrameKey(date: string | number | Date, period: MARKET_PRO
   }
 }
 
-export function groupCandlesByTimePeriod(candles: ICandle[], period: MARKET_PROFILE_PERIODS, timezone: string): ITimeFrame[] {
-  const periods: ITimeFrame[] = new Array(Math.ceil(candles.length / 24));
-  let timeFrameCount = 0;
-
-  let currentTimeFrame: ITimeFrame | null = null;
-  let currentTimeFrameKey = '';
+export function groupCandlesByTimePeriod(candles: ICandle[], candleGroupingPeriod: MARKET_PROFILE_PERIODS, timezone: string): ITimeFrame[] {
+  const periodsMap: Record<string, ITimeFrame> = {};
 
   for (const candle of candles) {
-    const timeFrameKey = getTimeFrameKey(candle.openTime, period, timezone);
+    const timeFrameKey = getTimeFrameKey(candle.openTime, candleGroupingPeriod, timezone);
 
-    if (timeFrameKey !== currentTimeFrameKey) {
-      if (currentTimeFrame) {
-        periods[timeFrameCount++] = currentTimeFrame;
-      }
-      currentTimeFrame = {
+    if (!periodsMap[timeFrameKey]) {
+      periodsMap[timeFrameKey] = {
         startTime: getTime(candle.openTime),
         endTime: getTime(candle.openTime),
         candles: [candle]
       };
-      currentTimeFrameKey = timeFrameKey;
-    } else if (currentTimeFrame) {
-      currentTimeFrame.endTime = getTime(candle.openTime);
-      currentTimeFrame.candles.push(candle);
+    } else {
+      const currentPeriod = periodsMap[timeFrameKey];
+      currentPeriod.endTime = getTime(candle.openTime);
+      currentPeriod.candles.push(candle);
     }
   }
 
-  if (currentTimeFrame) {
-    periods[timeFrameCount++] = currentTimeFrame;
-  }
-
-  periods.length = timeFrameCount;
-
-  return periods;
+  return Object.values(periodsMap).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 }
