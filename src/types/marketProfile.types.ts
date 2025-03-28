@@ -7,7 +7,8 @@ export interface IMarketProfile {
   profileDistribution?: Record<string, string>;
   startTime: string | number | Date;
   endTime: string | number | Date;
-  valueArea?: IValueArea;
+  valueArea: IValueArea;
+  tpoCount: number;
   initialBalance: IInitialBalance | null;
   failedAuction?: IVolumeProfileObservation[];
   excess?: IVolumeProfileObservation[];

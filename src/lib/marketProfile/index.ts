@@ -41,14 +41,21 @@ function buildMarketProfiles(
   for (const period of periods) {
     const { candles, startTime, endTime } = period;
     const profileDistribution: Record<string, string> = {};
+    let tpoCount = 0;
 
     for (let i = 0; i < candles.length; i++) {
       const candle = candles[i];
       const tpoLetter = TPO_LETTERS[i % TPO_LETTERS.length];
 
       for (let price = candle.low; price <= candle.high; price += priceStep) {
-        const roundedPrice = round((price / priceStep) * priceStep, pricePrecision);
-        profileDistribution[roundedPrice] = (profileDistribution[roundedPrice] || '') + tpoLetter;
+        const roundedPrice = round(
+          Math.round(price / priceStep) * priceStep,
+          pricePrecision
+        );
+        profileDistribution[roundedPrice] =
+          (profileDistribution[roundedPrice] || '') + tpoLetter;
+
+        tpoCount++;
       }
     }
 
@@ -57,7 +64,10 @@ function buildMarketProfiles(
       endTime,
       initialBalance: calculateInitialBalance(candles, timezone),
       valueArea: calculateValueArea(profileDistribution),
-      profileDistribution: includeProfileDistribution ? profileDistribution : undefined
+      profileDistribution: includeProfileDistribution
+        ? profileDistribution
+        : undefined,
+      tpoCount
     };
 
     profiles.push(profile);
@@ -74,29 +84,56 @@ function calculateValueArea(profileDistribution: Record<string, string>): IValue
   const high = Math.max(...prices);
   const low = Math.min(...prices);
 
+  // Calculate TPO counts (time spent) per price level
   const marketProfile = prices.map((price) => ({
     price,
-    volume: profileDistribution[price].length
+    tpoCount: profileDistribution[price].length
   }));
-  marketProfile.sort((a, b) => b.volume - a.volume);
 
-  const POC = marketProfile[0].price;
+  const totalTPOs = marketProfile.reduce((sum, { tpoCount }) => sum + tpoCount, 0);
+  const valueAreaTPOs = totalTPOs * 0.7;
 
-  const totalVolume = marketProfile.reduce((sum, { volume }) => sum + volume, 0);
-  const valueAreaVolume = totalVolume * 0.7;
+  // Identify the Point of Control (POC) as price level with highest TPO count
+  const sortedByTPO = [...marketProfile].sort((a, b) => b.tpoCount - a.tpoCount);
+  const POC = sortedByTPO[0].price;
 
-  let cumulativeVolume = 0;
-  let valueAreaPrices: number[] = [];
+  // Start from POC and expand outwards
+  const pocIndex = prices.indexOf(POC);
+  let lowerIndex = pocIndex - 1;
+  let upperIndex = pocIndex + 1;
 
-  for (const { price, volume } of marketProfile) {
-    cumulativeVolume += volume;
-    valueAreaPrices.push(price);
-    if (cumulativeVolume >= valueAreaVolume) break;
+  let cumulativeTPOs = sortedByTPO[0].tpoCount;
+  const valueAreaPrices = [POC];
+
+  while (cumulativeTPOs < valueAreaTPOs && (lowerIndex >= 0 || upperIndex < prices.length)) {
+    const lowerTPOs = lowerIndex >= 0 ? marketProfile[lowerIndex].tpoCount : -1;
+    const upperTPOs = upperIndex < prices.length ? marketProfile[upperIndex].tpoCount : -1;
+
+    if (lowerTPOs >= upperTPOs) {
+      if (lowerIndex >= 0) {
+        cumulativeTPOs += lowerTPOs;
+        valueAreaPrices.push(marketProfile[lowerIndex].price);
+        lowerIndex--;
+      } else if (upperIndex < prices.length) {
+        cumulativeTPOs += upperTPOs;
+        valueAreaPrices.push(marketProfile[upperIndex].price);
+        upperIndex++;
+      }
+    } else {
+      if (upperIndex < prices.length) {
+        cumulativeTPOs += upperTPOs;
+        valueAreaPrices.push(marketProfile[upperIndex].price);
+        upperIndex++;
+      } else if (lowerIndex >= 0) {
+        cumulativeTPOs += lowerTPOs;
+        valueAreaPrices.push(marketProfile[lowerIndex].price);
+        lowerIndex--;
+      }
+    }
   }
 
   const VAH = Math.max(...valueAreaPrices);
   const VAL = Math.min(...valueAreaPrices);
-
   const EQ = (VAH + VAL) / 2;
 
   return {
