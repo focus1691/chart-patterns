@@ -1,3 +1,4 @@
+import { toZonedTime } from 'date-fns-tz';
 import {
   SIGNAL_DIRECTION,
   EXCESS_TAIL_LENGTH_SIGNIFICANCE,
@@ -15,7 +16,7 @@ import {
   IVolumeProfileObservation
 } from '../../types';
 import { convertTpoPeriodToLetter } from '../../utils';
-import { calculateInitialBalance, groupCandlesByTimePeriod } from '../marketProfile/utils';
+import { groupCandlesByTimePeriod } from '../marketProfile/utils';
 import * as ValueArea from '../valueArea';
 
 /**
@@ -283,4 +284,30 @@ export function findNakedPointOfControl(valueAreas: IValueArea[]): INakedPointOf
     if (npoc.resistance !== null && npoc.support !== null) return npoc;
   }
   return npoc;
+}
+
+export function calculateInitialBalance(candles: ICandle[], timezone: string): IInitialBalance | null {
+  let ibHigh = -Infinity;
+  let ibLow = Infinity;
+  let ibDataFound = false;
+
+  for (const candle of candles) {
+    const zonedCandleTime = toZonedTime(candle.openTime, timezone);
+    const candleHour = zonedCandleTime.getHours();
+
+    if (candleHour > 0) break;
+
+    ibHigh = Math.max(ibHigh, candle.high);
+    ibLow = Math.min(ibLow, candle.low);
+    ibDataFound = true;
+  }
+
+  if (ibDataFound && ibHigh !== -Infinity && ibLow !== Infinity) {
+    return {
+      high: ibHigh,
+      low: ibLow
+    };
+  }
+
+  return null;
 }
