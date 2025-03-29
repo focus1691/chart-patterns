@@ -1,7 +1,7 @@
 import { startOfWeek, getWeek, getTime } from 'date-fns';
 import { format, toZonedTime } from 'date-fns-tz';
-import { MARKET_PROFILE_PERIODS } from '../../constants';
-import { ICandle, IInitialBalance, ITimeFrame } from '../../types';
+import { MARKET_PROFILE_PERIODS, MARKET_PROFILE_OPEN } from '../../constants';
+import { ICandle, IInitialBalance, ITimeFrame, IOpenType } from '../../types';
 
 export function calculateInitialBalance(profileDistribution: Record<string, string>): IInitialBalance | null {
   let ibHigh = -Infinity;
@@ -62,4 +62,44 @@ export function groupCandlesByTimePeriod(candles: ICandle[], candleGroupingPerio
   }
 
   return Object.values(periodsMap).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+}
+
+/**
+ * Determines the type of market open based on price action in the first two periods
+ * 
+ * @param candles The first two candles of the profile timeframe
+ * @param tickSize The size of each price tick
+ * @returns The type of market open (Drive or Auction)
+ */
+export function determineOpenType(candles: ICandle[], tickSize: number): IOpenType {
+  if (candles.length !== 2) {
+    return null;
+  }
+
+  const openPrice = candles[0].open;
+  
+  // Get the extreme prices from the first two candles
+  const highestHigh = Math.max(candles[0].high, candles[1].high);
+  const lowestLow = Math.min(candles[0].low, candles[1].low);
+  
+  // For upward drive: lowest price should not be more than 1 tick below open
+  // and highest price should be above open
+  if (lowestLow >= openPrice - tickSize && highestHigh > openPrice) {
+    return { 
+      type: MARKET_PROFILE_OPEN.OPEN_DRIVE,
+      direction: 'up'
+    };
+  }
+  
+  // For downward drive: highest price should not be more than 1 tick above open
+  // and lowest price should be below open
+  if (highestHigh <= openPrice + tickSize && lowestLow < openPrice) {
+    return { 
+      type: MARKET_PROFILE_OPEN.OPEN_DRIVE,
+      direction: 'down'
+    };
+  }
+  
+  // Default to Open Auction
+  return { type: MARKET_PROFILE_OPEN.OPEN_AUCTION };
 }

@@ -1,7 +1,12 @@
-import { MARKET_PROFILE_PERIODS } from '../constants';
+import { MARKET_PROFILE_PERIODS, MARKET_PROFILE_OPEN } from '../constants';
 import { ICandle } from './candle.types';
 import { IValueArea } from './valueArea.types';
 import { IInitialBalance, IVolumeProfileObservation } from './volumeProfile.types';
+
+export interface IOpenType {
+  type: MARKET_PROFILE_OPEN;
+  direction?: 'up' | 'down';
+}
 
 export interface IMarketProfile {
   profileDistribution?: Record<string, string>;
@@ -10,6 +15,7 @@ export interface IMarketProfile {
   valueArea: IValueArea;
   tpoCount: number;
   initialBalance: IInitialBalance | null;
+  openType: IOpenType;
   failedAuction?: IVolumeProfileObservation[];
   excess?: IVolumeProfileObservation[];
   poorHighLow?: IVolumeProfileObservation[];
