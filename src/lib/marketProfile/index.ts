@@ -1,7 +1,7 @@
 import { round } from '../../utils';
 import { TPO_LETTERS } from '../../constants';
 import { IMarketProfile, IMarketProfileBuilderConfig, ITimeFrame, IValueArea } from '../../types';
-import { calculateInitialBalance, groupCandlesByTimePeriod } from './utils';
+import { calculateInitialBalance, groupCandlesByTimePeriod, determineOpenType } from './utils';
 
 /**
  * Calculates the market profile for an array of candles. Typically, you use 30m candles, but you can theoretically use any timeframe.
@@ -41,9 +41,10 @@ function buildMarketProfiles(
   for (const period of periods) {
     const { candles, startTime, endTime } = period;
     const profileDistribution: Record<string, string> = {};
+    const candleCount = candles.length;
     let tpoCount = 0;
 
-    for (let i = 0; i < candles.length; i++) {
+    for (let i = 0; i < candleCount; i++) {
       const candle = candles[i];
       const tpoLetter = TPO_LETTERS[i % TPO_LETTERS.length];
 
@@ -55,13 +56,19 @@ function buildMarketProfiles(
       }
     }
 
+    const openType = determineOpenType(candles.slice(0, 2), tickSize);
+    const initialBalance = calculateInitialBalance(profileDistribution);
+    const valueArea = calculateValueArea(profileDistribution);
+
     const profile: IMarketProfile = {
       startTime,
       endTime,
-      initialBalance: calculateInitialBalance(profileDistribution),
-      valueArea: calculateValueArea(profileDistribution),
+      openType,
+      initialBalance,
+      valueArea,
       profileDistribution: includeProfileDistribution ? profileDistribution : undefined,
-      tpoCount
+      tpoCount,
+      candleCount
     };
 
     profiles.push(profile);
