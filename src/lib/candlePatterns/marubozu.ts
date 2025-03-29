@@ -20,10 +20,10 @@ import { ICandle } from '../../types';
  * ```typescript
  * import * as ta from 'chart-patterns';
  *
- * const signal = ta.CandlestickPatterns.getMarubozuPatternDirection(candle, 0.05);
+ * const signal = ta.CandlestickPatterns.detectMarubozu(candle, 0.05);
  * ```
  */
-export const getMarubozuPatternDirection = (candle: ICandle, threshold: number = 0.03): SIGNAL_DIRECTION => {
+export const detectMarubozu = (candle: ICandle, threshold: number = 0.03): SIGNAL_DIRECTION => {
   const { open, close, high, low } = candle;
 
   const bodySize = Math.abs(close - open);

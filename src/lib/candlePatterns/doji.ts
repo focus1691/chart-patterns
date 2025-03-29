@@ -18,10 +18,10 @@ import { ICandle } from '../../types';
  * ```typescript
  * import * as ta from 'chart-patterns';
  *
- * const signal = ta.CandlestickPatterns.getDojiPatternDirection(candle, 0.05);
+ * const signal = ta.CandlestickPatterns.detectDoji(candle, 0.05);
  * ```
  */
-export const getDojiPatternDirection = (candle: ICandle, threshold = 0.1): SIGNAL_DIRECTION => {
+export const detectDoji = (candle: ICandle, threshold = 0.1): SIGNAL_DIRECTION => {
   const { open, close, high, low } = candle;
 
   const bodySize = Math.abs(close - open);

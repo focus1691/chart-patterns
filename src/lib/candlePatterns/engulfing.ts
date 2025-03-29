@@ -12,10 +12,10 @@ import { IEngulfingPatternConfig } from '../../types/candlestickPatterns';
  * ```typescript
  * import * as ta from 'chart-patterns';
  *
- * const direction: SIGNAL_DIRECTION | null = ta.CandlestickPatterns.getEngulfingPatternDirection({ candles, index: 10 });
+ * const direction: SIGNAL_DIRECTION | null = ta.CandlestickPatterns.detectEngulfing({ candles, index: 10 });
  * ```
  */
-export const getEngulfingPatternDirection = (candles: ICandle[], config: IEngulfingPatternConfig): SIGNAL_DIRECTION => {
+export const detectEngulfing = (candles: ICandle[], config: IEngulfingPatternConfig): SIGNAL_DIRECTION => {
   const { index } = config;
   if (candles.length < 2) {
     return SIGNAL_DIRECTION.NONE;

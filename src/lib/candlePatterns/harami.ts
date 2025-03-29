@@ -23,10 +23,10 @@ import { ICandle } from '../../types';
  * ```typescript
  * import * as ta from 'chart-patterns';
  *
- * const signal = ta.CandlestickPatterns.getHaramiPatternDirection(candles, 5);
+ * const signal = ta.CandlestickPatterns.detectHarami(candles, 5);
  * ```
  */
-export const getHaramiPatternDirection = (candles: ICandle[], index: number): SIGNAL_DIRECTION => {
+export const detectHarami = (candles: ICandle[], index: number): SIGNAL_DIRECTION => {
   if (index < 1 || !candles[index] || !candles[index - 1]) {
     return SIGNAL_DIRECTION.NONE;
   }
