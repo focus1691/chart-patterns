@@ -66,40 +66,51 @@ export function groupCandlesByTimePeriod(candles: ICandle[], candleGroupingPerio
 
 /**
  * Determines the type of market open based on price action in the first two periods
- * 
+ *
  * @param candles The first two candles of the profile timeframe
  * @param tickSize The size of each price tick
  * @returns The type of market open (Drive or Auction)
  */
-export function determineOpenType(candles: ICandle[], tickSize: number): IOpenType {
+export function determineOpenType(candles: ICandle[], tickSize: number): IOpenType | null {
   if (candles.length !== 2) {
     return null;
   }
 
   const openPrice = candles[0].open;
-  
+
   // Get the extreme prices from the first two candles
   const highestHigh = Math.max(candles[0].high, candles[1].high);
   const lowestLow = Math.min(candles[0].low, candles[1].low);
-  
+
   // For upward drive: lowest price should not be more than 1 tick below open
   // and highest price should be above open
   if (lowestLow >= openPrice - tickSize && highestHigh > openPrice) {
-    return { 
+    return {
       type: MARKET_PROFILE_OPEN.OPEN_DRIVE,
       direction: 'up'
     };
   }
-  
+
   // For downward drive: highest price should not be more than 1 tick above open
   // and lowest price should be below open
   if (highestHigh <= openPrice + tickSize && lowestLow < openPrice) {
-    return { 
+    return {
       type: MARKET_PROFILE_OPEN.OPEN_DRIVE,
       direction: 'down'
     };
   }
-  
-  // Default to Open Auction
-  return { type: MARKET_PROFILE_OPEN.OPEN_AUCTION };
+
+  // Check for Open Auction - at least 40% of price action above and below open
+  const totalRange = highestHigh - lowestLow;
+  const rangeAboveOpen = highestHigh - openPrice;
+  const rangeBelowOpen = openPrice - lowestLow;
+
+  const percentAbove = rangeAboveOpen / totalRange;
+  const percentBelow = rangeBelowOpen / totalRange;
+
+  if (percentAbove >= 0.4 && percentBelow >= 0.4) {
+    return { type: MARKET_PROFILE_OPEN.OPEN_AUCTION };
+  }
+
+  return null;
 }
