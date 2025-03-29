@@ -14,6 +14,7 @@ export interface IMarketProfile {
   endTime: string | number | Date;
   valueArea: IValueArea;
   tpoCount: number;
+  candleCount: number;
   initialBalance: IInitialBalance | null;
   openType: IOpenType;
   failedAuction?: IVolumeProfileObservation[];

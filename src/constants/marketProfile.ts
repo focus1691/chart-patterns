@@ -14,8 +14,7 @@ export enum MARKET_PROFILE_OPEN {
   OPEN_DRIVE = 'Open Drive',
   OPEN_TEST_DRIVE = 'Open Test Drive',
   OPEN_REJECTION_REVERSE = 'Open Rejection Reverse',
-  OPEN_AUCTION = 'Open Auction',
-  OPEN_BALANCE = 'Open Balance'
+  OPEN_AUCTION = 'Open Auction'
 }
 
 export enum MARKET_PROFILE_DAYS {

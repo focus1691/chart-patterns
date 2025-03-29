@@ -41,9 +41,10 @@ function buildMarketProfiles(
   for (const period of periods) {
     const { candles, startTime, endTime } = period;
     const profileDistribution: Record<string, string> = {};
+    const candleCount = candles.length;
     let tpoCount = 0;
 
-    for (let i = 0; i < candles.length; i++) {
+    for (let i = 0; i < candleCount; i++) {
       const candle = candles[i];
       const tpoLetter = TPO_LETTERS[i % TPO_LETTERS.length];
 
@@ -66,7 +67,8 @@ function buildMarketProfiles(
       initialBalance,
       valueArea,
       profileDistribution: includeProfileDistribution ? profileDistribution : undefined,
-      tpoCount
+      tpoCount,
+      candleCount
     };
 
     profiles.push(profile);
