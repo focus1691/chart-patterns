@@ -10,11 +10,3 @@ export interface IEngulfingPatternConfig {
    */
   index?: number;
 }
-
-export interface IDojiConfig {
-  /**
-   * Threshold for the maximum body-to-range ratio to qualify as a Doji.
-   * Default is 0.1 (10% of the total candle range).
-   */
-  threshold?: number;
-}
