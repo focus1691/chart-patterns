@@ -55,10 +55,13 @@ const main = async () => {
 
   // Test Range Builder with 30m data for more granular analysis
   console.log('\nTesting Range Builder with daily data...');
-  const LAG = 2;
-  const THRESHOLD = 0.1;
-  const INFLUENCE = 0.1;
-  const ranges = RangeBuilder.findRanges(dailyCandles, LAG, THRESHOLD, INFLUENCE);
+  // Define Z-Score configuration
+  const zScoreConfig = {
+    lag: 2,
+    threshold: 0.1,
+    influence: 0.1
+  };
+  const ranges = RangeBuilder.findRanges(dailyCandles, zScoreConfig);
   console.log('Ranges found:', ranges.length);
 
   // Print first 3 ranges for sample with detailed fib analysis

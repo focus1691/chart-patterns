@@ -64,7 +64,7 @@ Footprint candles built from the [Orderflow service](https://github.com/focus169
 # Usage
 ```ts
 import * as ta from 'chart-patterns';
-import { IVolumeProfile, IMarketProfile, ILocalRange } from 'chart-patterns/dist/types';
+import { IVolumeProfile, IMarketProfile, ILocalRange, IZScoreConfig } from 'chart-patterns/dist/types';
 import { MARKET_PROFILE_PERIODS } from 'chart-patterns/dist/constants';
 
 const marketProfiles: IMarketProfile[] = ta.MarketProfile.build({
@@ -83,10 +83,17 @@ const volumeProfiles: IVolumeProfile[] = ta.VolumeProfile.build({
   timezone: 'Europe/London'
 });
 
-const LAG = 2;
-const threshold = 0.1;
-const influence = 1;
-const ranges: ILocalRange[] = ta.RangeBuilder.findRanges(candles, LAG, THRESHOLD, INFLUENCE);
+// Z-Score configuration for peak/pattern detection algorithms
+const zScoreConfig: IZScoreConfig = {
+  lag: 2,        // Controls smoothing and adaptability to trend changes
+  threshold: 0.1, // Number of standard deviations to classify a signal
+  influence: 1    // How strongly signals affect future calculations (0-1)
+};
+
+const ranges: ILocalRange[] = ta.RangeBuilder.findRanges(candles, zScoreConfig);
+
+// Create zigzag points for pattern recognition
+const zigzags = ta.ZigZags.create(candles, zScoreConfig);
 ```
 
 - Maket Profile

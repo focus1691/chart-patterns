@@ -1,6 +1,7 @@
 import { HARMONIC_PATTERNS, harmonicRatios } from '../../constants/harmonics';
 import { IHarmonic, IXABCDPattern, IXABCDRatio } from '../../types/harmonics.types';
 import { IZigZag } from '../../types/zigzags.types';
+import { IZScoreConfig } from '../../types/peakDetector.types';
 import { round } from '../../utils/math';
 
 /**
@@ -10,14 +11,16 @@ import { round } from '../../utils/math';
  * @returns {IHarmonic[]} An array of identified harmonic patterns.
  *
  * @example
- * // Parameters for generating ZigZag points
- * const lag: number = 5;
- * const threshold: number = 2;
- * const influence: number = 0.3;
+ * // Z-Score configuration for peak detection algorithms
+ * const zScoreConfig: IZScoreConfig = {
+ *   lag: 5,        // Controls smoothing and adaptability 
+ *   threshold: 2,   // Number of standard deviations to classify a signal
+ *   influence: 0.3  // How strongly signals affect future calculations (0-1)
+ * };
  *
  * // Assuming 'candles' is an array of ICandle objects representing the price data
  * // Generate ZigZag points from candlestick data
- * const zigzags: IZigZag[] = ZigZags.create(candles, {lag, threshold, influence});
+ * const zigzags: IZigZag[] = ZigZags.create(candles, zScoreConfig);
  *
  * // Find harmonic patterns from the generated ZigZag points
  * const harmonics: IHarmonic[] = Harmonics.findPatterns(zigzags);
