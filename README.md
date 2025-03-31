@@ -11,12 +11,12 @@
 # Indicators
 1. [Market Profile](https://focus1691.github.io/chart-patterns/functions/lib.MarketProfile.build.html "Market Profile")
 1. [Volume Profile](https://focus1691.github.io/chart-patterns/functions/lib.VolumeProfile.build.html "Volume Profile")
-1. [Value Area](https://focus1691.github.io/chart-patterns/functions/lib.ValueArea.calculate.html, "Value Area")
-1. [Peak Detector](https://focus1691.github.io/chart-patterns/modules/lib.PeakDetector.html, "Peak Detector")
-1. [Pivot Points](https://focus1691.github.io/chart-patterns/functions/lib.PivotPoints.calculatePivotPoints.html, "Pivot Points")
+1. [Value Area](https://focus1691.github.io/chart-patterns/functions/lib.ValueArea.calculate.html "Value Area")
+1. [Peak Detector](https://focus1691.github.io/chart-patterns/modules/lib.PeakDetector.html "Peak Detector")
+1. [Pivot Points](https://focus1691.github.io/chart-patterns/functions/lib.PivotPoints.calculatePivotPoints.html "Pivot Points")
 1. [Range Finder](https://focus1691.github.io/chart-patterns/functions/lib.RangeBuilder.findRanges.html "Range Finder")
-1. [Zscore](https://focus1691.github.io/chart-patterns/classes/lib.ZScores.ZScore.html#calc, "Zscore")
-1. [Zigzags](https://focus1691.github.io/chart-patterns/functions/lib.ZigZags.create.html, "Zigzags")
+1. [Zscore](https://focus1691.github.io/chart-patterns/classes/lib.ZScores.ZScore.html#calc "Zscore")
+1. [Zigzags](https://focus1691.github.io/chart-patterns/functions/lib.ZigZags.create.html "Zigzags")
 
 # Orderflow Indicators
 FootPrint candles built from the [Orderflow service](https://github.com/focus1691/orderflow).
@@ -25,13 +25,13 @@ FootPrint candles built from the [Orderflow service](https://github.com/focus169
 1. [High Volume Node](https://focus1691.github.io/chart-patterns/functions/lib.Orderflow.findHighVolumeNodes.html "High Volume Node")
 
 # General Indicators
-1. [EMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateEMA.html, "EMA")
-1. [SMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateSMA.html, "SMA")
+1. [EMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateEMA.html "EMA")
+1. [SMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateSMA.html "SMA")
 1. [RSI](https://focus1691.github.io/chart-patterns/functions/lib.RSI.calculateRSI.html "RSI")
 1. [VWAP](https://focus1691.github.io/chart-patterns/functions/lib.VWAP.calculateVWAP.html "VWAP")
 
 # Candlestick Patterns
-1. [Doji](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.getDojiPatternDirection.html, "Doji")
+1. [Doji](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.getDojiPatternDirection.html "Doji")
 1. [Engulfing](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.getEngulfingPatternDirection.html "Englufing")
 1. [Excess](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.getCandleExcessDirection.html "Excess")
 1. [Morning Star / Evening Star](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.detectMorningEveningStar.html "Morning Star / Evening Star")
