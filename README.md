@@ -22,7 +22,7 @@
 
 | Tool | Description |
 |------|-------------|
-| [Peak Detector](https://focus1691.github.io/chart-patterns/modules/lib.PeakDetector.html) | Detects local highs and lows in price to identify swing points. |
+| [Peak Detector](https://focus1691.github.io/chart-patterns/modules/lib.PeakDetector.html) | Finds swing highs/lows and directional ranges in price movement. |
 | [Pivot Points](https://focus1691.github.io/chart-patterns/functions/lib.PivotPoints.calculatePivotPoints.html) | Calculates classic pivot points and support/resistance levels. |
 | [Range Finder](https://focus1691.github.io/chart-patterns/functions/lib.RangeBuilder.findRanges.html) | Finds key support and resistance zones from price swings. |
 | [Zscore](https://focus1691.github.io/chart-patterns/classes/lib.ZScores.ZScore.html#calc) | Measures how far price deviates from the mean — useful for spotting extremes. |
