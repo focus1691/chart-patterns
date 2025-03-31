@@ -12,9 +12,9 @@
 
 | Tool | Description |
 |------|-------------|
-| [Market Profile](https://focus1691.github.io/chart-patterns/functions/lib.MarketProfile.build.html) | Distributes price over time to show where trading occurred most. |
-| [Volume Profile](https://focus1691.github.io/chart-patterns/functions/lib.VolumeProfile.build.html) | Shows volume traded at each price level to highlight high-interest zones. |
-| [Value Area](https://focus1691.github.io/chart-patterns/functions/lib.ValueArea.calculate.html) | Calculates the price range that contains a specified percentage of total volume. |
+| [Market Profile](https://focus1691.github.io/chart-patterns/functions/lib.MarketProfile.build.html) | Generates TPO profiles with Value Area, Initial Balance, and Point of Control. |
+| [Volume Profile](https://focus1691.github.io/chart-patterns/functions/lib.VolumeProfile.build.html) | Builds a volume histogram with Point of Control and Value Area. |
+| [Value Area](https://focus1691.github.io/chart-patterns/functions/lib.ValueArea.calculate.html) | Calculates Value Area, POC, and key volume levels from price data. |
 
 ---
 
