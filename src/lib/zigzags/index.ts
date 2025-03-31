@@ -2,25 +2,24 @@ import moment from 'moment';
 import { ICandle } from '../../types/candle.types';
 import { IPeak } from '../../types/range.types';
 import { IZigZag } from '../../types/zigzags.types';
-import { ISignalsConfig } from '../../types/peakDetector.types';
+import { ISignalsConfig, IZScoreConfig } from '../../types/peakDetector.types';
 import * as PeakDetector from '../peakDetector';
 
 /**
  * Creates an array of ZigZag points based on the provided candlestick data and peak detection configuration.
  *
- * @param {ICandle[]} candles - An array of candlestick data to analyse.
- * @param {number} lag - The lag value for the peak detection algorithm.
- * @param {number} threshold - The threshold value for identifying significant price changes.
- * @param {number} influence - The influence factor for adjusting the impact of recent signals on the algorithm.
- * @returns {IZigZag[]} An array of ZigZag points representing significant price changes.
+ * @param {ICandle[]} candles - An array of candlestick data to analyse
+ * @param {IZScoreConfig} zScoreConfig - Configuration parameters for the Z-Score algorithm:
+ *   - lag: Controls smoothing and adaptability to long-term changes
+ *   - threshold: Number of standard deviations required to classify a signal
+ *   - influence: How strongly signals affect future calculations (0-1)
+ * @returns {IZigZag[]} An array of ZigZag points representing significant price changes
  */
-export function create(candles: ICandle[], lag: number, threshold: number, influence: number): IZigZag[] {
+export function create(candles: ICandle[], zScoreConfig: IZScoreConfig): IZigZag[] {
   const zigzags: IZigZag[] = [];
   const config: ISignalsConfig = {
     values: candles.map((candle) => candle.close),
-    lag,
-    threshold,
-    influence,
+    config: zScoreConfig,
     flatten: false
   };
   const groupedPeaks: IPeak[][] = PeakDetector.findSignals(config) as IPeak[][];

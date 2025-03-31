@@ -2,7 +2,7 @@ import moment from 'moment';
 import { from, map, toArray } from 'rxjs';
 import { FIBONACCI_NUMBERS, IFibonacciRetracement, SIGNAL_DIRECTION } from '../../constants';
 import { ICandle } from '../../types/candle.types';
-import { ISignalsConfig } from '../../types/peakDetector.types';
+import { ISignalsConfig, IZScoreConfig } from '../../types/peakDetector.types';
 import { ILocalRange, IPeak } from '../../types/range.types';
 import { IZigZag } from '../../types/zigzags.types';
 import { countDecimals, isBetween, round } from '../../utils/math';
@@ -156,14 +156,22 @@ function appendFibs(ranges: ILocalRange[]): ILocalRange[] {
   return ranges;
 }
 
-export function findRanges(candles: ICandle[], lag: number, threshold: number, influence: number): ILocalRange[] {
+/**
+ * Find price ranges using Z-Score based peak detection algorithm
+ * 
+ * @param candles - Array of candlestick data to analyse
+ * @param zScoreConfig - Configuration parameters for the Z-Score algorithm:
+ *   - lag: Controls smoothing and adaptability to long-term changes
+ *   - threshold: Number of standard deviations required to classify a signal
+ *   - influence: How strongly signals affect future calculations (0-1)
+ * @returns Array of local price ranges with support and resistance levels
+ */
+export function findRanges(candles: ICandle[], zScoreConfig: IZScoreConfig): ILocalRange[] {
   let ranges: ILocalRange[] = [];
 
   const config: ISignalsConfig = {
     values: candles.map((candle) => (Number(candle.high) + Number(candle.low) + Number(candle.close)) / 3),
-    lag,
-    threshold,
-    influence
+    config: zScoreConfig
   };
 
   from(PeakDetector.findSignals(config))

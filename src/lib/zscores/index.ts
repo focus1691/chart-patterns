@@ -1,4 +1,5 @@
 import { round } from '../../utils/math';
+import { IZScoreConfig } from '../../types/peakDetector.types';
 
 export class ZScoreOutput {
   input: number[];
@@ -9,7 +10,16 @@ export class ZScoreOutput {
 }
 
 export class ZScore {
-  public static calc(input: number[], lag: number, threshold: number, influence: number, normaliseData?: boolean): ZScoreOutput {
+  /**
+   * Calculate Z-Scores for a time series
+   * 
+   * @param input - Array of numerical values to analyse
+   * @param config - Z-Score configuration parameters 
+   * @returns ZScoreOutput containing the analysis results
+   */
+  public static calc(input: number[], config: IZScoreConfig): ZScoreOutput {
+    const { lag, threshold, influence, normaliseData } = config;
+    
     if (normaliseData) {
       // For input with negative values
       input = ZScore.normaliseData(input);

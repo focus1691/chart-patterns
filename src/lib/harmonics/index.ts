@@ -17,7 +17,7 @@ import { round } from '../../utils/math';
  *
  * // Assuming 'candles' is an array of ICandle objects representing the price data
  * // Generate ZigZag points from candlestick data
- * const zigzags: IZigZag[] = ZigZags.create(candles, lag, threshold, influence);
+ * const zigzags: IZigZag[] = ZigZags.create(candles, {lag, threshold, influence});
  *
  * // Find harmonic patterns from the generated ZigZag points
  * const harmonics: IHarmonic[] = Harmonics.findPatterns(zigzags);
