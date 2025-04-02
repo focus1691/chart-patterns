@@ -48,7 +48,7 @@ Footprint candles built from the [Orderflow service](https://github.com/focus169
 | [EMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateEMA.html) | Exponential Moving Average — responds faster to price changes. |
 | [SMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateSMA.html) | Simple Moving Average — smooths out price over a defined window. |
 | [RSI](https://focus1691.github.io/chart-patterns/functions/lib.RSI.calculateRSI.html) | Relative Strength Index — shows overbought/oversold conditions. |
-| [VWAP](https://focus1691.github.io/chart-patterns/functions/lib.VWAP.calculateVWAP.html) | Volume-Weighted Average Price — key level used by institutions. |
+| [VWAP](https://focus1691.github.io/chart-patterns/modules/lib.VWAP.html) | Volume-Weighted Average Price — key level used by institutions. |
 
 ---
 
