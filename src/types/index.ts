@@ -9,4 +9,5 @@ export * from './pivotPoint.types';
 export * from './range.types';
 export * from './valueArea.types';
 export * from './volumeProfile.types';
+export * from './vwap.types';
 export * from './zigzags.types';
