@@ -38,10 +38,10 @@ class VWAPSession {
    * Creates a new VWAP calculation session.
    * 
    * @param pricePrecision - The number of decimal places to round the VWAP value to
-   * @param deviationMultiplier - The multiplier for standard deviation bands (default: 2)
+   * @param deviationMultiplier - The multiplier for standard deviation bands (default: 1)
    * @param maxSize - Maximum number of candles to keep in the session (default: 1000)
    */
-  constructor(pricePrecision: number, deviationMultiplier: number = 2, maxSize: number = 1000) {
+  constructor(pricePrecision: number, deviationMultiplier: number = 1, maxSize: number = 1000) {
     this.pricePrecision = pricePrecision;
     this.deviationMultiplier = deviationMultiplier;
     this.maxSize = maxSize;
@@ -263,6 +263,6 @@ class VWAPSession {
  * vwapSession.resetAndShrink();
  * ```
  */
-export function createSession(pricePrecision: number, deviationMultiplier: number = 2, maxSize: number = 1000): VWAPSession {
+export function createSession(pricePrecision: number, deviationMultiplier: number = 1, maxSize: number = 1000): VWAPSession {
   return new VWAPSession(pricePrecision, deviationMultiplier, maxSize);
 }
