@@ -13,6 +13,6 @@ export interface ILocalRange {
 }
 
 export interface IPeak {
-  position?: number;
+  position: number;
   direction: SIGNAL_DIRECTION;
 }
