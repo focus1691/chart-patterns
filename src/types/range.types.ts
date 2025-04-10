@@ -14,10 +14,5 @@ export interface ILocalRange {
 
 export interface IPeak {
   position?: number;
-  direction: -1 | 1;
-}
-
-export interface IPeakRange extends IPeak {
-  start?: number;
-  end?: number;
+  direction: SIGNAL_DIRECTION;
 }

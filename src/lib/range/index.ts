@@ -6,26 +6,7 @@ import { ISignalsConfig, IZScoreConfig } from '../../types/peakDetector.types';
 import { ILocalRange, IPeak } from '../../types/range.types';
 import { IZigZag } from '../../types/zigzags.types';
 import { countDecimals, isBetween, round } from '../../utils/math';
-import * as PeakDetector from '../peakDetector';
-
-function toZigzags(klines: ICandle[], peaks: IPeak[]): IZigZag {
-  const zigzag: IZigZag = {} as IZigZag;
-  for (let i = 0; i < peaks.length; i++) {
-    const { position, direction }: IPeak = peaks[i];
-    const close: number = Number(klines[position!]?.close);
-    if (!zigzag.price) {
-      zigzag.direction = direction === 1 ? 'PEAK' : 'TROUGH';
-      zigzag.price = close;
-      zigzag.timestamp = moment(klines[position!].openTime).unix();
-    } else {
-      if ((zigzag.direction === 'PEAK' && close > zigzag.price) || (zigzag.direction === 'TROUGH' && close < zigzag.price)) {
-        zigzag.price = close;
-        zigzag.timestamp = moment(klines[position!].openTime).unix();
-      }
-    }
-  }
-  return zigzag;
-}
+import { ZigZags } from '..';
 
 function calculateFibonacci(range: ILocalRange, direction: SIGNAL_DIRECTION): IFibonacciRetracement {
   const fibonacci: IFibonacciRetracement = {} as IFibonacciRetracement;
@@ -64,12 +45,12 @@ function toRanges(zigzags: IZigZag[], candles: ICandle[]): ILocalRange[] {
       if (startCandle) {
         currentRange = {
           start: moment(startCandle.openTime).unix(),
-          [currentZigzag.direction === 'PEAK' ? 'resistance' : 'support']: currentZigzag.price,
-          direction: currentZigzag.direction === 'PEAK' ? SIGNAL_DIRECTION.BULLISH : SIGNAL_DIRECTION.BEARISH
+          [currentZigzag.direction === SIGNAL_DIRECTION.BULLISH ? 'resistance' : 'support']: currentZigzag.price,
+          direction: currentZigzag.direction
         };
       }
     } else {
-      if (currentZigzag.direction === 'PEAK') {
+      if (currentZigzag.direction === SIGNAL_DIRECTION.BULLISH) {
         currentRange.resistance = Math.max(currentRange.resistance || 0, currentZigzag.price);
       } else {
         currentRange.support = Math.min(currentRange.support || Infinity, currentZigzag.price);
@@ -98,7 +79,7 @@ function toRanges(zigzags: IZigZag[], candles: ICandle[]): ILocalRange[] {
 function findRangeStartCandle(candles: ICandle[], currentZigzag: IZigZag, nextZigzag: IZigZag): ICandle | null {
   const relevantCandles = candles.filter((c) => moment(c.openTime).unix() >= currentZigzag.timestamp && moment(c.openTime).unix() <= nextZigzag.timestamp);
 
-  if (currentZigzag.direction === 'PEAK') {
+  if (currentZigzag.direction === SIGNAL_DIRECTION.BULLISH) {
     return relevantCandles.find((c) => Number(c.close) < currentZigzag.price) || null;
   } else {
     return relevantCandles.find((c) => Number(c.close) > currentZigzag.price) || null;
@@ -174,10 +155,13 @@ export function findRanges(candles: ICandle[], zScoreConfig: IZScoreConfig): ILo
     config: zScoreConfig
   };
 
-  from(PeakDetector.findSignals(config))
+  const zigzags = ZigZags.create(candles, {
+    ...zScoreConfig,
+    priceMethod: 'close'
+  });
+
+  from([zigzags])
     .pipe(
-      map((peaks) => toZigzags(candles, peaks as IPeak[])),
-      toArray(),
       map((zigzags) => toRanges(zigzags, candles)),
       map(mergeRanges),
       map(appendFibs)

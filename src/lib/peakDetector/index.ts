@@ -1,5 +1,5 @@
 import { ZScoreOutput, ZScore } from '../zscores';
-import { IPeak, IPeakRange } from '../../types/range.types';
+import { IPeak } from '../../types/range.types';
 import { ISignalsConfig, IZScoreConfig } from '../../types/peakDetector.types';
 
 /**
@@ -9,78 +9,47 @@ import { ISignalsConfig, IZScoreConfig } from '../../types/peakDetector.types';
  * @throws Error if required parameters are missing or invalid
  */
 function validateZScoreConfig(config: IZScoreConfig): void {
-  if (!config.lag || !config.threshold || !config.influence) 
+  if (!config.lag || !config.threshold || !config.influence)
     throw new Error('Parameter(s) required: lag, threshold, influence');
-  
-  if (config.influence < 0 || config.influence > 1) 
+
+  if (config.influence < 0 || config.influence > 1)
     throw new Error("'influence' should be between 0 - 1");
 }
 
 /**
- * Finds and groups signals representing peaks based on the provided configuration.
+ * Finds signals representing significant changes or anomalies in a numeric time series.
+ * 
+ * The function uses Z-Score based peak detection to identify periods where values
+ * deviate significantly from the moving average, indicating potential 
+ * market turning points or trend changes.
  *
- * @param {ISignalsConfig} signalsConfig - Configuration object for peak detection
- * @returns {IPeak[][] | IPeak[]} Peaks grouped by direction or flattened version if requested
+ * @param {ISignalsConfig} signalsConfig - Configuration object for peak detection containing:
+ *   - values: Array of numerical values to analyze (typically closing prices)
+ *   - config: Z-Score algorithm parameters (lag, threshold, influence)
+ * 
+ * @returns {IPeak[]} An array of detected peaks with their positions and directions:
+ *   - position: Index in the original array where the signal was detected
+ *   - direction: 1 for bullish (upward) signals, -1 for bearish (downward) signals
+ * 
+ * @example
+ * ```ts
+ * const peaks = findSignals({
+ *   values: [101, 102, 99, 101, 102, 107, 109, 105, 102, 100, 97, 95, 97],
+ *   config: { lag: 5, threshold: 2.5, influence: 0.5 }
+ * });
+ * ```
  */
-export function findSignals(signalsConfig: ISignalsConfig): IPeak[][] | IPeak[] {
+export function findSignals(signalsConfig: ISignalsConfig): IPeak[] {
   validateZScoreConfig(signalsConfig.config);
-  
+
   const output: ZScoreOutput = ZScore.calc(
-    signalsConfig.values, 
+    signalsConfig.values,
     signalsConfig.config
   );
-  
+
   const signals: IPeak[] = output.signals
     .map((direction, position) => direction !== 0 && ({ position, direction } as IPeak))
     .filter(({ direction }) => Boolean(direction));
-  
-  const groupedSignals: IPeak[][] = groupSignalsByDirection(signals);
 
-  if (signalsConfig.flatten) {
-    const flattenedSignals: IPeak[] = groupedSignals.map((group) => group[0]); // (-1, -1, 1, 1, -1, -1) becomes -1, 1, -1
-    return flattenedSignals;
-  }
-
-  return groupedSignals;
-}
-
-/**
- * Groups consecutive signals based on their direction to form distinct peak groups.
- *
- * @param {IPeak[]} peaks - An array of individual peak signals.
- * @returns {IPeak[][]} An array of grouped peak signals.
- */
-function groupSignalsByDirection(peaks: IPeak[]): IPeak[][] {
-  let lastSignal: IPeak;
-  const groupedSignals: IPeak[][] = [];
-
-  for (let i = 0; i < peaks.length; i++) {
-    if (peaks[i].direction === lastSignal?.direction) {
-      groupedSignals[groupedSignals.length - 1].push(peaks[i]);
-    } else {
-      groupedSignals.push([peaks[i]]);
-      lastSignal = peaks[i];
-    }
-  }
-  return groupedSignals;
-}
-
-/**
- * Converts groups of peak signals into ranges, capturing the start and end timestamps of each peak.
- *
- * @param {IPeak[][]} groupedSignals - Groups of peak signals.
- * @param {number[]} timestamps - Array of timestamps corresponding to each data point.
- * @returns {IPeakRange[]} An array of peak ranges, each with a direction, start, and end timestamp.
- */
-export function getPeakRanges(groupedSignals: IPeak[][], timestamps: number[]): IPeakRange[] {
-  const peakRanges: IPeakRange[] = [];
-
-  for (let i = 0; i < groupedSignals.length; i++) {
-    const nSignals = groupedSignals[i].length;
-    const { position, direction }: IPeak = groupedSignals[i][0];
-    const lastPeakPos = groupedSignals[i][nSignals - 1]?.position;
-    const peakRange = { direction, start: timestamps[position], end: timestamps[lastPeakPos] } as IPeakRange;
-    peakRanges.push(peakRange);
-  }
-  return peakRanges;
+  return signals;
 }

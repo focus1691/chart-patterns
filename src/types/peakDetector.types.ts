@@ -17,7 +17,6 @@ export interface IZScoreConfig {
   lag: number;
   threshold: number;
   influence: number;
-  normaliseData?: boolean;
 }
 
 /**
@@ -25,10 +24,8 @@ export interface IZScoreConfig {
  *
  * @property {number[]} values - An array of numerical values (e.g., closing prices of candles) to be analysed.
  * @property {IZScoreConfig} config - Configuration parameters for the Z-Score algorithm.
- * @property {boolean} flatten - Whether to flatten grouped signals into a single signal per direction change.
  */
 export interface ISignalsConfig {
   values: number[];
   config: IZScoreConfig;
-  flatten?: boolean;
 }

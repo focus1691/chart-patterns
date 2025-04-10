@@ -18,12 +18,7 @@ export class ZScore {
    * @returns ZScoreOutput containing the analysis results
    */
   public static calc(input: number[], config: IZScoreConfig): ZScoreOutput {
-    const { lag, threshold, influence, normaliseData } = config;
-    
-    if (normaliseData) {
-      // For input with negative values
-      input = ZScore.normaliseData(input);
-    }
+    const { lag, threshold, influence } = config;
 
     const result: ZScoreOutput = new ZScoreOutput();
     const signals: number[] = Array(input.length).fill(0);
@@ -102,11 +97,5 @@ export class ZScore {
     }
 
     return round(stdDev);
-  }
-
-  private static normaliseData(data: number[]): number[] {
-    const min = Math.min(...data);
-    const max = Math.max(...data);
-    return data.map((value) => (value - min) / (max - min));
   }
 }
