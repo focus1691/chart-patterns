@@ -13,7 +13,7 @@
 | Tool | Description |
 |------|-------------|
 | [Market Profile](https://focus1691.github.io/chart-patterns/functions/lib.MarketProfile.build.html) | Generates TPO profiles with Value Area, Initial Balance, and Point of Control. |
-| [Volume Profile](https://focus1691.github.io/chart-patterns/functions/lib.VolumeProfile.build.html) | Builds a volume histogram with Point of Control and Value Area. |
+| [Volume Profile](https://focus1691.github.io/chart-patterns/modules/lib.VolumeProfile.html) | Process candles or individual trades to build volume histograms with Point of Control and Value Area. |
 | [Value Area](https://focus1691.github.io/chart-patterns/functions/lib.ValueArea.calculate.html) | Calculates Value Area, POC, and key volume levels from price data. |
 
 ---
@@ -67,6 +67,7 @@ import * as ta from 'chart-patterns';
 import { IVolumeProfile, IMarketProfile, ILocalRange, IZScoreConfig } from 'chart-patterns/dist/types';
 import { MARKET_PROFILE_PERIODS } from 'chart-patterns/dist/constants';
 
+// Market Profile
 const marketProfiles: IMarketProfile[] = ta.MarketProfile.build({
   candles,
   candleGroupingPeriod: MARKET_PROFILE_PERIODS.DAILY,
@@ -76,12 +77,31 @@ const marketProfiles: IMarketProfile[] = ta.MarketProfile.build({
   timezone: 'Europe/London'
 });
 
-const volumeProfiles: IVolumeProfile[] = ta.VolumeProfile.build({
-  candles,
-  tickSize: 0.1,
-  period: MARKET_PROFILE_PERIODS.DAILY,
-  timezone: 'Europe/London'
+// Volume Profile - Session-based API
+// Create a session for candle-based volume profile
+const barSession = ta.VolumeProfile.createBarSession({
+  valueAreaRowSize: 24,
+  valueAreaVolume: 0.7,
+  pricePrecision: 2
 });
+
+// Process candles one by one
+for (const candle of candles) {
+  barSession.processCandle(candle);
+}
+
+// Get value area and distribution results
+const valueArea = barSession.getValueArea();
+const distribution = barSession.getVolumeDistribution();
+
+// For raw trade data - even more precision
+const tickSession = ta.VolumeProfile.createTickSession();
+// Process each individual trade
+for (const trade of trades) {
+  tickSession.processTrade(trade);
+}
+// Get detailed trade analysis with exact price levels
+const tickDistribution = tickSession.getVolumeDistribution();
 
 // Z-Score configuration for peak/pattern detection algorithms
 const zScoreConfig: IZScoreConfig = {

@@ -1,4 +1,4 @@
-import { IVolumeProfileSessionConfig, IRawTradeVolumeProfileSessionConfig } from '../../types';
+import { IVolumeProfileSessionConfig } from '../../types';
 import { BarVolumeProfileSession } from './candle';
 import { TickVolumeProfileSession } from './rawTrades';
 
@@ -92,7 +92,7 @@ export function createBarSession(config?: IVolumeProfileSessionConfig): BarVolum
  * session.reset();
  * ```
  */
-export function createRawTradeSession(config?: IRawTradeVolumeProfileSessionConfig): TickVolumeProfileSession {
+export function createRawTradeSession(config?: IVolumeProfileSessionConfig): TickVolumeProfileSession {
   return new TickVolumeProfileSession(config);
 }
 
@@ -127,6 +127,6 @@ export function createRawTradeSession(config?: IRawTradeVolumeProfileSessionConf
  * }, 5000);
  * ```
  */
-export function createTickSession(config?: IRawTradeVolumeProfileSessionConfig): TickVolumeProfileSession {
+export function createTickSession(config?: IVolumeProfileSessionConfig): TickVolumeProfileSession {
   return createRawTradeSession(config);
 }

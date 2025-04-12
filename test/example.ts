@@ -7,7 +7,7 @@ import {
   CandlestickPatterns,
   VWAP
 } from '../src/lib';
-import { ICandle } from '../src/types';
+import { ICandle, ITrade } from '../src/types';
 import { MARKET_PROFILE_PERIODS, FIBONACCI_NUMBERS, SIGNAL_DIRECTION } from '../src/constants';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -28,6 +28,32 @@ const loadCandles = (filename: string): ICandle[] => {
     close: candle.close,
     volume: candle.volume
   }));
+};
+
+// Simulate some trade data from candles
+const generateTradesFromCandles = (candles: ICandle[]): ITrade[] => {
+  const trades: ITrade[] = [];
+  for (const candle of candles) {
+    // Create between 5-15 trades for each candle
+    const numTrades = 5 + Math.floor(Math.random() * 10);
+    const priceRange = candle.high - candle.low;
+    const volumePerTrade = candle.volume / numTrades;
+    
+    for (let i = 0; i < numTrades; i++) {
+      // Random price within candle range
+      const tradePrice = candle.low + (Math.random() * priceRange);
+      // Determine if buyer initiated based on where in the candle the price falls
+      const isBuyer = tradePrice > (candle.open + candle.close) / 2;
+      
+      trades.push({
+        price: tradePrice,
+        volume: volumePerTrade,
+        isBuyer,
+        time: new Date(candle.openTime.getTime() + (i * (candle.closeTime.getTime() - candle.openTime.getTime()) / numTrades))
+      });
+    }
+  }
+  return trades;
 };
 
 const printTitle = (title: string): void => {
@@ -74,27 +100,75 @@ const main = async () => {
   console.log(`Initial Balance: ${sampleProfile.initialBalance.low} - ${sampleProfile.initialBalance.high}`);
   console.log(`TPO Count: ${sampleProfile.tpoCount}`);
 
-  // Volume Profile test
-  printTitle("3. Volume Profile Analysis");
-  console.log('Building volume profiles with 30-minute candles grouped by day...');
-  const volumeProfiles = VolumeProfile.build({
-    candles: thirtyMinCandles,
-    tickSize: 100,
-    period: MARKET_PROFILE_PERIODS.DAILY,
-    timezone: 'Europe/London'
+  // Volume Profile test - New Session-based API
+  printTitle("3. Volume Profile Analysis - Bar Session");
+  console.log('Creating a volume profile session for 30-minute candles...');
+  
+  // Create a bar session
+  const barSession = VolumeProfile.createBarSession({
+    valueAreaRowSize: 24,
+    valueAreaVolume: 0.7,
+    pricePrecision: 2
+  });
+  
+  // Process all candles for the first day
+  const firstDayCandles = thirtyMinCandles.slice(0, 48); // Assuming 48 candles per day
+  for (const candle of firstDayCandles) {
+    barSession.processCandle(candle);
+  }
+  
+  // Get value area and distribution
+  const barValueArea = barSession.getValueArea();
+  const barDistribution = barSession.getVolumeDistribution();
+  
+  console.log(`Processed ${firstDayCandles.length} candles`);
+  console.log(`Point of Control (POC): ${barValueArea.POC}`);
+  console.log(`Value Area: ${barValueArea.VAL} - ${barValueArea.VAH}`);
+  console.log(`Total Volume: ${barDistribution.totalVolume}`);
+  console.log(`Buy/Sell Ratio: ${(barDistribution.buyVolume / barDistribution.totalVolume * 100).toFixed(2)}%`);
+  console.log(`Price Levels in Histogram: ${barDistribution.histogram.length}`);
+  
+  // Tick-based volume profile
+  printTitle("4. Volume Profile Analysis - Tick Session");
+  console.log('Creating a tick-based volume profile session...');
+  
+  // Generate some trade data from our candles
+  const trades = generateTradesFromCandles(firstDayCandles);
+  console.log(`Generated ${trades.length} simulated trades`);
+  
+  // Create tick session
+  const tickSession = VolumeProfile.createTickSession({
+    valueAreaRowSize: 48, // More granularity
+    valueAreaVolume: 0.7,
+    pricePrecision: 2
+  });
+  
+  // Process trades
+  tickSession.processTrades(trades);
+  
+  // Get tick-based value area and distribution
+  const tickValueArea = tickSession.getValueArea();
+  const tickDistribution = tickSession.getVolumeDistribution();
+  
+  console.log(`Point of Control (POC): ${tickValueArea.POC}`);
+  console.log(`Value Area: ${tickValueArea.VAL} - ${tickValueArea.VAH}`);
+  console.log(`Total Volume: ${tickDistribution.totalVolume}`);
+  console.log(`Buy/Sell Ratio: ${(tickDistribution.buyVolume / tickDistribution.totalVolume * 100).toFixed(2)}%`);
+  console.log(`Price Levels in Histogram: ${tickDistribution.histogram.length}`);
+  console.log(`Exact Price Points: ${tickDistribution.priceLevels.length}`);
+  
+  // Display most active price levels
+  const topPriceLevels = tickDistribution.priceLevels
+    .sort((a, b) => b.volume - a.volume)
+    .slice(0, 3);
+  
+  printSubtitle("Top 3 Most Active Price Levels");
+  topPriceLevels.forEach((level, i) => {
+    console.log(`#${i+1}: Price ${level.price} - Volume ${level.volume} (${(level.buyVolume / level.volume * 100).toFixed(2)}% buy)`);
   });
 
-  console.log(`Generated ${volumeProfiles.length} volume profiles`);
-
-  printSubtitle("Sample Volume Profile");
-  const sampleVolumeProfile = volumeProfiles[0];
-  console.log(`Date: ${new Date(sampleVolumeProfile.startTime).toDateString()}`);
-  console.log(`Point of Control (POC): ${sampleVolumeProfile.valueArea.POC}`);
-  console.log(`Value Area: ${sampleVolumeProfile.valueArea.VAL} - ${sampleVolumeProfile.valueArea.VAH}`);
-  console.log(`Initial Balance: ${sampleVolumeProfile.IB.low} - ${sampleVolumeProfile.IB.high}`);
-
   // Z-Score Peak Detection
-  printTitle("4. Z-Score Peak Detection");
+  printTitle("5. Z-Score Peak Detection");
   // Define Z-Score configuration
   const zScoreConfig = {
     lag: 5,          // Increased from 2 to 5 for better smoothing
@@ -123,7 +197,7 @@ const main = async () => {
   });
 
   // ZigZag Analysis
-  printTitle("5. ZigZag Analysis");
+  printTitle("6. ZigZag Analysis");
   const zigzagConfig: ZigZagConfig = {
     ...zScoreConfig,
     priceMethod: 'extremes'  // Use high/low for extremes
@@ -140,7 +214,7 @@ const main = async () => {
   });
 
   // Range Analysis with Fibonacci levels
-  printTitle("6. Price Range Analysis with Fibonacci Levels");
+  printTitle("7. Price Range Analysis with Fibonacci Levels");
   console.log('Finding price ranges in daily candles...');
   const ranges = RangeBuilder.findRanges(dailyCandles, zScoreConfig);
   console.log(`Found ${ranges.length} distinct price ranges`);
@@ -171,7 +245,7 @@ const main = async () => {
   }
 
   // Candlestick Pattern Detection
-  printTitle("7. Candlestick Pattern Detection");
+  printTitle("8. Candlestick Pattern Detection");
   console.log('Analyzing candlestick patterns in daily data...');
 
   // Sample counts for different patterns
@@ -209,7 +283,7 @@ const main = async () => {
   console.log(`Found ${marubozu} Marubozu patterns`);
 
   // VWAP Analysis
-  printTitle("8. VWAP Analysis");
+  printTitle("9. VWAP Analysis");
   console.log('Calculating VWAP with standard deviation bands...');
 
   const vwapSession = VWAP.createSession(2, 2, 20); // 2 decimal precision, 2 std dev bands, 20 candles max
@@ -228,7 +302,7 @@ const main = async () => {
   console.log(`Lower Band (-2σ): ${vwapResult.lowerBand}`);
 
   // Statistics on all analysis
-  printTitle("9. Overall Statistics");
+  printTitle("10. Overall Statistics");
 
   // Average range size
   const avgRangeSize = ranges.reduce((acc, range) => {
