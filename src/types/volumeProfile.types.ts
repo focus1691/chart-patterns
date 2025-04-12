@@ -1,27 +1,16 @@
-import { ICandle, INakedPointOfControl, IValueArea } from './';
+import { ICandle, IValueArea } from './';
 import { MARKET_PROFILE_PERIODS } from '../constants';
-
-/**
- * Represents the overall structure of the volume profile analysis for a trading session or asset.
- *
- * @property {INakedPointOfControl} npoc - The naked points of control indicating untested price levels with significant past activity.
- * @property {IVolumeProfileFindings[]} volumeProfiles - An array of detailed volume profile findings for individual sessions or periods.
- */
-export interface IVolumeProfileResult {
-  npoc?: INakedPointOfControl;
-  volumeProfiles?: IVolumeProfile[];
-}
 
 export interface IVolumeProfile {
   startTime: string | number | Date;
   endTime: string | number | Date;
   valueArea?: IValueArea;
-  IB?: IInitialBalance;
-  failedAuction?: IVolumeProfileObservation[];
-  excess?: IVolumeProfileObservation[];
-  poorHighLow?: IVolumeProfileObservation[];
-  singlePrints?: IVolumeProfileObservation[];
-  ledges?: IVolumeProfileObservation[];
+  // IB?: IInitialBalance;
+  // failedAuction?: IVolumeProfileObservation[];
+  // excess?: IVolumeProfileObservation[];
+  // poorHighLow?: IVolumeProfileObservation[];
+  // singlePrints?: IVolumeProfileObservation[];
+  // ledges?: IVolumeProfileObservation[];
 }
 
 /**
@@ -49,21 +38,42 @@ export interface IInitialBalance {
 }
 
 /**
- * Configuration used for building Volume Profile.
- *
- * @interface IVolumeProfileConfig
- * @property {ICandle[]} candles - Candle Array.
- * @property {MARKET_PROFILE_PERIODS} period - Specifies the time period over which the Volume Profile is calculated.
- * @property {number} tickSize - The minimum price increment defining price level resolution, e.g., 0.1 for BTCUSDT.
- * @property {string} timezone - The timezone to use for time-based calculations, e.g., 'Europe/London'.
- * @property {number} valueAreaRowSize - The number of Value Area rows.
- * @property {number} valueAreaVolume - The Value Area percentage.
+ * Configuration used for creating a Volume Profile Session.
  */
-export interface IVolumeProfileConfig {
-  candles: ICandle[];
-  period: MARKET_PROFILE_PERIODS;
-  tickSize: number;
-  timezone: string;
+export interface IVolumeProfileSessionConfig {
   valueAreaRowSize?: number;
   valueAreaVolume?: number;
+  pricePrecision?: number;
+  volumePrecision?: number;
+}
+
+/**
+ * Represents a volume row in the volume profile histogram
+ */
+export interface IVolumeRow {
+  volume: number;
+  buyVolume: number;
+  sellVolume: number;
+  low: number;
+  mid: number;
+  high: number;
+}
+
+/**
+ * Represents the complete volume distribution for a session
+ */
+export interface IVolumeDistribution {
+  histogram: IVolumeRow[];
+  valueArea: IValueArea;
+  totalVolume: number;
+  buyVolume: number;
+  sellVolume: number;
+}
+
+/**
+ * Volume distribution with raw trade data
+ */
+export interface IRawTradeVolumeDistribution extends IVolumeDistribution {
+  priceLevels: { price: number, volume: number, buyVolume: number, sellVolume: number }[];
+  tradesCount: number;
 }

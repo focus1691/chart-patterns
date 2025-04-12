@@ -1,4 +1,4 @@
-export interface IVolumeRow {
+export interface IValueAreaVolumeRow {
   volume: number;
   low: number;
   high: number;
@@ -12,9 +12,4 @@ export interface IValueArea {
   EQ: number;
   VAL: number;
   low: number;
-}
-
-export interface INakedPointOfControl {
-  resistance?: number;
-  support?: number;
 }

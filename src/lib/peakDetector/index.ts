@@ -24,7 +24,7 @@ function validateZScoreConfig(config: IZScoreConfig): void {
  * market turning points or trend changes.
  *
  * @param {ISignalsConfig} signalsConfig - Configuration object for peak detection containing:
- *   - values: Array of numerical values to analyze (typically closing prices)
+ *   - values: Array of numerical values to analyse (typically closing prices)
  *   - config: Z-Score algorithm parameters (lag, threshold, influence)
  * 
  * @returns {IPeak[]} An array of detected peaks with their positions and directions:

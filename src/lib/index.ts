@@ -7,7 +7,6 @@ export * as PeakDetector from './peakDetector';
 export * as PivotPoints from './pivotPoints';
 export * as RangeBuilder from './range';
 export * as RSI from './rsi';
-export * as ValueArea from './valueArea';
 export * as VolumeProfile from './volumeProfile';
 export * as VWAP from './vwap';
 export * as ZScores from './zscores';

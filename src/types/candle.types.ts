@@ -9,3 +9,10 @@ export interface ICandle {
   volume: number;
   closeTime: Date;
 }
+
+export interface ITrade {
+  price: number;
+  volume: number;
+  isBuyer: boolean;
+  time: Date | string | number;
+}

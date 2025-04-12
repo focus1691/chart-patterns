@@ -13,7 +13,7 @@ import { SIGNAL_DIRECTION } from '../../constants';
  * filtering out minor price movements. This implementation uses Z-Score algorithm to 
  * identify potential turning points in the price series.
  *
- * @param {ICandle[]} candles - An array of candlestick data to analyze
+ * @param {ICandle[]} candles - An array of candlestick data to analyse
  * @param {ZigZagConfig} config - Configuration for zigzag calculation:
  *   - lag: Controls smoothing and adaptability (from Z-Score)
  *   - threshold: Number of standard deviations required (from Z-Score)
