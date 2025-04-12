@@ -69,7 +69,7 @@ export function createBarSession(config?: IVolumeProfileSessionConfig): BarVolum
  * import * as ta from 'chart-patterns';
  * 
  * // Create a tick volume profile session
- * const session = ta.VolumeProfile.createRawTradeSession();
+ * const session = ta.VolumeProfile.createTickSession();
  * 
  * // Process individual trades
  * session.processTrade({
@@ -87,35 +87,9 @@ export function createBarSession(config?: IVolumeProfileSessionConfig): BarVolum
  * 
  * // Get distribution with both histogram and exact price levels
  * const distribution = session.getVolumeDistribution();
+ * // distribution.priceLevels contains exact price points with their volumes
  * 
- * // Reset the session
- * session.reset();
- * ```
- */
-export function createRawTradeSession(config?: IVolumeProfileSessionConfig): TickVolumeProfileSession {
-  return new TickVolumeProfileSession(config);
-}
-
-/**
- * Creates a new Tick-based Volume Profile session (alias for createRawTradeSession).
- * 
- * This function is an alias for {@link createRawTradeSession} with a more intuitive name
- * that clearly indicates it processes individual ticks/trades rather than candles.
- * 
- * @param config - Configuration options for the Volume Profile session
- * @returns A new Tick-based Volume Profile session
- * 
- * @example
- * ```typescript
- * import * as ta from 'chart-patterns';
- * 
- * // Create a tick volume profile session
- * const session = ta.VolumeProfile.createTickSession({
- *   valueAreaRowSize: 48,  // more granular price rows
- *   pricePrecision: 2
- * });
- * 
- * // Process trades in real-time
+ * // Real-time processing example
  * socket.on('trade', trade => {
  *   session.processTrade(trade);
  * });
@@ -125,8 +99,11 @@ export function createRawTradeSession(config?: IVolumeProfileSessionConfig): Tic
  *   const valueArea = session.getValueArea(); // auto-rebuilds only when needed
  *   console.log('Current Value Area:', valueArea);
  * }, 5000);
+ * 
+ * // Reset the session
+ * session.reset();
  * ```
  */
 export function createTickSession(config?: IVolumeProfileSessionConfig): TickVolumeProfileSession {
-  return createRawTradeSession(config);
+  return new TickVolumeProfileSession(config);
 }
