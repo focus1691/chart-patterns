@@ -89,6 +89,12 @@ export class TickVolumeProfileSession {
       this.histogramNeedsRebuild = true;
     }
 
+    // For the first trade, set both lowest and highest to the same value
+    if (this.tradesCount === 0) {
+      this.lowestPrice = price;
+      this.highestPrice = price;
+    }
+
     this.totalVolume = this.totalVolume.plus(volume);
 
     // Track buy/sell volume
@@ -164,8 +170,27 @@ export class TickVolumeProfileSession {
    * ```
    */
   rebuildHistogram(): void {
+    // If there's no price range (e.g., only one price point)
     const range = this.highestPrice.minus(this.lowestPrice);
-    if (range.lessThanOrEqualTo(0)) return;
+    if (range.lessThanOrEqualTo(0) || this.tradesCount === 0) {
+      // Create a single row with the accumulated volume
+      const singlePrice = this.lowestPrice;
+      const totalVol = this.totalVolume.toNumber();
+      const buyVol = this.buyVolume.toNumber();
+      const sellVol = this.sellVolume.toNumber();
+      
+      this.histogram = [{
+        volume: totalVol,
+        buyVolume: buyVol,
+        sellVolume: sellVol,
+        low: Number(singlePrice.toFixed(this.pricePrecision)),
+        mid: Number(singlePrice.toFixed(this.pricePrecision)),
+        high: Number(singlePrice.toFixed(this.pricePrecision))
+      }];
+      
+      this.histogramNeedsRebuild = false;
+      return;
+    }
 
     const stepSize = range.dividedBy(this.valueAreaRowSize);
 
