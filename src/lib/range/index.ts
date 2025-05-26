@@ -128,7 +128,14 @@ function mergeRanges(ranges: ILocalRange[]): ILocalRange[] {
 }
 
 function appendFibs(ranges: ILocalRange[]): ILocalRange[] {
+  if (!ranges) return [];
+  
   for (let i = 0; i < ranges.length; i++) {
+    // Skip undefined ranges or those without both support and resistance
+    if (!ranges[i] || ranges[i].resistance === undefined || ranges[i].support === undefined) {
+      continue;
+    }
+    
     ranges[i].fibs = {
       lowToHigh: calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BEARISH),
       highToLow: calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BULLISH)
