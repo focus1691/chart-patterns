@@ -89,9 +89,22 @@ function mergeRanges(ranges: ILocalRange[]): ILocalRange[] {
     const nextSupport = ranges[i].support;
     const isInPrevRange = isBetween(support!)(resistance!);
 
+    // Check if previous range is completely contained within the next range
+    const isPrevRangeInNext = support !== undefined && resistance !== undefined &&
+                             nextSupport !== undefined && nextResistance !== undefined &&
+                             support >= nextSupport && resistance <= nextResistance;
+
+    // Calculate range sizes to avoid joining when next range is significantly larger
+    const prevRangeSize = resistance !== undefined && support !== undefined ? resistance - support : 0;
+    const nextRangeSize = nextResistance !== undefined && nextSupport !== undefined ? nextResistance - nextSupport : 0;
+    const sizeRatio = prevRangeSize > 0 ? nextRangeSize / prevRangeSize : Infinity;
+
+    // Only join if the next range isn't more than 2.5x the size of the previous range
+    const shouldJoinContainedRange = isPrevRangeInNext && sizeRatio <= 2.5;
+
     if (!nextResistance || !nextSupport) {
       fullExtendedRanges.push(ranges[i]);
-    } else if (isInPrevRange(nextResistance) || isInPrevRange(nextSupport)) {
+    } else if (isInPrevRange(nextResistance) || isInPrevRange(nextSupport) || shouldJoinContainedRange) {
       const beginning: number = Math.min(start!, end!, ranges[i].start!, ranges[i].end!);
       const ending: number = Math.max(start!, end!, ranges[i].start!, ranges[i].end!);
       fullExtendedRanges[fullExtendedRanges.length - 1].resistance = Math.max(resistance ?? nextResistance, nextResistance);
