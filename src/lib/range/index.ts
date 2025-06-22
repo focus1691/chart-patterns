@@ -1,35 +1,12 @@
 import moment from 'moment';
-import { from, map, toArray } from 'rxjs';
+import { from, map } from 'rxjs';
 import { FIBONACCI_NUMBERS, IFibonacciRetracement, SIGNAL_DIRECTION } from '../../constants';
 import { ICandle } from '../../types/candle.types';
-import { ISignalsConfig, IZScoreConfig } from '../../types/peakDetector.types';
-import { ILocalRange, IPeak } from '../../types/range.types';
+import { IZScoreConfig } from '../../types/peakDetector.types';
+import { ILocalRange } from '../../types/range.types';
 import { IZigZag } from '../../types/zigzags.types';
 import { countDecimals, isBetween, round } from '../../utils/math';
 import { ZigZags } from '..';
-
-function calculateFibonacci(range: ILocalRange, direction: SIGNAL_DIRECTION): IFibonacciRetracement {
-  const fibonacci: IFibonacciRetracement = {} as IFibonacciRetracement;
-
-  if (!range.resistance || !range.support) return fibonacci;
-
-  const diff: number = Math.abs(range.resistance - range.support);
-
-  const retracement = (fibNumber: number): number | null => {
-    const decimals = Math.max(countDecimals(range.support), countDecimals(range.resistance));
-    return direction === SIGNAL_DIRECTION.BULLISH
-      ? round(range.support + diff * fibNumber, decimals) // Low to High
-      : round(range.resistance - diff * fibNumber, decimals); // High to Low
-  };
-
-  Object.values(FIBONACCI_NUMBERS)
-    .filter((fib): fib is number => typeof fib === 'number') // Ensure only numeric values
-    .forEach((fib) => {
-      fibonacci[fib as keyof IFibonacciRetracement] = retracement(fib);
-    });
-
-  return fibonacci;
-}
 
 function toRanges(zigzags: IZigZag[], candles: ICandle[]): ILocalRange[] {
   const ranges: ILocalRange[] = [];
@@ -127,23 +104,6 @@ function mergeRanges(ranges: ILocalRange[]): ILocalRange[] {
   return fullExtendedRanges;
 }
 
-function appendFibs(ranges: ILocalRange[]): ILocalRange[] {
-  if (!ranges) return [];
-  
-  for (let i = 0; i < ranges.length; i++) {
-    // Skip undefined ranges or those without both support and resistance
-    if (!ranges[i] || ranges[i].resistance === undefined || ranges[i].support === undefined) {
-      continue;
-    }
-    
-    ranges[i].fibs = {
-      lowToHigh: calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BEARISH),
-      highToLow: calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BULLISH)
-    };
-  }
-  return ranges;
-}
-
 /**
  * Find price ranges using Z-Score based peak detection algorithm
  * 
@@ -156,11 +116,6 @@ function appendFibs(ranges: ILocalRange[]): ILocalRange[] {
  */
 export function findRanges(candles: ICandle[], zScoreConfig: IZScoreConfig): ILocalRange[] {
   let ranges: ILocalRange[] = [];
-
-  const config: ISignalsConfig = {
-    values: candles.map((candle) => (Number(candle.high) + Number(candle.low) + Number(candle.close)) / 3),
-    config: zScoreConfig
-  };
 
   const zigzags = ZigZags.create(candles, {
     ...zScoreConfig,
@@ -177,5 +132,45 @@ export function findRanges(candles: ICandle[], zScoreConfig: IZScoreConfig): ILo
       ranges = result;
     });
 
+  return ranges;
+}
+
+function calculateFibonacci(range: ILocalRange, direction: SIGNAL_DIRECTION): IFibonacciRetracement {
+  const fibonacci: IFibonacciRetracement = {} as IFibonacciRetracement;
+
+  if (!range.resistance || !range.support) return fibonacci;
+
+  const diff: number = Math.abs(range.resistance - range.support);
+
+  const retracement = (fibNumber: number): number | null => {
+    const decimals = Math.max(countDecimals(range.support!), countDecimals(range.resistance!));
+    return direction === SIGNAL_DIRECTION.BULLISH
+      ? round(range.support! + diff * fibNumber, decimals) // Low to High
+      : round(range.resistance! - diff * fibNumber, decimals); // High to Low
+  };
+
+  Object.values(FIBONACCI_NUMBERS)
+    .filter((fib): fib is number => typeof fib === 'number') // Ensure only numeric values
+    .forEach((fib) => {
+      fibonacci[fib as keyof IFibonacciRetracement] = retracement(fib);
+    });
+
+  return fibonacci;
+}
+
+function appendFibs(ranges: ILocalRange[]): ILocalRange[] {
+  if (!ranges) return [];
+  
+  for (let i = 0; i < ranges.length; i++) {
+    // Skip undefined ranges or those without both support and resistance
+    if (!ranges[i] || ranges[i].resistance === undefined || ranges[i].support === undefined) {
+      continue;
+    }
+    
+    ranges[i].fibs = {
+      lowToHigh: calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BEARISH),
+      highToLow: calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BULLISH)
+    };
+  }
   return ranges;
 }
