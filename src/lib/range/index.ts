@@ -1,4 +1,3 @@
-import moment from 'moment';
 import { from, map } from 'rxjs';
 import { FIBONACCI_NUMBERS, IFibonacciRetracement, SIGNAL_DIRECTION } from '../../constants';
 import { ICandle } from '../../types/candle.types';
@@ -21,7 +20,7 @@ function toRanges(zigzags: IZigZag[], candles: ICandle[]): ILocalRange[] {
 
       if (startCandle) {
         currentRange = {
-          start: moment(startCandle.openTime).unix(),
+          start: currentZigzag.timestamp,
           [currentZigzag.direction === SIGNAL_DIRECTION.BULLISH ? 'resistance' : 'support']: currentZigzag.price,
           direction: currentZigzag.direction
         };
@@ -36,7 +35,7 @@ function toRanges(zigzags: IZigZag[], candles: ICandle[]): ILocalRange[] {
       const breakoutCandle = findBreakoutCandle(currentRange, candles, currentZigzag.timestamp, nextZigzag.timestamp);
 
       if (breakoutCandle) {
-        currentRange.end = moment(breakoutCandle.openTime).unix();
+        currentRange.end = nextZigzag.timestamp;
         ranges.push(currentRange);
 
         currentRange = null;
@@ -45,8 +44,7 @@ function toRanges(zigzags: IZigZag[], candles: ICandle[]): ILocalRange[] {
   }
 
   if (currentRange && !currentRange.end) {
-    const lastBreakout = findBreakoutCandle(currentRange, candles, zigzags[zigzags.length - 2].timestamp, zigzags[zigzags.length - 1].timestamp);
-    currentRange.end = lastBreakout ? moment(lastBreakout.openTime).unix() : zigzags[zigzags.length - 1].timestamp;
+    currentRange.end = zigzags[zigzags.length - 1].timestamp;
     ranges.push(currentRange);
   }
 
@@ -54,7 +52,10 @@ function toRanges(zigzags: IZigZag[], candles: ICandle[]): ILocalRange[] {
 }
 
 function findRangeStartCandle(candles: ICandle[], currentZigzag: IZigZag, nextZigzag: IZigZag): ICandle | null {
-  const relevantCandles = candles.filter((c) => moment(c.openTime).unix() >= currentZigzag.timestamp && moment(c.openTime).unix() <= nextZigzag.timestamp);
+  const relevantCandles = candles.filter((c) => {
+    const openTimeMs = Math.floor(c.openTime.getTime() / 1000);
+    return openTimeMs >= currentZigzag.timestamp && openTimeMs <= nextZigzag.timestamp;
+  });
 
   if (currentZigzag.direction === SIGNAL_DIRECTION.BULLISH) {
     return relevantCandles.find((c) => Number(c.close) < currentZigzag.price) || null;
@@ -64,7 +65,7 @@ function findRangeStartCandle(candles: ICandle[], currentZigzag: IZigZag, nextZi
 }
 
 function findBreakoutCandle(range: ILocalRange, candles: ICandle[], startTime: number, endTime: number): ICandle | null {
-  const relevantCandles = candles.filter((c) => moment(c.openTime).unix() >= startTime && moment(c.openTime).unix() <= endTime);
+  const relevantCandles = candles.filter((c) => Math.floor(c.openTime.getTime() / 1000) >= startTime && Math.floor(c.openTime.getTime() / 1000) <= endTime);
 
   for (const candle of relevantCandles) {
     if (range.resistance && Number(candle.close) > range.resistance) {
@@ -91,8 +92,8 @@ function mergeRanges(ranges: ILocalRange[]): ILocalRange[] {
     if (!nextResistance || !nextSupport) {
       fullExtendedRanges.push(ranges[i]);
     } else if (isInPrevRange(nextResistance) || isInPrevRange(nextSupport)) {
-      const beginning: number = Math.min(moment(start).valueOf(), moment(end).valueOf(), moment(ranges[i].start).valueOf(), moment(ranges[i].end).valueOf());
-      const ending: number = Math.max(moment(start).valueOf(), moment(end).valueOf(), moment(ranges[i].start).valueOf(), moment(ranges[i].end).valueOf());
+      const beginning: number = Math.min(start!, end!, ranges[i].start!, ranges[i].end!);
+      const ending: number = Math.max(start!, end!, ranges[i].start!, ranges[i].end!);
       fullExtendedRanges[fullExtendedRanges.length - 1].resistance = Math.max(resistance ?? nextResistance, nextResistance);
       fullExtendedRanges[fullExtendedRanges.length - 1].support = Math.min(support ?? nextSupport, nextSupport);
       fullExtendedRanges[fullExtendedRanges.length - 1].start = beginning;
@@ -106,7 +107,7 @@ function mergeRanges(ranges: ILocalRange[]): ILocalRange[] {
 
 /**
  * Find price ranges using Z-Score based peak detection algorithm
- * 
+ *
  * @param candles - Array of candlestick data to analyse
  * @param zScoreConfig - Configuration parameters for the Z-Score algorithm:
  *   - lag: Controls smoothing and adaptability to long-term changes
@@ -160,13 +161,13 @@ function calculateFibonacci(range: ILocalRange, direction: SIGNAL_DIRECTION): IF
 
 function appendFibs(ranges: ILocalRange[]): ILocalRange[] {
   if (!ranges) return [];
-  
+
   for (let i = 0; i < ranges.length; i++) {
     // Skip undefined ranges or those without both support and resistance
     if (!ranges[i] || ranges[i].resistance === undefined || ranges[i].support === undefined) {
       continue;
     }
-    
+
     ranges[i].fibs = {
       lowToHigh: calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BEARISH),
       highToLow: calculateFibonacci(ranges[i], SIGNAL_DIRECTION.BULLISH)

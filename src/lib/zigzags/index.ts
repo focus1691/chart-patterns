@@ -1,4 +1,3 @@
-import moment from 'moment';
 import { ICandle } from '../../types/candle.types';
 import { IPeak } from '../../types/range.types';
 import { IZigZag, ZigZagConfig } from '../../types/zigzags.types';
@@ -60,7 +59,7 @@ export function create(candles: ICandle[], config: ZigZagConfig): IZigZag[] {
         zigzags.push({
           direction: lastDirection === 1 ? SIGNAL_DIRECTION.BULLISH : SIGNAL_DIRECTION.BEARISH,
           price: extremeValue,
-          timestamp: moment(extremeCandle.openTime).unix()
+          timestamp: Math.floor(new Date(extremeCandle.openTime).getTime() / 1000)
         });
       }
 
@@ -101,7 +100,7 @@ export function create(candles: ICandle[], config: ZigZagConfig): IZigZag[] {
     zigzags.push({
       direction: lastDirection === 1 ? SIGNAL_DIRECTION.BULLISH : SIGNAL_DIRECTION.BEARISH,
       price: extremeValue,
-      timestamp: moment(extremeCandle.openTime).unix()
+      timestamp: Math.floor(new Date(extremeCandle.openTime).getTime() / 1000)
     });
   }
 
