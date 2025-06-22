@@ -2,19 +2,19 @@ import { round } from '../../utils/math';
 import { IZScoreConfig } from '../../types/peakDetector.types';
 
 export class ZScoreOutput {
-  input: number[];
-  signals: number[];
-  avgFilter: number[];
-  filtered_stddev: number[];
+  input: number[] = [];
+  signals: number[] = [];
+  avgFilter: number[] = [];
+  filtered_stddev: number[] = [];
   peakCount: number = 0;
 }
 
 export class ZScore {
   /**
    * Calculate Z-Scores for a time series
-   * 
+   *
    * @param input - Array of numerical values to analyse
-   * @param config - Z-Score configuration parameters 
+   * @param config - Z-Score configuration parameters
    * @returns ZScoreOutput containing the analysis results
    */
   public static calc(input: number[], config: IZScoreConfig): ZScoreOutput {
