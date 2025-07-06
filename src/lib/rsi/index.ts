@@ -55,3 +55,57 @@ export function calculateRSI(candles: ICandle[], period: number = 14): number[] 
 
   return rsi;
 }
+
+export function calculateStochasticRSI(
+  candles: ICandle[], 
+  rsiPeriod: number = 14, 
+  stochPeriod: number = 14,
+  kSmoothing: number = 3,
+  dSmoothing: number = 3
+): { k: number[], d: number[] } {
+  const rsiValues = calculateRSI(candles, rsiPeriod);
+  
+  if (rsiValues.length < stochPeriod) {
+    return { k: [], d: [] };
+  }
+
+  // Calculate raw stochastic RSI values
+  const rawStochasticRSI: number[] = [];
+  for (let i = stochPeriod - 1; i < rsiValues.length; i++) {
+    const rsiSlice = rsiValues.slice(i - stochPeriod + 1, i + 1);
+    const highestRSI = Math.max(...rsiSlice);
+    const lowestRSI = Math.min(...rsiSlice);
+    const currentRSI = rsiValues[i];
+
+    let stochRSI: number;
+    if (highestRSI === lowestRSI) {
+      stochRSI = 0; // Avoid division by zero
+    } else {
+      stochRSI = ((currentRSI - lowestRSI) / (highestRSI - lowestRSI)) * 100;
+    }
+
+    rawStochasticRSI.push(stochRSI);
+  }
+
+  if (rawStochasticRSI.length < Math.max(kSmoothing, dSmoothing)) {
+    return { k: [], d: [] };
+  }
+
+  // Calculate %K (smoothed stochastic RSI)
+  const kValues: number[] = [];
+  for (let i = kSmoothing - 1; i < rawStochasticRSI.length; i++) {
+    const kSlice = rawStochasticRSI.slice(i - kSmoothing + 1, i + 1);
+    const avgK = kSlice.reduce((sum, val) => sum + val, 0) / kSmoothing;
+    kValues.push(round(avgK, 2));
+  }
+
+  // Calculate %D (smoothed %K)
+  const dValues: number[] = [];
+  for (let i = dSmoothing - 1; i < kValues.length; i++) {
+    const dSlice = kValues.slice(i - dSmoothing + 1, i + 1);
+    const avgD = dSlice.reduce((sum, val) => sum + val, 0) / dSmoothing;
+    dValues.push(round(avgD, 2));
+  }
+
+  return { k: kValues, d: dValues };
+}
