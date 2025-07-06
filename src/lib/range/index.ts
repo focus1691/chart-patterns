@@ -8,7 +8,7 @@ import { countDecimals, isBetween, round } from '../../utils/math';
 import { ZigZags } from '..';
 
 function isValidRange(range: Partial<ILocalRange>): boolean {
-  return range !== undefined && typeof range.support === 'number' && typeof range.resistance === 'number';
+  return range && typeof range.support === 'number' && typeof range.resistance === 'number';
 }
 
 function toRanges(zigzags: IZigZag[], candles: ICandle[]): ILocalRange[] {
