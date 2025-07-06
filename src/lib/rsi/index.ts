@@ -1,46 +1,57 @@
 import { ICandle } from '../../types/candle.types';
+import { round } from '../../utils/math';
 
-export function calculateRSI(candles: ICandle[], period: number = 14, numElements: number = 2): number[] {
-  if (candles.length < period) {
+export function calculateRSI(candles: ICandle[], period: number = 14): number[] {
+  if (candles.length < period + 1) {
     return [];
   }
 
-  const rsi = new Array(candles.length).fill(0);
-  let gains = 0;
-  let losses = 0;
+  const rsi: number[] = [];
+  let gainSum = 0;
+  let lossSum = 0;
 
-  // Calculate initial average gains and losses
+  // Calculate initial average gains and losses for the first period
   for (let i = 1; i <= period; i++) {
     const change = candles[i].close - candles[i - 1].close;
     if (change > 0) {
-      gains += change;
+      gainSum += change;
     } else {
-      losses -= change;
+      lossSum -= change;
     }
   }
 
-  let averageGain = gains / period;
-  let averageLoss = losses / period;
+  let averageGain = gainSum / period;
+  let averageLoss = lossSum / period;
 
-  // Calculate RSI values starting from 'period' index
-  for (let i = period; i < candles.length; i++) {
-    if (i > period) {
-      const change = candles[i].close - candles[i - 1].close;
-      gains = change > 0 ? change : 0;
-      losses = change < 0 ? -change : 0;
+  // Calculate first RSI value
+  if (averageGain === 0 && averageLoss === 0) {
+    rsi.push(50); // Flat market - neutral
+  } else if (averageLoss === 0) {
+    rsi.push(100);
+  } else {
+    const rs = averageGain / averageLoss;
+    rsi.push(round(100 - 100 / (1 + rs), 2));
+  }
 
-      // Apply smoothing formula
-      averageGain = (averageGain * (period - 1) + gains) / period;
-      averageLoss = (averageLoss * (period - 1) + losses) / period;
-    }
+  // Calculate RSI values for remaining periods using smoothing formula
+  for (let i = period + 1; i < candles.length; i++) {
+    const change = candles[i].close - candles[i - 1].close;
+    const gain = change > 0 ? change : 0;
+    const loss = change < 0 ? -change : 0;
 
-    if (averageLoss === 0) {
-      rsi[i] = 100;
+    // Apply smoothing formula (Wilder's smoothing)
+    averageGain = (averageGain * (period - 1) + gain) / period;
+    averageLoss = (averageLoss * (period - 1) + loss) / period;
+
+    if (averageGain === 0 && averageLoss === 0) {
+      rsi.push(50); // Flat market - neutral
+    } else if (averageLoss === 0) {
+      rsi.push(100);
     } else {
       const rs = averageGain / averageLoss;
-      rsi[i] = 100 - 100 / (1 + rs);
+      rsi.push(round(100 - 100 / (1 + rs), 2));
     }
   }
 
-  return rsi.slice(-numElements);
+  return rsi;
 }
