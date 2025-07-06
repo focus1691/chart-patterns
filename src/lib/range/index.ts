@@ -7,9 +7,13 @@ import { IZigZag } from '../../types/zigzags.types';
 import { countDecimals, isBetween, round } from '../../utils/math';
 import { ZigZags } from '..';
 
+function isValidRange(range: Partial<ILocalRange>): boolean {
+  return range !== undefined && typeof range.support === 'number' && typeof range.resistance === 'number';
+}
+
 function toRanges(zigzags: IZigZag[], candles: ICandle[]): ILocalRange[] {
   const ranges: ILocalRange[] = [];
-  let currentRange: ILocalRange | null = null;
+  let currentRange: Partial<ILocalRange> | null = null;
 
   for (let i = 0; i < zigzags.length - 1; i++) {
     const currentZigzag = zigzags[i];
@@ -36,16 +40,19 @@ function toRanges(zigzags: IZigZag[], candles: ICandle[]): ILocalRange[] {
 
       if (breakoutCandle) {
         currentRange.end = nextZigzag.timestamp;
-        ranges.push(currentRange);
+
+        if (isValidRange(currentRange)) {
+          ranges.push(currentRange as ILocalRange);
+        }
 
         currentRange = null;
       }
     }
   }
 
-  if (currentRange && !currentRange.end) {
+  if (isValidRange(currentRange) && !currentRange.end) {
     currentRange.end = zigzags[zigzags.length - 1].timestamp;
-    ranges.push(currentRange);
+    ranges.push(currentRange as ILocalRange);
   }
 
   return ranges;
@@ -64,7 +71,7 @@ function findRangeStartCandle(candles: ICandle[], currentZigzag: IZigZag, nextZi
   }
 }
 
-function findBreakoutCandle(range: ILocalRange, candles: ICandle[], startTime: number, endTime: number): ICandle | null {
+function findBreakoutCandle(range: Partial<ILocalRange>, candles: ICandle[], startTime: number, endTime: number): ICandle | null {
   const relevantCandles = candles.filter((c) => Math.floor(c.openTime.getTime() / 1000) >= startTime && Math.floor(c.openTime.getTime() / 1000) <= endTime);
 
   for (const candle of relevantCandles) {
