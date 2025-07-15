@@ -46,8 +46,10 @@ Footprint candles built from the [Orderflow service](https://github.com/focus169
 | Tool | Description |
 |------|-------------|
 | [EMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateEMA.html) | Exponential Moving Average — responds faster to price changes. |
-| [SMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateSMA.html) | Simple Moving Average — smooths out price over a defined window. |
+| [MFI](https://focus1691.github.io/chart-patterns/functions/lib.MFI.calculateMFI.html) | Money Flow Index — volume-weighted RSI showing buying/selling pressure. |
 | [RSI](https://focus1691.github.io/chart-patterns/functions/lib.RSI.calculateRSI.html) | Relative Strength Index — shows overbought/oversold conditions. |
+| [SMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateSMA.html) | Simple Moving Average — smooths out price over a defined window. |
+| [Stochastic RSI](https://focus1691.github.io/chart-patterns/functions/lib.RSI.calculateStochasticRSI.html) | Stochastic oscillator applied to RSI — faster signals for momentum changes. |
 | [VWAP](https://focus1691.github.io/chart-patterns/modules/lib.VWAP.html) | Volume-Weighted Average Price — key level used by institutions. |
 
 ---
@@ -102,6 +104,13 @@ for (const trade of trades) {
 }
 // Get detailed trade analysis with exact price levels
 const tickDistribution = tickSession.getVolumeDistribution();
+
+// Money Flow Index - volume-based momentum oscillator
+const mfiValues = ta.MFI.calculateMFI(candles, 14);
+
+// RSI and Stochastic RSI
+const rsiValues = ta.RSI.calculateRSI(candles, 14);
+const stochRsiResult = ta.RSI.calculateStochasticRSI(candles, 14, 14, 3, 3);
 
 // Z-Score configuration for peak/pattern detection algorithms
 const zScoreConfig: IZScoreConfig = {

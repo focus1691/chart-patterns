@@ -1,6 +1,7 @@
 export * as CandlestickPatterns from './candlePatterns';
 export * as Harmonics from './harmonics/';
 export * as MarketProfile from './marketProfile';
+export * as MFI from './mfi';
 export * as MovingAverage from './movingAverage';
 export * as Orderflow from './orderflow';
 export * as PeakDetector from './peakDetector';
