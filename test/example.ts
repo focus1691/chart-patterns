@@ -171,9 +171,9 @@ const main = async () => {
   printTitle("5. Z-Score Peak Detection");
   // Define Z-Score configuration
   const zScoreConfig = {
-    lag: 5,          // Increased from 2 to 5 for better smoothing
-    threshold: 0.5,   // Increased sensitivity from 0.1
-    influence: 0.2    // Slightly increased from 0.1
+    lag: 7,
+    threshold: 0.1,
+    influence: 1
   };
 
   console.log(`Running peak detection with config: lag=${zScoreConfig.lag}, threshold=${zScoreConfig.threshold}, influence=${zScoreConfig.influence}`);

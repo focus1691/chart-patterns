@@ -68,8 +68,8 @@ Requires raw trade data. More information can be found in my [blog post here](ht
 # Usage
 ```ts
 import * as ta from 'chart-patterns';
-import { IVolumeProfile, IMarketProfile, ILocalRange, IZScoreConfig } from 'chart-patterns/dist/types';
-import { MARKET_PROFILE_PERIODS } from 'chart-patterns/dist/constants';
+import { IMarketProfile, ILocalRange, IZScoreConfig } from 'chart-patterns/dist/types';
+import { MARKET_PROFILE_PERIODS, SIGNAL_DIRECTION } from 'chart-patterns/dist/constants';
 
 // Market Profile
 const marketProfiles: IMarketProfile[] = ta.MarketProfile.build({
@@ -83,7 +83,7 @@ const marketProfiles: IMarketProfile[] = ta.MarketProfile.build({
 
 // Volume Profile - Session-based API
 // Create a session for candle-based volume profile
-const barSession = ta.VolumeProfile.createBarSession({
+const volumeProfileBarSession = ta.VolumeProfile.createBarSession({
   valueAreaRowSize: 24,
   valueAreaVolume: 0.7,
   pricePrecision: 2
@@ -91,7 +91,7 @@ const barSession = ta.VolumeProfile.createBarSession({
 
 // Process candles one by one
 for (const candle of candles) {
-  barSession.processCandle(candle);
+  volumeProfileBarSession.processCandle(candle);
 }
 
 // Get value area and distribution results
@@ -99,13 +99,13 @@ const valueArea = barSession.getValueArea();
 const distribution = barSession.getVolumeDistribution();
 
 // For raw trade data - even more precision
-const tickSession = ta.VolumeProfile.createTickSession();
+const volumeProfileTickSession = ta.VolumeProfile.createTickSession();
 // Process each individual trade
 for (const trade of trades) {
-  tickSession.processTrade(trade);
+  volumeProfileTickSession.processTrade(trade);
 }
 // Get detailed trade analysis with exact price levels
-const tickDistribution = tickSession.getVolumeDistribution();
+const tickDistribution = volumeProfileTickSession.getVolumeDistribution();
 
 // Money Flow Index - volume-based momentum oscillator
 const mfiValues = ta.MFI.calculateMFI(candles, 14);
@@ -125,10 +125,24 @@ const ranges: ILocalRange[] = ta.RangeBuilder.findRanges(candles, zScoreConfig);
 
 // Create zigzag points for pattern recognition
 const zigzags = ta.ZigZags.create(candles, zScoreConfig);
+
+// Candlestick Pattern Detection - Excess (large wicks indicating rejection)
+const excessDirection: SIGNAL_DIRECTION = ta.CandlestickPatterns.getCandleExcessDirection(candles[0]);
+// Returns: SIGNAL_DIRECTION.BULLISH (long lower wick), BEARISH (long upper wick), 
+// BIDIRECTIONAL (both), or NONE
+
+// Process multiple candles for excess patterns
+const excessSignals = candles.map(candle => ({
+  timestamp: candle.timestamp,
+  direction: ta.CandlestickPatterns.getCandleExcessDirection(candle)
+})).filter(signal => signal.direction !== ta.SIGNAL_DIRECTION.NONE);
+
 ```
 
-- Maket Profile
-![image](https://github.com/user-attachments/assets/4b5f81a9-7d55-42f1-ad95-023b47ecfc2a)
+## Visualisations
 
-- Ranges
-![rr_fullsize](https://github.com/user-attachments/assets/22077a58-ed1c-422c-946d-b9d25e586f7e)
+### Market Profile Output
+![Market Profile visualization showing TPO distribution with Value Area, POC, and VAH/VAL highlighted](https://github.com/user-attachments/assets/4b5f81a9-7d55-42f1-ad95-023b47ecfc2a)
+
+### Range Detection Output
+![Range detection visualization showing support and resistance levels identified on BTC/USDT price action](https://github.com/user-attachments/assets/22077a58-ed1c-422c-946d-b9d25e586f7e)
