@@ -3,9 +3,7 @@
 [![npm version](https://badge.fury.io/js/chart-patterns.svg)](https://www.npmjs.com/package/chart-patterns)
 [![GitHub license](https://img.shields.io/github/license/focus1691/chart-patterns.svg)](https://github.com/focus1691/chart-patterns/blob/master/LICENSE)
 
-## Advanced Technical Analysis Library for Algo Traders
-
-`chart-patterns` is a TypeScript library that provides technical analysis for volume-based indicators and uses peak detection algorithms to generate pattern-based indicators.
+TypeScript library that provides technical analysis for volume-based indicators and uses peak detection algorithms to generate pattern-based indicators.
 
 ### 📊 Market & Volume Distribution
 
