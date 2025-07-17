@@ -3,36 +3,33 @@
 [![npm version](https://badge.fury.io/js/chart-patterns.svg)](https://www.npmjs.com/package/chart-patterns)
 [![GitHub license](https://img.shields.io/github/license/focus1691/chart-patterns.svg)](https://github.com/focus1691/chart-patterns/blob/master/LICENSE)
 
-
 ## Advanced Technical Analysis Library for Algo Traders
 
-`chart-patterns` is a comprehensive TypeScript/JavaScript library that provides technical analysis tools for financial markets. This library includes traditional candlestick pattern recognition, volume analysis, order flow insights, and market structure identification.
+`chart-patterns` is a TypeScript library that provides technical analysis for volume based indicators, and also uses peak detection algos for generating pattern based indicators.
 
 ### 📊 Market & Volume Distribution
 
 | Tool | Description |
 |------|-------------|
 | [Market Profile](https://focus1691.github.io/chart-patterns/functions/lib.MarketProfile.build.html) | Generates TPO profiles with Value Area, Initial Balance, and Point of Control. |
-| [Volume Profile](https://focus1691.github.io/chart-patterns/modules/lib.VolumeProfile.html) | Process candles or individual trades to build volume histograms with Point of Control and Value Area. |
-| [Value Area](https://focus1691.github.io/chart-patterns/functions/lib.ValueArea.calculate.html) | Calculates Value Area, POC, and key volume levels from price data. |
+| [Volume Profile](https://focus1691.github.io/chart-patterns/modules/lib.VolumeProfile.html) | Generate Volume Profiles to find the Value Area. Process either Kline or tick data to build these profiles. |
 
 ---
 
-### 🧭 Support & Resistance
+### 🧭 Z-Score Tools for Ranges & Swings
 
 | Tool | Description |
 |------|-------------|
-| [Peak Detector](https://focus1691.github.io/chart-patterns/modules/lib.PeakDetector.html) | Finds swing highs/lows and directional ranges in price movement. |
-| [Pivot Points](https://focus1691.github.io/chart-patterns/functions/lib.PivotPoints.calculatePivotPoints.html) | Calculates classic pivot points and support/resistance levels. |
+| [Peak Detector](https://focus1691.github.io/chart-patterns/modules/lib.PeakDetector.html) | Z-Score based Peak Detector to find swing highs/lows. |
 | [Range Finder](https://focus1691.github.io/chart-patterns/functions/lib.RangeBuilder.findRanges.html) | Finds key support and resistance zones from price swings. |
+| [Zigzags](https://focus1691.github.io/chart-patterns/functions/lib.ZigZags.create.html) | Highlights major price swings only. |
 | [Zscore](https://focus1691.github.io/chart-patterns/classes/lib.ZScores.ZScore.html#calc) | Measures how far price deviates from the mean — useful for spotting extremes. |
-| [Zigzags](https://focus1691.github.io/chart-patterns/functions/lib.ZigZags.create.html) | Identifies significant price swings, filtering out minor moves. |
 
 ---
 
 ### 🔍 Orderflow
 
-Footprint candles built from the [Orderflow service](https://github.com/focus1691/orderflow).
+Requires raw trade data. More information in my [blog post here](https://blog.chartsignals.trading/blog/crypto-trading-bot-architecture).
 
 | Tool | Description |
 |------|-------------|
@@ -45,12 +42,13 @@ Footprint candles built from the [Orderflow service](https://github.com/focus169
 
 | Tool | Description |
 |------|-------------|
-| [EMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateEMA.html) | Exponential Moving Average — responds faster to price changes. |
-| [MFI](https://focus1691.github.io/chart-patterns/functions/lib.MFI.calculateMFI.html) | Money Flow Index — volume-weighted RSI showing buying/selling pressure. |
-| [RSI](https://focus1691.github.io/chart-patterns/functions/lib.RSI.calculateRSI.html) | Relative Strength Index — shows overbought/oversold conditions. |
-| [SMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateSMA.html) | Simple Moving Average — smooths out price over a defined window. |
-| [Stochastic RSI](https://focus1691.github.io/chart-patterns/functions/lib.RSI.calculateStochasticRSI.html) | Stochastic oscillator applied to RSI — faster signals for momentum changes. |
-| [VWAP](https://focus1691.github.io/chart-patterns/modules/lib.VWAP.html) | Volume-Weighted Average Price — key level used by institutions. |
+| [EMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateEMA.html) | Exponential Moving Average — Weighted moving average that reacts quickly to price. |
+| [MFI](https://focus1691.github.io/chart-patterns/functions/lib.MFI.calculateMFI.html) | Money Flow Index — Volume-based oscillator showing buy/sell pressure. |
+| [Pivot Points](https://focus1691.github.io/chart-patterns/functions/lib.PivotPoints.calculatePivotPoints.html) | Calculates pivot, support, and resistance levels. |
+| [RSI](https://focus1691.github.io/chart-patterns/functions/lib.RSI.calculateRSI.html) | Relative Strength Index — Measures momentum to spot overbought/oversold. |
+| [SMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateSMA.html) | Simple Moving Average — Simple average of price over a period. |
+| [Stochastic RSI](https://focus1691.github.io/chart-patterns/functions/lib.RSI.calculateStochasticRSI.html) | Tracks RSI momentum shifts. |
+| [VWAP](https://focus1691.github.io/chart-patterns/modules/lib.VWAP.html) | Average price weighted by volume. |
 
 ---
 
@@ -58,10 +56,14 @@ Footprint candles built from the [Orderflow service](https://github.com/focus169
 
 | Pattern | Description |
 |---------|-------------|
-| [Doji](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.getDojiPatternDirection.html) | Indicates indecision — open and close are nearly equal. |
-| [Engulfing](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.getEngulfingPatternDirection.html) | A reversal pattern where one candle fully engulfs the previous one. |
-| [Excess](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.getCandleExcessDirection.html) | Identifies candles with excess (tails/wicks) suggesting rejection. |
-| [Morning Star / Evening Star](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.detectMorningEveningStar.html) | Reversal patterns formed across three candles — bullish or bearish. |
+| [Doji](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.getDojiPatternDirection.html) | Signals indecision — open and close are nearly equal. |
+| [Engulfing](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.detectEngulfing.html) | Reversal pattern where one candle fully engulfs the previous. |
+| [Excess](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.getCandleExcessDirection.html) | Detects large wicks suggesting rejection from highs/lows. |
+| [Harami](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.detectHarami.html) | Small candle inside a larger one — potential reversal. |
+| [Homing Pigeon](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.detectHarami.html) | Two small-bodied candles in a downtrend — possible bullish reversal. |
+| [Inverted Hammer](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.detectInvertedHammer.html) | Small body with long upper wick — potential bullish reversal. |
+| [Marubozu](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.detectMarubozu.html) | Full-body candle with no wicks — strong directional move. |
+| [Morning Star / Evening Star](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.detectMorningEveningStar.html) | Three-candle reversal pattern — bullish (morning) or bearish (evening). |
 
 # Usage
 ```ts
