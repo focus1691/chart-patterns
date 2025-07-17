@@ -5,7 +5,7 @@
 
 ## Advanced Technical Analysis Library for Algo Traders
 
-`chart-patterns` is a TypeScript library that provides technical analysis for volume based indicators, and also uses peak detection algos for generating pattern based indicators.
+`chart-patterns` is a TypeScript library that provides technical analysis for volume-based indicators and uses peak detection algorithms to generate pattern-based indicators.
 
 ### 📊 Market & Volume Distribution
 
@@ -20,7 +20,7 @@
 
 | Tool | Description |
 |------|-------------|
-| [Peak Detector](https://focus1691.github.io/chart-patterns/modules/lib.PeakDetector.html) | Z-Score based Peak Detector to find swing highs/lows. |
+| [Peak Detector](https://focus1691.github.io/chart-patterns/modules/lib.PeakDetector.html) | Z-Score-based Peak Detector to find swing highs and lows. |
 | [Range Finder](https://focus1691.github.io/chart-patterns/functions/lib.RangeBuilder.findRanges.html) | Finds key support and resistance zones from price swings. |
 | [Zigzags](https://focus1691.github.io/chart-patterns/functions/lib.ZigZags.create.html) | Highlights major price swings only. |
 | [Zscore](https://focus1691.github.io/chart-patterns/classes/lib.ZScores.ZScore.html#calc) | Measures how far price deviates from the mean — useful for spotting extremes. |
@@ -29,7 +29,7 @@
 
 ### 🔍 Orderflow
 
-Requires raw trade data. More information in my [blog post here](https://blog.chartsignals.trading/blog/crypto-trading-bot-architecture).
+Requires raw trade data. More information can be found in my [blog post here](https://blog.chartsignals.trading/blog/crypto-trading-bot-architecture).
 
 | Tool | Description |
 |------|-------------|
@@ -42,7 +42,7 @@ Requires raw trade data. More information in my [blog post here](https://blog.ch
 
 | Tool | Description |
 |------|-------------|
-| [EMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateEMA.html) | Exponential Moving Average — Weighted moving average that reacts quickly to price. |
+| [EMA](https://focus1691.github.io/chart-patterns/functions/lib.MovingAverage.calculateEMA.html) | Exponential Moving Average — a weighted moving average that reacts quickly to price. |
 | [MFI](https://focus1691.github.io/chart-patterns/functions/lib.MFI.calculateMFI.html) | Money Flow Index — Volume-based oscillator showing buy/sell pressure. |
 | [Pivot Points](https://focus1691.github.io/chart-patterns/functions/lib.PivotPoints.calculatePivotPoints.html) | Calculates pivot, support, and resistance levels. |
 | [RSI](https://focus1691.github.io/chart-patterns/functions/lib.RSI.calculateRSI.html) | Relative Strength Index — Measures momentum to spot overbought/oversold. |
@@ -58,7 +58,7 @@ Requires raw trade data. More information in my [blog post here](https://blog.ch
 |---------|-------------|
 | [Doji](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.getDojiPatternDirection.html) | Signals indecision — open and close are nearly equal. |
 | [Engulfing](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.detectEngulfing.html) | Reversal pattern where one candle fully engulfs the previous. |
-| [Excess](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.getCandleExcessDirection.html) | Detects large wicks suggesting rejection from highs/lows. |
+| [Excess](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.getCandleExcessDirection.html) | Detects large wicks, suggesting rejection from highs or lows. |
 | [Harami](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.detectHarami.html) | Small candle inside a larger one — potential reversal. |
 | [Homing Pigeon](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.detectHarami.html) | Two small-bodied candles in a downtrend — possible bullish reversal. |
 | [Inverted Hammer](https://focus1691.github.io/chart-patterns/functions/lib.CandlestickPatterns.detectInvertedHammer.html) | Small body with long upper wick — potential bullish reversal. |
