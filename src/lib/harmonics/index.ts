@@ -1,7 +1,6 @@
 import { HARMONIC_PATTERNS, harmonicRatios } from '../../constants/harmonics';
 import { IHarmonic, IXABCDPattern, IXABCDRatio } from '../../types/harmonics.types';
 import { IZigZag } from '../../types/zigzags.types';
-import { IZScoreConfig } from '../../types/peakDetector.types';
 import { round } from '../../utils/math';
 
 /**

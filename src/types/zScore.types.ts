@@ -18,14 +18,3 @@ export interface IZScoreConfig {
   threshold: number;
   influence: number;
 }
-
-/**
- * Configuration object used for generating signals, particularly in the context of peak detection algorithms.
- *
- * @property {number[]} values - An array of numerical values (e.g., closing prices of candles) to be analysed.
- * @property {IZScoreConfig} config - Configuration parameters for the Z-Score algorithm.
- */
-export interface ISignalsConfig {
-  values: number[];
-  config: IZScoreConfig;
-}

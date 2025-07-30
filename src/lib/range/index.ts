@@ -1,7 +1,7 @@
 import { from, map } from 'rxjs';
 import { FIBONACCI_NUMBERS, IFibonacciRetracement, SIGNAL_DIRECTION } from '../../constants';
 import { ICandle } from '../../types/candle.types';
-import { IZScoreConfig } from '../../types/peakDetector.types';
+import { IZScoreConfig } from '../../types/zScore.types';
 import { ILocalRange } from '../../types/range.types';
 import { IZigZag } from '../../types/zigzags.types';
 import { countDecimals, isBetween, round } from '../../utils/math';
@@ -138,10 +138,7 @@ function mergeRanges(ranges: ILocalRange[]): ILocalRange[] {
 export function findRanges(candles: ICandle[], zScoreConfig: IZScoreConfig): ILocalRange[] {
   let ranges: ILocalRange[] = [];
 
-  const zigzags = ZigZags.create(candles, {
-    ...zScoreConfig,
-    priceMethod: 'close'
-  });
+  const zigzags = ZigZags.create(candles, zScoreConfig, 'close');
 
   from([zigzags])
     .pipe(
