@@ -1,5 +1,5 @@
-import { MarketProfile, VolumeProfile, RangeBuilder, PeakDetector, ZigZags, CandlestickPatterns, VWAP } from '../src/lib';
-import { ICandle, ITrade } from '../src/types';
+import { MarketProfile, VolumeProfile, RangeBuilder, PeakDetector, ZigZags, CandlestickPatterns, VWAP, Divergences } from '../src/lib';
+import { ICandle, ITrade, IDivergence } from '../src/types';
 import { MARKET_PROFILE_PERIODS, FIBONACCI_NUMBERS, SIGNAL_DIRECTION } from '../src/constants';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -57,6 +57,44 @@ const printSubtitle = (subtitle: string): void => {
   console.log('\n' + '-'.repeat(50));
   console.log(`${subtitle}`);
   console.log('-'.repeat(50));
+};
+
+/**
+ * Print formatted divergences to console
+ */
+const printDivergences = (divergences: IDivergence[], indicator: string): void => {
+  console.log(`\n🔍 ${indicator.toUpperCase()} DIVERGENCES DETECTED 🔍`);
+  console.log('================================');
+
+  if (divergences.length === 0) {
+    console.log(`No ${indicator} divergences found with current criteria.`);
+    return;
+  }
+
+  divergences.forEach((div, index) => {
+    const emoji = div.type === SIGNAL_DIRECTION.BULLISH ? '🟢📈' : '🔴📉';
+    const typeLabel = div.type === SIGNAL_DIRECTION.BULLISH ? 'bullish' : 'bearish';
+
+    console.log(`\n${emoji} ${typeLabel.toUpperCase()} ${indicator.toUpperCase()} DIVERGENCE #${index + 1}`);
+    console.log(`Strength: ${div.strength} points`);
+    console.log(`Duration: ${div.startTime.toISOString().slice(0, 19)} → ${div.endTime.toISOString().slice(0, 19)}`);
+    console.log(`Pattern: ${div.description}`);
+
+    console.log('Key Points:');
+    div.points.forEach((point, i) => {
+      const arrow = point.direction === 'HIGH' ? '📈' : '📉';
+      console.log(
+        `  ${i + 1}. ${arrow} ${point.direction} | Price: $${point.priceValue.toFixed(3)} | ${indicator}: ${point.indicatorValue.toFixed(1)} | ${point.time
+          .toISOString()
+          .slice(0, 19)}`
+      );
+    });
+  });
+
+  console.log(`\n📊 Summary: Found ${divergences.length} ${indicator} divergence(s)`);
+  const bullish = divergences.filter((d) => d.type === SIGNAL_DIRECTION.BULLISH).length;
+  const bearish = divergences.filter((d) => d.type === SIGNAL_DIRECTION.BEARISH).length;
+  console.log(`🟢 Bullish: ${bullish} | 🔴 Bearish: ${bearish}`);
 };
 
 const main = async () => {
@@ -244,8 +282,50 @@ const main = async () => {
     }
   }
 
+  // Divergence Analysis
+  printTitle('8. Divergence Analysis');
+  console.log('Analyzing divergences between price and technical indicators...');
+
+  // Use a tighter Z-Score config for divergence detection
+  const divergenceZScoreConfig = {
+    lag: 3,
+    threshold: 1,
+    influence: 0.75
+  };
+
+  console.log(`Using Z-Score config for divergence: lag=${divergenceZScoreConfig.lag}, threshold=${divergenceZScoreConfig.threshold}, influence=${divergenceZScoreConfig.influence}`);
+
+  // MFI Divergences
+  printSubtitle('MFI Divergence Detection');
+  console.log('Searching for MFI divergences using 30-minute data...');
+  const mfiDivergences = Divergences.mfi(thirtyMinCandles, divergenceZScoreConfig, 14);
+  printDivergences(mfiDivergences, 'MFI');
+
+  // RSI Divergences
+  printSubtitle('RSI Divergence Detection');
+  console.log('Searching for RSI divergences using 30-minute data...');
+  const rsiDivergences = Divergences.rsi(thirtyMinCandles, divergenceZScoreConfig, 14);
+  printDivergences(rsiDivergences, 'RSI');
+
+  // Overall divergence summary
+  const totalDivergences = mfiDivergences.length + rsiDivergences.length;
+  if (totalDivergences > 0) {
+    console.log(`\n🎯 DIVERGENCE SUMMARY`);
+    console.log(`Total divergences found: ${totalDivergences}`);
+    console.log(`MFI divergences: ${mfiDivergences.length}`);
+    console.log(`RSI divergences: ${rsiDivergences.length}`);
+    
+    // Find the most recent divergence
+    const allDivergences = [...mfiDivergences, ...rsiDivergences].sort((a, b) => b.endTime.getTime() - a.endTime.getTime());
+    if (allDivergences.length > 0) {
+      const mostRecent = allDivergences[0];
+      const indicator = mfiDivergences.includes(mostRecent) ? 'MFI' : 'RSI';
+      console.log(`Most recent: ${mostRecent.type === SIGNAL_DIRECTION.BULLISH ? 'Bullish' : 'Bearish'} ${indicator} divergence ending ${mostRecent.endTime.toISOString().slice(0, 19)}`);
+    }
+  }
+
   // Candlestick Pattern Detection
-  printTitle('8. Candlestick Pattern Detection');
+  printTitle('9. Candlestick Pattern Detection');
   console.log('Analyzing candlestick patterns in daily data...');
 
   // Sample counts for different patterns
@@ -283,7 +363,7 @@ const main = async () => {
   console.log(`Found ${marubozu} Marubozu patterns`);
 
   // VWAP Analysis
-  printTitle('9. VWAP Analysis');
+  printTitle('10. VWAP Analysis');
   console.log('Calculating VWAP with standard deviation bands...');
 
   const vwapSession = VWAP.createSession(2, 2, 20); // 2 decimal precision, 2 std dev bands, 20 candles max
@@ -302,7 +382,7 @@ const main = async () => {
   console.log(`Lower Band (-2σ): ${vwapResult.lowerBand}`);
 
   // Statistics on all analysis
-  printTitle('10. Overall Statistics');
+  printTitle('11. Overall Statistics');
 
   // Average range size
   const avgRangeSize =

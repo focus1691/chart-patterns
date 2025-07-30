@@ -318,7 +318,31 @@ function checkConsecutiveHighsDivergence(points: IDivergencePoint[]): IDivergenc
 }
 
 /**
- * Find divergences using Money Flow Index (MFI)
+ * Detects bullish and bearish divergences between price action and the Money Flow Index (MFI).
+ * 
+ * Divergences occur when price and the MFI indicator move in opposite directions, potentially 
+ * signaling trend reversals:
+ * - Bullish divergence: Price makes lower lows while MFI makes higher lows
+ * - Bearish divergence: Price makes higher highs while MFI makes lower highs
+ * 
+ * @param {ICandle[]} candles - Array of candlestick data to analyze
+ * @param {IZScoreConfig} zScoreConfig - Z-Score configuration for peak detection. Defaults to:
+ *   - lag: 3, threshold: 1, influence: 0.75
+ * @param {number} mfiPeriod - Period for MFI calculation (default: 14)
+ * 
+ * @returns {IDivergence[]} Array of detected divergences with timing, strength, and description
+ * 
+ * @example
+ * ```typescript
+ * const zScoreConfig = { lag: 3, threshold: 1, influence: 0.75 };
+ * const mfiDivergences = Divergences.mfi(candles, zScoreConfig, 14);
+ * 
+ * mfiDivergences.forEach(div => {
+ *   console.log(`${div.type === SIGNAL_DIRECTION.BULLISH ? 'Bullish' : 'Bearish'} MFI divergence`);
+ *   console.log(`Strength: ${div.strength} points`);
+ *   console.log(`Duration: ${div.startTime} to ${div.endTime}`);
+ * });
+ * ```
  */
 export function mfi(candles: ICandle[], zScoreConfig: IZScoreConfig = defaultZscoreConfig, mfiPeriod: number = 14): IDivergence[] {
   const mfiValues = MFI.calculateMFI(candles, mfiPeriod);
@@ -326,7 +350,30 @@ export function mfi(candles: ICandle[], zScoreConfig: IZScoreConfig = defaultZsc
 }
 
 /**
- * Find divergences using Relative Strength Index (RSI)
+ * Detects bullish and bearish divergences between price action and the Relative Strength Index (RSI).
+ * 
+ * Divergences occur when price and the RSI indicator move in opposite directions, potentially 
+ * signaling trend reversals:
+ * - Bullish divergence: Price makes lower lows while RSI makes higher lows
+ * - Bearish divergence: Price makes higher highs while RSI makes lower highs
+ * 
+ * @param {ICandle[]} candles - Array of candlestick data to analyze
+ * @param {IZScoreConfig} zScoreConfig - Z-Score configuration for peak detection. Defaults to:
+ *   - lag: 3, threshold: 1, influence: 0.75
+ * @param {number} rsiPeriod - Period for RSI calculation (default: 14)
+ * 
+ * @returns {IDivergence[]} Array of detected divergences with timing, strength, and description
+ * 
+ * @example
+ * ```typescript
+ * const zScoreConfig = { lag: 3, threshold: 1, influence: 0.75 };
+ * const rsiDivergences = Divergences.rsi(candles, zScoreConfig, 14);
+ * 
+ * rsiDivergences.forEach(div => {
+ *   console.log(`${div.type === SIGNAL_DIRECTION.BULLISH ? 'Bullish' : 'Bearish'} RSI divergence`);
+ *   console.log(`Description: ${div.description}`);
+ * });
+ * ```
  */
 export function rsi(candles: ICandle[], zScoreConfig: IZScoreConfig = defaultZscoreConfig, rsiPeriod: number = 14): IDivergence[] {
   const rsiValues = RSI.calculateRSI(candles, rsiPeriod);
@@ -334,7 +381,32 @@ export function rsi(candles: ICandle[], zScoreConfig: IZScoreConfig = defaultZsc
 }
 
 /**
- * Generic divergence finder for custom indicators
+ * Detects bullish and bearish divergences between price action and a custom technical indicator.
+ * 
+ * This generic function allows you to detect divergences with any custom indicator values.
+ * The indicator values array must have the same length as the candles array and represent
+ * the indicator value for each corresponding candle.
+ * 
+ * @param {ICandle[]} candles - Array of candlestick data to analyze
+ * @param {IZScoreConfig} zScoreConfig - Z-Score configuration for peak detection. Defaults to:
+ *   - lag: 3, threshold: 1, influence: 0.75
+ * @param {number[]} indicatorValues - Array of custom indicator values (same length as candles)
+ * 
+ * @returns {IDivergence[]} Array of detected divergences with timing, strength, and description
+ * 
+ * @example
+ * ```typescript
+ * // Example with custom MACD values
+ * const macdValues = calculateMACD(candles); // Your custom indicator calculation
+ * const zScoreConfig = { lag: 3, threshold: 1, influence: 0.75 };
+ * 
+ * const customDivergences = Divergences.custom(candles, zScoreConfig, macdValues);
+ * 
+ * customDivergences.forEach(div => {
+ *   console.log(`Custom indicator divergence found: ${div.description}`);
+ *   console.log(`Points involved: ${div.points.length}`);
+ * });
+ * ```
  */
 export function custom(candles: ICandle[], zScoreConfig: IZScoreConfig = defaultZscoreConfig, indicatorValues: number[]): IDivergence[] {
   return findDivergences(candles, zScoreConfig, indicatorValues);
