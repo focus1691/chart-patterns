@@ -71,17 +71,6 @@ function collectAllCorrelations(candles: ICandle[], pricePeaks: any[], indicator
     }
   }
 
-  console.log(`\n🔍 DEBUG: All correlations (${correlations.length} total):`);
-  correlations.forEach((corr, i) => {
-    const statusEmoji = corr.isMatch ? '✅' : '❌';
-    const statusText = corr.isMatch ? 'MATCH' : 'MISMATCH';
-    console.log(
-      `${i}: Peak ${corr.peakIndex} ${corr.direction} at ${corr.time.toISOString().slice(11, 19)} | Price: ${corr.priceValue.toFixed(
-        3
-      )} | ${corr.indicatorValue.toFixed(1)} ${statusEmoji} ${statusText}`
-    );
-  });
-
   return correlations;
 }
 
@@ -113,12 +102,6 @@ function groupConsecutiveMatches(correlations: IDivergencePoint[]): IDivergenceP
   if (currentGroup.length >= 2) {
     matchGroups.push(currentGroup);
   }
-
-  console.log(`\n🔗 DEBUG: Found ${matchGroups.length} consecutive match groups:`);
-  matchGroups.forEach((group, i) => {
-    console.log(`Group ${i + 1}: ${group.length} consecutive matches (peaks ${group[0].peakIndex}-${group[group.length - 1].peakIndex})`);
-  });
-
   return matchGroups;
 }
 
