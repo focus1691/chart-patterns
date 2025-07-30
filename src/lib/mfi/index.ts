@@ -14,7 +14,7 @@ import { round } from '../../utils/math';
  * - Values above 50 suggest buying pressure dominates
  * - Values below 50 suggest selling pressure dominates
  *
- * @param candles - Array of candlestick data to analyze
+ * @param candles - Array of candlestick data to analyse
  * @param period - Period for MFI calculation (default: 14)
  * @param precision - Number of decimal places for rounding (default: 2)
  * @param useRollingWindow - Use O(N) rolling window optimization vs O(N*period) (default: true)

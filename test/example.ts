@@ -293,7 +293,9 @@ const main = async () => {
     influence: 0.75
   };
 
-  console.log(`Using Z-Score config for divergence: lag=${divergenceZScoreConfig.lag}, threshold=${divergenceZScoreConfig.threshold}, influence=${divergenceZScoreConfig.influence}`);
+  console.log(
+    `Using Z-Score config for divergence: lag=${divergenceZScoreConfig.lag}, threshold=${divergenceZScoreConfig.threshold}, influence=${divergenceZScoreConfig.influence}`
+  );
 
   // MFI Divergences
   printSubtitle('MFI Divergence Detection');
@@ -314,13 +316,17 @@ const main = async () => {
     console.log(`Total divergences found: ${totalDivergences}`);
     console.log(`MFI divergences: ${mfiDivergences.length}`);
     console.log(`RSI divergences: ${rsiDivergences.length}`);
-    
+
     // Find the most recent divergence
     const allDivergences = [...mfiDivergences, ...rsiDivergences].sort((a, b) => b.endTime.getTime() - a.endTime.getTime());
     if (allDivergences.length > 0) {
       const mostRecent = allDivergences[0];
       const indicator = mfiDivergences.includes(mostRecent) ? 'MFI' : 'RSI';
-      console.log(`Most recent: ${mostRecent.type === SIGNAL_DIRECTION.BULLISH ? 'Bullish' : 'Bearish'} ${indicator} divergence ending ${mostRecent.endTime.toISOString().slice(0, 19)}`);
+      console.log(
+        `Most recent: ${mostRecent.type === SIGNAL_DIRECTION.BULLISH ? 'Bullish' : 'Bearish'} ${indicator} divergence ending ${mostRecent.endTime
+          .toISOString()
+          .slice(0, 19)}`
+      );
     }
   }
 

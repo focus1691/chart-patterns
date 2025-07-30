@@ -55,7 +55,7 @@ export class TickVolumeProfileSession {
    * and updates the profile. Unlike the candle-based approach, this provides exact
    * precision about where volume occurred by using actual trade prices.
    *
-   * The method is optimized for high-frequency processing, as it only marks the histogram
+   * The method is optimised for high-frequency processing, as it only marks the histogram
    * for rebuilding when necessary and doesn't perform expensive calculations until results
    * are requested.
    *
@@ -129,7 +129,7 @@ export class TickVolumeProfileSession {
    * Process multiple trades in batch.
    *
    * Efficiently processes an array of trades without rebuilding the histogram
-   * after each trade. This is optimized for bulk loading historical trade data.
+   * after each trade. This is optimised for bulk loading historical trade data.
    *
    * @param trades - An array of trades to process
    *
