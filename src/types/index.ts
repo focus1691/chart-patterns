@@ -1,5 +1,6 @@
 export * from './candle.types';
 export * from './candlestickPatterns';
+export * from './divergence.types';
 export * from './harmonics.types';
 export * from './marketProfile.types';
 export * from './movingAverage.types';
