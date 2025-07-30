@@ -274,26 +274,32 @@ function checkConsecutiveHighsDivergence(points: IDivergencePoint[]): IDivergenc
   const firstIndicator = validHighs[0].indicatorValue;
   const lastIndicator = validHighs[validHighs.length - 1].indicatorValue;
 
-  // Check for bearish divergence patterns
   const priceIncreasing = lastPrice > firstPrice; // higher highs
   const indicatorDecreasing = lastIndicator < firstIndicator; // lower highs
-
   const priceDecreasing = lastPrice < firstPrice; // lower highs
   const indicatorIncreasing = lastIndicator > firstIndicator; // higher highs
 
-  if ((priceIncreasing && indicatorDecreasing) || (priceDecreasing && indicatorIncreasing)) {
-    const pattern =
-      priceIncreasing && indicatorDecreasing
-        ? `higher highs (${firstPrice.toFixed(3)} → ${lastPrice.toFixed(3)}) while lower highs (${firstIndicator.toFixed(1)} → ${lastIndicator.toFixed(1)})`
-        : `lower highs (${firstPrice.toFixed(3)} → ${lastPrice.toFixed(3)}) while higher highs (${firstIndicator.toFixed(1)} → ${lastIndicator.toFixed(1)})`;
-
+  // Check for bearish divergence: price higher highs, indicator lower highs
+  if (priceIncreasing && indicatorDecreasing) {
     return {
       type: SIGNAL_DIRECTION.BEARISH,
       startTime: validHighs[0].time,
       endTime: validHighs[validHighs.length - 1].time,
       points: validHighs,
       strength: validHighs.length,
-      description: `Bearish divergence: Price ${pattern}`
+      description: `Bearish divergence: Price higher highs (${firstPrice.toFixed(3)} → ${lastPrice.toFixed(3)}) while indicator lower highs (${firstIndicator.toFixed(1)} → ${lastIndicator.toFixed(1)})`
+    };
+  }
+
+  // Check for bullish divergence: price lower highs, indicator higher highs
+  if (priceDecreasing && indicatorIncreasing) {
+    return {
+      type: SIGNAL_DIRECTION.BULLISH,
+      startTime: validHighs[0].time,
+      endTime: validHighs[validHighs.length - 1].time,
+      points: validHighs,
+      strength: validHighs.length,
+      description: `Bullish divergence: Price lower highs (${firstPrice.toFixed(3)} → ${lastPrice.toFixed(3)}) while indicator higher highs (${firstIndicator.toFixed(1)} → ${lastIndicator.toFixed(1)})`
     };
   }
 
