@@ -1,4 +1,4 @@
-import { SIGNAL_DIRECTION } from "../constants";
+import { SIGNAL_DIRECTION } from '../constants';
 
 export type zigzagType = 'PEAK' | 'TROUGH';
 

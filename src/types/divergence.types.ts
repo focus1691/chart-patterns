@@ -1,4 +1,4 @@
-import { SIGNAL_DIRECTION } from "../constants/signals";
+import { SIGNAL_DIRECTION } from '../constants/signals';
 
 export interface IDivergencePoint {
   time: Date;

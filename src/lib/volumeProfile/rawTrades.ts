@@ -1,15 +1,9 @@
-import {
-  ITrade,
-  IValueArea,
-  IVolumeRow,
-  IVolumeProfileSessionConfig,
-  IRawTradeVolumeDistribution
-} from '../../types';
+import { ITrade, IValueArea, IVolumeRow, IVolumeProfileSessionConfig, IRawTradeVolumeDistribution } from '../../types';
 import Decimal from 'decimal.js';
 
 /**
  * A volume profile session that processes raw trade data for maximum accuracy.
- * 
+ *
  * This class builds volume profiles directly from individual trades rather than
  * aggregated candlestick data. This approach provides a more accurate representation
  * of exactly where trading activity occurred, particularly useful for high-frequency
@@ -26,18 +20,21 @@ export class TickVolumeProfileSession {
   private lowestPrice: Decimal = new Decimal(Infinity);
   private pricePrecision: number;
   private volumePrecision: number;
-  private priceGroups: Map<string, {
-    price: Decimal,
-    volume: Decimal,
-    buyVolume: Decimal,
-    sellVolume: Decimal
-  }> = new Map();
+  private priceGroups: Map<
+    string,
+    {
+      price: Decimal;
+      volume: Decimal;
+      buyVolume: Decimal;
+      sellVolume: Decimal;
+    }
+  > = new Map();
   private histogramNeedsRebuild: boolean = true;
   private tradesCount: number = 0;
 
   /**
    * Creates a new tick-based Volume Profile session.
-   * 
+   *
    * @param config - Configuration options
    * @param config.valueAreaRowSize - Number of price rows in the histogram (default: 24)
    * @param config.valueAreaVolume - Percentage of volume that defines the value area (default: 0.7 or 70%)
@@ -53,17 +50,17 @@ export class TickVolumeProfileSession {
 
   /**
    * Process a single trade and update the volume profile.
-   * 
+   *
    * This method takes an individual trade, extracts its price and volume information,
    * and updates the profile. Unlike the candle-based approach, this provides exact
    * precision about where volume occurred by using actual trade prices.
-   * 
+   *
    * The method is optimized for high-frequency processing, as it only marks the histogram
    * for rebuilding when necessary and doesn't perform expensive calculations until results
    * are requested.
-   * 
+   *
    * @param trade - The individual trade to process
-   * 
+   *
    * @example
    * ```typescript
    * session.processTrade({
@@ -121,7 +118,7 @@ export class TickVolumeProfileSession {
         buyVolume: isBuyTrade ? volume : new Decimal(0),
         sellVolume: isBuyTrade ? new Decimal(0) : volume
       });
-      this.histogramNeedsRebuild = true;  // New price point added
+      this.histogramNeedsRebuild = true; // New price point added
     }
 
     // Increment trade count instead of storing the trade
@@ -130,17 +127,17 @@ export class TickVolumeProfileSession {
 
   /**
    * Process multiple trades in batch.
-   * 
+   *
    * Efficiently processes an array of trades without rebuilding the histogram
    * after each trade. This is optimized for bulk loading historical trade data.
-   * 
+   *
    * @param trades - An array of trades to process
-   * 
+   *
    * @example
    * ```typescript
    * // Process a batch of historical trades
    * session.processTrades(historicalTrades);
-   * 
+   *
    * // Histogram will only be rebuilt when results are requested
    * const valueArea = session.getValueArea();
    * ```
@@ -153,17 +150,17 @@ export class TickVolumeProfileSession {
 
   /**
    * Manually trigger a histogram rebuild.
-   * 
+   *
    * Under normal circumstances, the histogram is automatically rebuilt only when
    * needed (when results are requested). This method allows forcing a rebuild,
    * which might be useful in specific scenarios like preparing for multiple
    * rapid read operations.
-   * 
+   *
    * @example
    * ```typescript
    * // Force histogram rebuild before multiple reads
    * session.rebuildHistogram();
-   * 
+   *
    * // Now perform multiple reads without rebuilding histogram each time
    * const valueArea = session.getValueArea();
    * const distribution = session.getVolumeDistribution();
@@ -178,16 +175,18 @@ export class TickVolumeProfileSession {
       const totalVol = this.totalVolume.toNumber();
       const buyVol = this.buyVolume.toNumber();
       const sellVol = this.sellVolume.toNumber();
-      
-      this.histogram = [{
-        volume: totalVol,
-        buyVolume: buyVol,
-        sellVolume: sellVol,
-        low: Number(singlePrice.toFixed(this.pricePrecision)),
-        mid: Number(singlePrice.toFixed(this.pricePrecision)),
-        high: Number(singlePrice.toFixed(this.pricePrecision))
-      }];
-      
+
+      this.histogram = [
+        {
+          volume: totalVol,
+          buyVolume: buyVol,
+          sellVolume: sellVol,
+          low: Number(singlePrice.toFixed(this.pricePrecision)),
+          mid: Number(singlePrice.toFixed(this.pricePrecision)),
+          high: Number(singlePrice.toFixed(this.pricePrecision))
+        }
+      ];
+
       this.histogramNeedsRebuild = false;
       return;
     }
@@ -197,14 +196,8 @@ export class TickVolumeProfileSession {
     // Initialize new histogram
     this.histogram = Array.from({ length: this.valueAreaRowSize }, (_, row) => {
       const rowDecimal = new Decimal(row);
-      const lowPrice = Decimal.max(
-        this.lowestPrice,
-        this.lowestPrice.plus(stepSize.times(rowDecimal))
-      );
-      const highPrice = Decimal.min(
-        this.highestPrice,
-        this.lowestPrice.plus(stepSize.times(rowDecimal).plus(stepSize))
-      );
+      const lowPrice = Decimal.max(this.lowestPrice, this.lowestPrice.plus(stepSize.times(rowDecimal)));
+      const highPrice = Decimal.min(this.highestPrice, this.lowestPrice.plus(stepSize.times(rowDecimal).plus(stepSize)));
       const midPrice = lowPrice.plus(highPrice).dividedBy(2);
 
       return {
@@ -233,7 +226,7 @@ export class TickVolumeProfileSession {
 
   /**
    * Ensures the histogram is up to date.
-   * 
+   *
    * @private
    */
   private ensureHistogramIsBuilt(): void {
@@ -244,17 +237,17 @@ export class TickVolumeProfileSession {
 
   /**
    * Get the current value area calculation.
-   * 
+   *
    * Calculates key volume profile metrics based on the current state:
    * - Point of Control (POC): The price level with the highest volume
    * - Value Area High (VAH): Upper boundary of the value area
    * - Value Area Low (VAL): Lower boundary of the value area
    * - Equilibrium (EQ): Midpoint between the highest and lowest prices
-   * 
+   *
    * The histogram is automatically rebuilt if necessary.
-   * 
+   *
    * @returns The value area object, or null if no trades have been processed
-   * 
+   *
    * @example
    * ```typescript
    * const valueArea = session.getValueArea();
@@ -321,26 +314,26 @@ export class TickVolumeProfileSession {
 
   /**
    * Get the detailed price levels and their volumes.
-   * 
+   *
    * Returns an array of exact price points where trading occurred, along with
    * the volume at each price. This provides a more granular view than the histogram,
    * showing the actual traded prices rather than price ranges.
-   * 
+   *
    * @returns Array of price levels with their associated volumes
-   * 
+   *
    * @example
    * ```typescript
    * const priceLevels = session.getPriceLevels();
-   * 
+   *
    * // Find prices with the highest buy volume
    * const topBuyPrices = priceLevels
    *   .sort((a, b) => b.buyVolume - a.buyVolume)
    *   .slice(0, 5);
-   * 
+   *
    * console.log('Top 5 prices with highest buy volume:', topBuyPrices);
    * ```
    */
-  getPriceLevels(): { price: number, volume: number, buyVolume: number, sellVolume: number }[] {
+  getPriceLevels(): { price: number; volume: number; buyVolume: number; sellVolume: number }[] {
     const levels = [];
     for (const [_, group] of this.priceGroups) {
       levels.push({
@@ -357,25 +350,25 @@ export class TickVolumeProfileSession {
 
   /**
    * Get the volume distribution across price levels.
-   * 
+   *
    * Returns a comprehensive view of the volume profile, including:
    * - Histogram: Array of volume rows with price ranges and aggregated volumes
    * - Price Levels: Array of exact prices with their individual volumes
    * - Value Area: POC, VAH, VAL, and other key metrics
    * - Volume Summary: Total, buy, and sell volumes, plus trade count
-   * 
+   *
    * The histogram is automatically rebuilt if necessary.
-   * 
+   *
    * @returns The volume distribution, or a default empty distribution if no trades have been processed
-   * 
+   *
    * @example
    * ```typescript
    * const distribution = session.getVolumeDistribution();
-   * 
+   *
    * // Access both histogram and exact price data
    * console.log('Binned price levels:', distribution.histogram.length);
    * console.log('Exact price points:', distribution.priceLevels.length);
-   * 
+   *
    * // Analyse trading activity
    * console.log('Total trades processed:', distribution.tradesCount);
    * console.log('Total volume:', distribution.totalVolume);
@@ -398,7 +391,7 @@ export class TickVolumeProfileSession {
     this.ensureHistogramIsBuilt();
 
     // Create a deep copy with properly rounded values
-    const formattedHistogram = this.histogram.map(row => {
+    const formattedHistogram = this.histogram.map((row) => {
       return {
         volume: Number(new Decimal(row.volume).toFixed(this.volumePrecision)),
         buyVolume: Number(new Decimal(row.buyVolume).toFixed(this.volumePrecision)),
@@ -422,16 +415,16 @@ export class TickVolumeProfileSession {
 
   /**
    * Reset the session to its initial state.
-   * 
+   *
    * Clears all processed trades, volumes, price groups, and histograms,
    * returning the session to its initial empty state. Use this when starting
    * a new analysis period.
-   * 
+   *
    * @example
    * ```typescript
    * // Reset the session at the start of a new trading day
    * session.reset();
-   * 
+   *
    * // Begin processing new trades
    * socket.on('trade', trade => {
    *   session.processTrade(trade);
@@ -449,4 +442,4 @@ export class TickVolumeProfileSession {
     this.histogramNeedsRebuild = true;
     this.tradesCount = 0;
   }
-} 
+}

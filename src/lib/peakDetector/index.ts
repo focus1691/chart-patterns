@@ -9,9 +9,13 @@ import { IZScoreConfig } from '../../types/zScore.types';
  * @throws Error if required parameters are missing or invalid
  */
 function validateZScoreConfig(config: IZScoreConfig): void {
-  if (!config.lag || !config.threshold || !config.influence) { throw new Error('Parameter(s) required: lag, threshold, influence'); }
+  if (!config.lag || !config.threshold || !config.influence) {
+    throw new Error('Parameter(s) required: lag, threshold, influence');
+  }
 
-  if (config.influence < 0 || config.influence > 1) { throw new Error("'influence' should be between 0 - 1"); }
+  if (config.influence < 0 || config.influence > 1) {
+    throw new Error("'influence' should be between 0 - 1");
+  }
 }
 
 /**
@@ -42,14 +46,9 @@ function validateZScoreConfig(config: IZScoreConfig): void {
 export function findSignals(values: number[], zScoreConfig: IZScoreConfig): IPeak[] {
   validateZScoreConfig(zScoreConfig);
 
-  const output: ZScoreOutput = ZScore.calc(
-    values,
-    zScoreConfig
-  );
+  const output: ZScoreOutput = ZScore.calc(values, zScoreConfig);
 
-  const signals: IPeak[] = output.signals.flatMap((direction, position) =>
-    direction !== 0 ? [{ position, direction } as IPeak] : []
-  );
+  const signals: IPeak[] = output.signals.flatMap((direction, position) => (direction !== 0 ? [{ position, direction } as IPeak] : []));
 
   return signals;
 }

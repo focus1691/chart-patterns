@@ -74,6 +74,6 @@ export interface IVolumeDistribution {
  * Volume distribution with raw trade data
  */
 export interface IRawTradeVolumeDistribution extends IVolumeDistribution {
-  priceLevels: { price: number, volume: number, buyVolume: number, sellVolume: number }[];
+  priceLevels: { price: number; volume: number; buyVolume: number; sellVolume: number }[];
   tradesCount: number;
 }

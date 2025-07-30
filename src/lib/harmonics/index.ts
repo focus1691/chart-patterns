@@ -12,7 +12,7 @@ import { round } from '../../utils/math';
  * @example
  * // Z-Score configuration for peak detection algorithms
  * const zScoreConfig: IZScoreConfig = {
- *   lag: 5,        // Controls smoothing and adaptability 
+ *   lag: 5,        // Controls smoothing and adaptability
  *   threshold: 2,   // Number of standard deviations to classify a signal
  *   influence: 0.3  // How strongly signals affect future calculations (0-1)
  * };

@@ -97,9 +97,13 @@ function mergeRanges(ranges: ILocalRange[]): ILocalRange[] {
     const isInPrevRange = isBetween(support!)(resistance!);
 
     // Check if previous range is completely contained within the next range
-    const isPrevRangeInNext = support !== undefined && resistance !== undefined &&
-                             nextSupport !== undefined && nextResistance !== undefined &&
-                             support >= nextSupport && resistance <= nextResistance;
+    const isPrevRangeInNext =
+      support !== undefined &&
+      resistance !== undefined &&
+      nextSupport !== undefined &&
+      nextResistance !== undefined &&
+      support >= nextSupport &&
+      resistance <= nextResistance;
 
     // Calculate range sizes to avoid joining when next range is significantly larger
     const prevRangeSize = resistance !== undefined && support !== undefined ? resistance - support : 0;
