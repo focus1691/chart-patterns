@@ -3,11 +3,11 @@ import { VWAPResult } from '../../types/vwap.types';
 
 /**
  * Represents a Volume-Weighted Average Price (VWAP) calculation session.
- * 
+ *
  * VWAP is a trading benchmark that represents the average price a security
  * has traded at throughout the day, based on both volume and price.
  * It provides insight into both the trend and value of a security.
- * 
+ *
  * @class VWAPSession
  */
 class VWAPSession {
@@ -25,7 +25,7 @@ class VWAPSession {
   private deviationMultiplier: number;
   /** Maximum number of candles to store in the session */
   private maxSize: number;
-  
+
   // Welford's algorithm variables for online variance calculation
   /** Mean of the weighted values for Welford's algorithm */
   private mean = 0;
@@ -36,7 +36,7 @@ class VWAPSession {
 
   /**
    * Creates a new VWAP calculation session.
-   * 
+   *
    * @param pricePrecision - The number of decimal places to round the VWAP value to
    * @param deviationMultiplier - The multiplier for standard deviation bands (default: 1)
    * @param maxSize - Maximum number of candles to keep in the session (default: 1000)
@@ -49,7 +49,7 @@ class VWAPSession {
 
   /**
    * Processes a single candle and updates the VWAP calculation.
-   * 
+   *
    * @param candle - The candle data to process
    * @returns void
    */
@@ -61,7 +61,7 @@ class VWAPSession {
     if (this.typicalPrices.length >= this.maxSize) {
       const oldestPrice = this.typicalPrices.shift();
       const oldestVolume = this.volumes.shift();
-      
+
       // Adjust cumulative values by removing oldest entry
       this.cumulativeTypicalPriceVolume -= oldestPrice * oldestVolume;
       this.cumulativeVolume -= oldestVolume;
@@ -88,7 +88,7 @@ class VWAPSession {
 
   /**
    * Updates Welford's algorithm when adding a new value.
-   * 
+   *
    * @private
    * @param value - The typical price value to add
    * @param weight - The volume weight for this value
@@ -105,7 +105,7 @@ class VWAPSession {
       const newMeanIncrement = (value - this.mean) * (weight / this.totalWeight);
       const newMean = this.mean + newMeanIncrement;
       const newM2Increment = weight * (value - this.mean) * (value - newMean);
-      
+
       this.mean = newMean;
       this.m2 += newM2Increment;
     }
@@ -113,7 +113,7 @@ class VWAPSession {
 
   /**
    * Updates Welford's algorithm when removing a value (for sliding window).
-   * 
+   *
    * @private
    * @param value - The typical price value to remove
    * @param weight - The volume weight for this value
@@ -130,9 +130,9 @@ class VWAPSession {
     // Downdating algorithm for removing values from Welford's
     const oldMean = this.mean;
     this.totalWeight -= weight;
-    
+
     if (this.totalWeight > 0) {
-      this.mean = this.mean + ((this.mean - value) * weight / this.totalWeight);
+      this.mean = this.mean + ((this.mean - value) * weight) / this.totalWeight;
       // Use direct delta calculation instead of Math.pow
       const delta = value - oldMean;
       this.m2 -= weight * delta * delta * (this.totalWeight / (this.totalWeight + weight));
@@ -142,7 +142,7 @@ class VWAPSession {
 
   /**
    * Calculates the standard deviation using Welford's algorithm.
-   * 
+   *
    * @private
    * @returns The standard deviation or null if insufficient data
    */
@@ -153,13 +153,13 @@ class VWAPSession {
 
     const variance = this.m2 / this.totalWeight;
     const standardDeviation = Math.sqrt(variance);
-    
+
     return Number(standardDeviation.toFixed(this.pricePrecision));
   }
 
   /**
    * Resets the VWAP calculation session.
-   * 
+   *
    * @returns void
    */
   reset(): void {
@@ -175,7 +175,7 @@ class VWAPSession {
   /**
    * Optional method to reset and shrink arrays to free memory.
    * Useful in memory-sensitive environments.
-   * 
+   *
    * @returns void
    */
   resetAndShrink(): void {
@@ -187,7 +187,7 @@ class VWAPSession {
 
   /**
    * Gets the raw VWAP value without standard deviation bands.
-   * 
+   *
    * @returns The calculated VWAP value or null if no data is available
    */
   getRawVWAP(): number | null {
@@ -201,12 +201,12 @@ class VWAPSession {
 
   /**
    * Calculates and returns the current VWAP value with standard deviation bands.
-   * 
+   *
    * @returns Object containing VWAP, upper band, and lower band values
    */
   getVWAP(): VWAPResult {
     const vwap = this.getRawVWAP();
-    
+
     if (vwap === null) {
       return { vwap: null, upperBand: null, lowerBand: null };
     }
@@ -227,38 +227,38 @@ class VWAPSession {
 
 /**
  * Creates a new VWAP calculation session.
- * 
- * The Volume-Weighted Average Price (VWAP) is a trading benchmark that shows the ratio of the value 
- * traded to total volume traded over a specific time period. It's calculated by adding up the dollars 
- * traded for every transaction (price multiplied by the number of shares traded) and then dividing 
+ *
+ * The Volume-Weighted Average Price (VWAP) is a trading benchmark that shows the ratio of the value
+ * traded to total volume traded over a specific time period. It's calculated by adding up the dollars
+ * traded for every transaction (price multiplied by the number of shares traded) and then dividing
  * by the total shares traded.
  *
  * @param pricePrecision - The number of decimal places to round the VWAP value to
  * @param deviationMultiplier - The multiplier for standard deviation bands (default: 2)
  * @param maxSize - Maximum number of candles to keep in the session (default: 1000)
  * @returns A new VWAP calculation session
- * 
+ *
  * @example
  * ```typescript
  * import * as ta from 'chart-patterns';
- * 
+ *
  * // Create a new VWAP session with 2 decimal places precision, 2 standard deviations, and max 1000 candles
  * const vwapSession = ta.VWAP.createSession(2, 2, 1000);
- * 
+ *
  * // Process candles
  * for (const candle of candles) {
  *   vwapSession.processCandle(candle);
  * }
- * 
+ *
  * // Get just the raw VWAP value without bands
  * const vwapValue = vwapSession.getRawVWAP();
- * 
+ *
  * // Get the current VWAP value with standard deviation bands
  * const { vwap, upperBand, lowerBand } = vwapSession.getVWAP();
- * 
+ *
  * // Reset the session (e.g., at the start of a new trading day)
  * vwapSession.reset();
- * 
+ *
  * // Reset and free memory in memory-sensitive environments
  * vwapSession.resetAndShrink();
  * ```

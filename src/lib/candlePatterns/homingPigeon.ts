@@ -47,8 +47,8 @@ export const detectHomingPigeon = (candles: ICandle[], index: number): SIGNAL_DI
   const isSecondBodySmaller = secondBody < firstBody;
 
   // Second candle must be completely inside the first candle's range
-  const isSecondInsideFirst = 
-    secondCandle.high <= firstCandle.high && 
+  const isSecondInsideFirst =
+    secondCandle.high <= firstCandle.high &&
     secondCandle.low >= firstCandle.low &&
     secondCandle.open <= firstCandle.open &&
     secondCandle.close >= firstCandle.close;

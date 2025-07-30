@@ -1,5 +1,5 @@
 import { round } from '../../utils/math';
-import { IZScoreConfig } from '../../types/peakDetector.types';
+import { IZScoreConfig } from '../../types/zScore.types';
 
 export class ZScoreOutput {
   input: number[] = [];

@@ -1,6 +1,6 @@
 import { ZScoreOutput, ZScore } from '../zscores';
 import { IPeak } from '../../types/range.types';
-import { ISignalsConfig, IZScoreConfig } from '../../types/peakDetector.types';
+import { IZScoreConfig } from '../../types/zScore.types';
 
 /**
  * Validates the Z-Score configuration parameters
@@ -9,9 +9,13 @@ import { ISignalsConfig, IZScoreConfig } from '../../types/peakDetector.types';
  * @throws Error if required parameters are missing or invalid
  */
 function validateZScoreConfig(config: IZScoreConfig): void {
-  if (!config.lag || !config.threshold || !config.influence) { throw new Error('Parameter(s) required: lag, threshold, influence'); }
+  if (!config.lag || !config.threshold || !config.influence) {
+    throw new Error('Parameter(s) required: lag, threshold, influence');
+  }
 
-  if (config.influence < 0 || config.influence > 1) { throw new Error("'influence' should be between 0 - 1"); }
+  if (config.influence < 0 || config.influence > 1) {
+    throw new Error("'influence' should be between 0 - 1");
+  }
 }
 
 /**
@@ -21,9 +25,11 @@ function validateZScoreConfig(config: IZScoreConfig): void {
  * deviate significantly from the moving average, indicating potential
  * market turning points or trend changes.
  *
- * @param {ISignalsConfig} signalsConfig - Configuration object for peak detection containing:
- *   - values: Array of numerical values to analyse (typically closing prices)
- *   - config: Z-Score algorithm parameters (lag, threshold, influence)
+ * @param {number[]} values - Array of numerical values to analyse (typically closing prices)
+ * @param {IZScoreConfig} zScoreConfig - Z-Score algorithm parameters containing:
+ *   - lag: Number of previous observations to use for calculating moving average
+ *   - threshold: Z-Score threshold for signal detection
+ *   - influence: Weight of new signals on the algorithm (0-1)
  *
  * @returns {IPeak[]} An array of detected peaks with their positions and directions:
  *   - position: Index in the original array where the signal was detected
@@ -31,23 +37,18 @@ function validateZScoreConfig(config: IZScoreConfig): void {
  *
  * @example
  * ```ts
- * const peaks = findSignals({
- *   values: [101, 102, 99, 101, 102, 107, 109, 105, 102, 100, 97, 95, 97],
- *   config: { lag: 5, threshold: 2.5, influence: 0.5 }
- * });
+ * const peaks = findSignals(
+ *   [101, 102, 99, 101, 102, 107, 109, 105, 102, 100, 97, 95, 97],
+ *   { lag: 5, threshold: 2.5, influence: 0.5 }
+ * );
  * ```
  */
-export function findSignals(signalsConfig: ISignalsConfig): IPeak[] {
-  validateZScoreConfig(signalsConfig.config);
+export function findSignals(values: number[], zScoreConfig: IZScoreConfig): IPeak[] {
+  validateZScoreConfig(zScoreConfig);
 
-  const output: ZScoreOutput = ZScore.calc(
-    signalsConfig.values,
-    signalsConfig.config
-  );
+  const output: ZScoreOutput = ZScore.calc(values, zScoreConfig);
 
-  const signals: IPeak[] = output.signals.flatMap((direction, position) =>
-    direction !== 0 ? [{ position, direction } as IPeak] : []
-  );
+  const signals: IPeak[] = output.signals.flatMap((direction, position) => (direction !== 0 ? [{ position, direction } as IPeak] : []));
 
   return signals;
 }

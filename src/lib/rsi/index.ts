@@ -57,14 +57,14 @@ export function calculateRSI(candles: ICandle[], period: number = 14): number[] 
 }
 
 export function calculateStochasticRSI(
-  candles: ICandle[], 
-  rsiPeriod: number = 14, 
+  candles: ICandle[],
+  rsiPeriod: number = 14,
   stochPeriod: number = 14,
   kSmoothing: number = 3,
   dSmoothing: number = 3
-): { k: number[], d: number[] } {
+): { k: number[]; d: number[] } {
   const rsiValues = calculateRSI(candles, rsiPeriod);
-  
+
   if (rsiValues.length < stochPeriod) {
     return { k: [], d: [] };
   }

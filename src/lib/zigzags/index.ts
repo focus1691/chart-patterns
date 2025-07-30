@@ -1,7 +1,7 @@
 import { ICandle } from '../../types/candle.types';
 import { IPeak } from '../../types/range.types';
-import { IZigZag, ZigZagConfig } from '../../types/zigzags.types';
-import { ISignalsConfig } from '../../types/peakDetector.types';
+import { IZigZag } from '../../types/zigzags.types';
+import { IZScoreConfig } from '../../types/zScore.types';
 import * as PeakDetector from '../peakDetector';
 import { SIGNAL_DIRECTION } from '../../constants';
 
@@ -13,36 +13,30 @@ import { SIGNAL_DIRECTION } from '../../constants';
  * identify potential turning points in the price series.
  *
  * @param {ICandle[]} candles - An array of candlestick data to analyse
- * @param {ZigZagConfig} config - Configuration for zigzag calculation:
- *   - lag: Controls smoothing and adaptability (from Z-Score)
- *   - threshold: Number of standard deviations required (from Z-Score)
- *   - influence: How strongly signals affect calculations (from Z-Score)
- *   - priceMethod: Method to determine zigzag price points ('close' or 'extremes')
+ * @param {IZScoreConfig} zScoreConfig - Z-Score algorithm parameters containing:
+ *   - lag: Controls smoothing and adaptability
+ *   - threshold: Number of standard deviations required for signal detection
+ *   - influence: How strongly signals affect calculations (0-1)
+ * @param {('close' | 'extremes')} priceMethod - Method to determine zigzag price points:
+ *   - 'close': Uses closing prices for zigzag points
+ *   - 'extremes': Uses high/low prices for zigzag points (default: 'close')
  *
  * @returns {IZigZag[]} An array of ZigZag points with their direction, price, and timestamp
  *
  * @example
  * ```ts
- * const zigzags = create(candles, {
- *   lag: 5,
- *   threshold: 2.5,
- *   influence: 0.5,
- *   priceMethod: 'extremes'
- * });
+ * const zigzags = create(
+ *   candles,
+ *   { lag: 5, threshold: 2.5, influence: 0.5 },
+ *   'extremes'
+ * );
  * ```
  */
-export function create(candles: ICandle[], config: ZigZagConfig): IZigZag[] {
+export function create(candles: ICandle[], zScoreConfig: IZScoreConfig, priceMethod: 'close' | 'extremes' = 'close'): IZigZag[] {
   const zigzags: IZigZag[] = [];
 
-  // Default to 'close' if priceMethod not specified
-  const priceMethod = config.priceMethod || 'close';
-
-  const signalsConfig: ISignalsConfig = {
-    values: candles.map((candle) => candle.close),
-    config: config // Use config directly as it already has all Z-Score params
-  };
-
-  const peaks: IPeak[] = PeakDetector.findSignals(signalsConfig);
+  const values: number[] = candles.map((candle) => candle.close);
+  const peaks: IPeak[] = PeakDetector.findSignals(values, zScoreConfig);
 
   let lastDirection: number | null = null;
   let extremeValue: number = 0;

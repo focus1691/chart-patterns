@@ -18,6 +18,7 @@ TypeScript library that provides technical analysis for volume-based indicators 
 
 | Tool | Description |
 |------|-------------|
+| [Divergences](https://focus1691.github.io/chart-patterns/modules/lib.Divergences.html) | Detects bullish/bearish divergences between price and indicators (MFI, RSI). |
 | [Peak Detector](https://focus1691.github.io/chart-patterns/modules/lib.PeakDetector.html) | Z-Score-based Peak Detector to find swing highs and lows. |
 | [Range Finder](https://focus1691.github.io/chart-patterns/functions/lib.RangeBuilder.findRanges.html) | Finds key support and resistance zones from price swings. |
 | [Zigzags](https://focus1691.github.io/chart-patterns/functions/lib.ZigZags.create.html) | Highlights major price swings only. |
@@ -66,7 +67,7 @@ Requires raw trade data. More information can be found in my [blog post here](ht
 # Usage
 ```ts
 import * as ta from 'chart-patterns';
-import { IMarketProfile, ILocalRange, IZScoreConfig } from 'chart-patterns/dist/types';
+import { IMarketProfile, ILocalRange, IZScoreConfig, IDivergence } from 'chart-patterns/dist/types';
 import { MARKET_PROFILE_PERIODS, SIGNAL_DIRECTION } from 'chart-patterns/dist/constants';
 
 // Market Profile
@@ -123,6 +124,25 @@ const ranges: ILocalRange[] = ta.RangeBuilder.findRanges(candles, zScoreConfig);
 
 // Create zigzag points for pattern recognition
 const zigzags = ta.ZigZags.create(candles, zScoreConfig);
+
+// Divergence Detection - Find divergences between price and indicators
+// MFI Divergences
+const mfiDivergences: IDivergence[] = ta.Divergences.mfi(candles, zScoreConfig, 14);
+
+// RSI Divergences  
+const rsiDivergences: IDivergence[] = ta.Divergences.rsi(candles, zScoreConfig, 14);
+
+// Custom indicator divergences
+const customIndicatorValues = [/* your indicator values */];
+const customDivergences: IDivergence[] = ta.Divergences.custom(candles, zScoreConfig, customIndicatorValues);
+
+// Process divergence results
+mfiDivergences.forEach(divergence => {
+  console.log(`${divergence.type === SIGNAL_DIRECTION.BULLISH ? 'Bullish' : 'Bearish'} MFI divergence detected`);
+  console.log(`Duration: ${divergence.startTime} to ${divergence.endTime}`);
+  console.log(`Strength: ${divergence.strength} points`);
+  console.log(`Description: ${divergence.description}`);
+});
 
 // Candlestick Pattern Detection - Excess (large wicks indicating rejection)
 const excessDirection: SIGNAL_DIRECTION = ta.CandlestickPatterns.getCandleExcessDirection(candles[0]);

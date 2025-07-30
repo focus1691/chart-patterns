@@ -1,4 +1,5 @@
 export * as CandlestickPatterns from './candlePatterns';
+export * as Divergences from './divergence';
 export * as Harmonics from './harmonics/';
 export * as MarketProfile from './marketProfile';
 export * as MFI from './mfi';

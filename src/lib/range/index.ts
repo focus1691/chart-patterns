@@ -1,7 +1,7 @@
 import { from, map } from 'rxjs';
 import { FIBONACCI_NUMBERS, IFibonacciRetracement, SIGNAL_DIRECTION } from '../../constants';
 import { ICandle } from '../../types/candle.types';
-import { IZScoreConfig } from '../../types/peakDetector.types';
+import { IZScoreConfig } from '../../types/zScore.types';
 import { ILocalRange } from '../../types/range.types';
 import { IZigZag } from '../../types/zigzags.types';
 import { countDecimals, isBetween, round } from '../../utils/math';
@@ -97,9 +97,13 @@ function mergeRanges(ranges: ILocalRange[]): ILocalRange[] {
     const isInPrevRange = isBetween(support!)(resistance!);
 
     // Check if previous range is completely contained within the next range
-    const isPrevRangeInNext = support !== undefined && resistance !== undefined &&
-                             nextSupport !== undefined && nextResistance !== undefined &&
-                             support >= nextSupport && resistance <= nextResistance;
+    const isPrevRangeInNext =
+      support !== undefined &&
+      resistance !== undefined &&
+      nextSupport !== undefined &&
+      nextResistance !== undefined &&
+      support >= nextSupport &&
+      resistance <= nextResistance;
 
     // Calculate range sizes to avoid joining when next range is significantly larger
     const prevRangeSize = resistance !== undefined && support !== undefined ? resistance - support : 0;
@@ -138,10 +142,7 @@ function mergeRanges(ranges: ILocalRange[]): ILocalRange[] {
 export function findRanges(candles: ICandle[], zScoreConfig: IZScoreConfig): ILocalRange[] {
   let ranges: ILocalRange[] = [];
 
-  const zigzags = ZigZags.create(candles, {
-    ...zScoreConfig,
-    priceMethod: 'close'
-  });
+  const zigzags = ZigZags.create(candles, zScoreConfig, 'close');
 
   from([zigzags])
     .pipe(
