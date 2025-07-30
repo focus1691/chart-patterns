@@ -1,5 +1,3 @@
-import { ICandle } from './candle.types';
-
 export interface IDivergencePoint {
   time: Date;
   priceValue: number;
@@ -17,9 +15,3 @@ export interface IDivergence {
   description: string;
   indicator: string; // 'MFI', 'RSI', etc.
 }
-
-export interface IDivergenceConfig {
-  maxTimeSpanHours?: number; // Maximum time span for a sequence (default: 48)
-}
-
-export type IndicatorCalculator = (candles: ICandle[], ...args: any[]) => number[]; 

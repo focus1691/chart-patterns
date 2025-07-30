@@ -1,7 +1,7 @@
 import { from, map } from 'rxjs';
 import { ICandle } from '../../types/candle.types';
 import { IZScoreConfig } from '../../types/zScore.types';
-import { IDivergence, IDivergencePoint, IDivergenceConfig, IndicatorCalculator } from '../../types/divergence.types';
+import { IDivergence, IDivergencePoint } from '../../types/divergence.types';
 import { ZigZags, PeakDetector, MFI, RSI } from '..';
 
 /**
@@ -11,10 +11,8 @@ function findDivergences(
   candles: ICandle[],
   zScoreConfig: IZScoreConfig,
   indicatorValues: number[],
-  indicatorName: string,
-  config: IDivergenceConfig = {}
+  indicatorName: string
 ): IDivergence[] {
-  const { maxTimeSpanHours = 48 } = config;
   const minPoints: number = 4;
 
   let divergences: IDivergence[] = [];
@@ -32,7 +30,7 @@ function findDivergences(
   from([{ pricePeaks, indicatorZigzags }])
     .pipe(
       map(({ pricePeaks, indicatorZigzags }) => collectCorrelations(candles, pricePeaks, indicatorZigzags, indicatorName)),
-      map(correlations => findSequences(correlations, minPoints, maxTimeSpanHours)),
+      map(correlations => findSequences(correlations, minPoints)),
       map(sequences => analyzeSequences(sequences, indicatorName)),
       map(divs => removeDuplicateDivergences(divs))
     )
@@ -74,9 +72,9 @@ function collectCorrelations(
     }
   }
 
-  correlations.sort((a, b) => a.time.getTime() - b.time.getTime());
+  // No need to sort - correlations are already in chronological order
+  // since both pricePeaks and indicatorZigzags are generated chronologically
 
-  // REMOVE DEBUG
   console.log(`\n🔍 DEBUG: ${indicatorName} correlations:`);
   correlations.forEach((corr, i) => {
     console.log(`${i}: Peak ${corr.peakIndex} ${corr.direction} at ${corr.time.toISOString().slice(11, 19)} | Price: ${corr.priceValue.toFixed(3)} | ${indicatorName}: ${corr.indicatorValue.toFixed(1)}`);
@@ -87,21 +85,15 @@ function collectCorrelations(
 
 function findSequences(
   correlations: IDivergencePoint[],
-  minPoints: number,
-  maxTimeSpanHours: number
+  minPoints: number
 ): IDivergencePoint[][] {
   const sequences: IDivergencePoint[][] = [];
 
-  // Try different starting points for sequences
+  // Try different starting points for sequences of minimum length
   for (let startIdx = 0; startIdx <= correlations.length - minPoints; startIdx++) {
     for (let endIdx = startIdx + minPoints - 1; endIdx < correlations.length; endIdx++) {
       const sequence = correlations.slice(startIdx, endIdx + 1);
-
-      // Check if this is a valid sequence (time span not too large)
-      const timeSpanHours = (sequence[sequence.length - 1].time.getTime() - sequence[0].time.getTime()) / (1000 * 60 * 60);
-      if (timeSpanHours <= maxTimeSpanHours) {
-        sequences.push(sequence);
-      }
+      sequences.push(sequence);
     }
   }
 
@@ -226,11 +218,10 @@ function removeDuplicateDivergences(divergences: IDivergence[]): IDivergence[] {
 export function mfi(
   candles: ICandle[],
   zScoreConfig: IZScoreConfig,
-  config: IDivergenceConfig = {},
   mfiPeriod: number = 14
 ): IDivergence[] {
   const mfiValues = MFI.calculateMFI(candles, mfiPeriod);
-  return findDivergences(candles, zScoreConfig, mfiValues, 'MFI', config);
+  return findDivergences(candles, zScoreConfig, mfiValues, 'MFI');
 }
 
 /**
@@ -239,11 +230,10 @@ export function mfi(
 export function rsi(
   candles: ICandle[],
   zScoreConfig: IZScoreConfig,
-  config: IDivergenceConfig = {},
   rsiPeriod: number = 14
 ): IDivergence[] {
   const rsiValues = RSI.calculateRSI(candles, rsiPeriod);
-  return findDivergences(candles, zScoreConfig, rsiValues, 'RSI', config);
+  return findDivergences(candles, zScoreConfig, rsiValues, 'RSI');
 }
 
 /**
@@ -253,8 +243,7 @@ export function custom(
   candles: ICandle[],
   zScoreConfig: IZScoreConfig,
   indicatorValues: number[],
-  indicatorName: string,
-  config: IDivergenceConfig = {}
+  indicatorName: string
 ): IDivergence[] {
-  return findDivergences(candles, zScoreConfig, indicatorValues, indicatorName, config);
+  return findDivergences(candles, zScoreConfig, indicatorValues, indicatorName);
 }
