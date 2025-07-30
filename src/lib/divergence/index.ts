@@ -2,6 +2,7 @@ import { from, map } from 'rxjs';
 import { ICandle } from '../../types/candle.types';
 import { IZScoreConfig } from '../../types/zScore.types';
 import { IDivergence, IDivergencePoint } from '../../types/divergence.types';
+import { SIGNAL_DIRECTION } from '../../constants/signals';
 import { ZigZags, PeakDetector, MFI, RSI } from '..';
 
 const defaultZscoreConfig = {
@@ -202,7 +203,7 @@ function checkConsecutiveLowsDivergence(points: IDivergencePoint[]): IDivergence
 
   if (priceDecreasing && indicatorIncreasing) {
     return {
-      type: 'bullish',
+      type: SIGNAL_DIRECTION.BULLISH,
       startTime: validLows[0].time,
       endTime: validLows[validLows.length - 1].time,
       points: validLows,
@@ -260,7 +261,7 @@ function checkConsecutiveHighsDivergence(points: IDivergencePoint[]): IDivergenc
       : `lower highs (${firstPrice.toFixed(3)} → ${lastPrice.toFixed(3)}) while higher highs (${firstIndicator.toFixed(1)} → ${lastIndicator.toFixed(1)})`;
 
     return {
-      type: 'bearish',
+      type: SIGNAL_DIRECTION.BEARISH,
       startTime: validHighs[0].time,
       endTime: validHighs[validHighs.length - 1].time,
       points: validHighs,

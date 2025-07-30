@@ -1,3 +1,5 @@
+import { SIGNAL_DIRECTION } from "../constants/signals";
+
 export interface IDivergencePoint {
   time: Date;
   priceValue: number;
@@ -7,7 +9,7 @@ export interface IDivergencePoint {
 }
 
 export interface IDivergence {
-  type: 'bullish' | 'bearish';
+  type: SIGNAL_DIRECTION;
   startTime: Date;
   endTime: Date;
   points: IDivergencePoint[];
