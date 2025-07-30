@@ -159,8 +159,32 @@ const excessSignals = candles.map(candle => ({
 
 ## Visualisations
 
-### Market Profile Output
-![Market Profile visualization showing TPO distribution with Value Area, POC, and VAH/VAL highlighted](https://github.com/user-attachments/assets/4b5f81a9-7d55-42f1-ad95-023b47ecfc2a)
-
-### Range Detection Output
-![Range detection visualization showing support and resistance levels identified on BTC/USDT price action](https://github.com/user-attachments/assets/22077a58-ed1c-422c-946d-b9d25e586f7e)
+<table>
+   <tr>
+      <td align="center" width="50%"><b>Market Profile</b></td>
+      <td align="center" width="50%"><b>MFI Divergence</b></td>
+   </tr>
+   <tr>
+      <td width="50%">
+         <img src="https://github.com/user-attachments/assets/4b5f81a9-7d55-42f1-ad95-023b47ecfc2a"
+            alt="Market Profile visualization showing TPO distribution with Value Area, POC, and VAH/VAL highlighted"
+            >
+      </td>
+      <td width="50%">
+         <img src="https://github.com/user-attachments/assets/096d6f25-2136-4429-8bbc-4cff7665a49f"
+            alt="Screenshot from 2025-07-30 17-28-54"
+            >
+      </td>
+   </tr>
+   <!-- New row spanning both columns for Range Detection -->
+   <tr>
+      <td colspan="2" align="center"><b>Range Detection</b></td>
+   </tr>
+   <tr>
+      <td colspan="2">
+         <img src="https://github.com/user-attachments/assets/22077a58-ed1c-422c-946d-b9d25e586f7e"
+            alt="Range detection visualization showing support and resistance levels identified on BTC/USDT price action"
+            >
+      </td>
+   </tr>
+</table>
