@@ -89,9 +89,7 @@ const volumeProfileBarSession = ta.VolumeProfile.createBarSession({
 });
 
 // Process candles one by one
-for (const candle of candles) {
-  volumeProfileBarSession.processCandle(candle);
-}
+candles.forEach((candle) => volumeProfileBarSession.processCandle(candle));
 
 // Get value area and distribution results
 const valueArea = barSession.getValueArea();
@@ -125,35 +123,18 @@ const ranges: ILocalRange[] = ta.RangeBuilder.findRanges(candles, zScoreConfig);
 // Create zigzag points for pattern recognition
 const zigzags = ta.ZigZags.create(candles, zScoreConfig);
 
+const zScoreConfigDivergences: IZScoreConfig = {
+  lag: 3,
+  threshold: 1,
+  influence: 0.75
+};
+
 // Divergence Detection - Find divergences between price and indicators
-// MFI Divergences
-const mfiDivergences: IDivergence[] = ta.Divergences.mfi(candles, zScoreConfig, 14);
-
-// RSI Divergences  
-const rsiDivergences: IDivergence[] = ta.Divergences.rsi(candles, zScoreConfig, 14);
-
-// Custom indicator divergences
-const customIndicatorValues = [/* your indicator values */];
-const customDivergences: IDivergence[] = ta.Divergences.custom(candles, zScoreConfig, customIndicatorValues);
-
-// Process divergence results
-mfiDivergences.forEach(divergence => {
-  console.log(`${divergence.type === SIGNAL_DIRECTION.BULLISH ? 'Bullish' : 'Bearish'} MFI divergence detected`);
-  console.log(`Duration: ${divergence.startTime} to ${divergence.endTime}`);
-  console.log(`Strength: ${divergence.strength} points`);
-  console.log(`Description: ${divergence.description}`);
-});
+const mfiDivergences: IDivergence[] = ta.Divergences.mfi(candles, zScoreConfigDivergences, 14);
+const rsiDivergences: IDivergence[] = ta.Divergences.rsi(candles, zScoreConfigDivergences, 14);
 
 // Candlestick Pattern Detection - Excess (large wicks indicating rejection)
 const excessDirection: SIGNAL_DIRECTION = ta.CandlestickPatterns.getCandleExcessDirection(candles[0]);
-// Returns: SIGNAL_DIRECTION.BULLISH (long lower wick), BEARISH (long upper wick), 
-// BIDIRECTIONAL (both), or NONE
-
-// Process multiple candles for excess patterns
-const excessSignals = candles.map(candle => ({
-  timestamp: candle.timestamp,
-  direction: ta.CandlestickPatterns.getCandleExcessDirection(candle)
-})).filter(signal => signal.direction !== ta.SIGNAL_DIRECTION.NONE);
 
 ```
 
