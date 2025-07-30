@@ -32,9 +32,9 @@ function findDivergences(candles: ICandle[], zScoreConfig: IZScoreConfig, indica
 
   from([{ pricePeaks, indicatorZigzags }])
     .pipe(
-      map(({ pricePeaks, indicatorZigzags }) => collectCorrelations(candles, pricePeaks, indicatorZigzags)),
-      map((correlations) => findConsecutiveGroups(correlations)),
-      map((groups) => findDivergencesInGroups(groups))
+      map(({ pricePeaks, indicatorZigzags }) => collectAllCorrelations(candles, pricePeaks, indicatorZigzags)),
+      map((correlations) => groupConsecutiveMatches(correlations)),
+      map((matchGroups) => findDivergencesInGroups(matchGroups))
     )
     .subscribe((result: IDivergence[]) => {
       divergences = result;
@@ -43,7 +43,7 @@ function findDivergences(candles: ICandle[], zScoreConfig: IZScoreConfig, indica
   return divergences;
 }
 
-function collectCorrelations(candles: ICandle[], pricePeaks: any[], indicatorZigzags: any[]): IDivergencePoint[] {
+function collectAllCorrelations(candles: ICandle[], pricePeaks: any[], indicatorZigzags: any[]): IDivergencePoint[] {
   const correlations: IDivergencePoint[] = [];
 
   for (const [peakIndex, peak] of pricePeaks.entries()) {
@@ -56,29 +56,70 @@ function collectCorrelations(candles: ICandle[], pricePeaks: any[], indicatorZig
       return timeDiff === 0;
     });
 
-    if (matchingZigzag && peak.direction === matchingZigzag.direction) {
+    if (matchingZigzag) {
       const peakPrice = peak.direction === 1 ? candleAtPeak.high : candleAtPeak.low;
+      const isMatch = peak.direction === matchingZigzag.direction;
 
       correlations.push({
         time: candleAtPeak.openTime,
         priceValue: peakPrice,
         indicatorValue: matchingZigzag.price,
         direction: peak.direction === 1 ? 'HIGH' : 'LOW',
-        peakIndex
+        peakIndex,
+        isMatch
       });
     }
   }
 
-  console.log(`\n🔍 DEBUG: correlations:`);
+  console.log(`\n🔍 DEBUG: All correlations (${correlations.length} total):`);
   correlations.forEach((corr, i) => {
+    const statusEmoji = corr.isMatch ? '✅' : '❌';
+    const statusText = corr.isMatch ? 'MATCH' : 'MISMATCH';
     console.log(
       `${i}: Peak ${corr.peakIndex} ${corr.direction} at ${corr.time.toISOString().slice(11, 19)} | Price: ${corr.priceValue.toFixed(
         3
-      )} | ${corr.indicatorValue.toFixed(1)}`
+      )} | ${corr.indicatorValue.toFixed(1)} ${statusEmoji} ${statusText}`
     );
   });
 
   return correlations;
+}
+
+/**
+ * Group consecutive matching correlations into arrays
+ * A minimum of 2 consecutive matches is required to form a group
+ */
+function groupConsecutiveMatches(correlations: IDivergencePoint[]): IDivergencePoint[][] {
+  if (correlations.length === 0) return [];
+
+  const matchGroups: IDivergencePoint[][] = [];
+  let currentGroup: IDivergencePoint[] = [];
+
+  for (const correlation of correlations) {
+    if (correlation.isMatch) {
+      // Add to current group
+      currentGroup.push(correlation);
+    } else {
+      // End current group if it has enough matches
+      if (currentGroup.length >= 2) {
+        matchGroups.push([...currentGroup]);
+      }
+      // Start new group
+      currentGroup = [];
+    }
+  }
+
+  // Don't forget the last group
+  if (currentGroup.length >= 2) {
+    matchGroups.push(currentGroup);
+  }
+
+  console.log(`\n🔗 DEBUG: Found ${matchGroups.length} consecutive match groups:`);
+  matchGroups.forEach((group, i) => {
+    console.log(`Group ${i + 1}: ${group.length} consecutive matches (peaks ${group[0].peakIndex}-${group[group.length - 1].peakIndex})`);
+  });
+
+  return matchGroups;
 }
 
 /**

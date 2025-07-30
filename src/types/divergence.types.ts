@@ -6,6 +6,7 @@ export interface IDivergencePoint {
   indicatorValue: number;
   direction: 'HIGH' | 'LOW';
   peakIndex: number;
+  isMatch: boolean; // Whether the price and indicator directions match
 }
 
 export interface IDivergence {
