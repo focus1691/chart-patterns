@@ -13,8 +13,6 @@ function findDivergences(
   indicatorValues: number[],
   indicatorName: string
 ): IDivergence[] {
-  const minPoints: number = 4;
-
   let divergences: IDivergence[] = [];
 
   const pricePeaks = PeakDetector.findSignals(candles.map((v => v.close)), zScoreConfig);
@@ -30,9 +28,8 @@ function findDivergences(
   from([{ pricePeaks, indicatorZigzags }])
     .pipe(
       map(({ pricePeaks, indicatorZigzags }) => collectCorrelations(candles, pricePeaks, indicatorZigzags, indicatorName)),
-      map(correlations => findSequences(correlations, minPoints)),
-      map(sequences => analyzeSequences(sequences, indicatorName)),
-      map(divs => removeDuplicateDivergences(divs))
+      map(correlations => findConsecutiveGroups(correlations)),
+      map(groups => findDivergencesInGroups(groups, indicatorName))
     )
     .subscribe((result: IDivergence[]) => {
       divergences = result;
@@ -72,9 +69,6 @@ function collectCorrelations(
     }
   }
 
-  // No need to sort - correlations are already in chronological order
-  // since both pricePeaks and indicatorZigzags are generated chronologically
-
   console.log(`\n🔍 DEBUG: ${indicatorName} correlations:`);
   correlations.forEach((corr, i) => {
     console.log(`${i}: Peak ${corr.peakIndex} ${corr.direction} at ${corr.time.toISOString().slice(11, 19)} | Price: ${corr.priceValue.toFixed(3)} | ${indicatorName}: ${corr.indicatorValue.toFixed(1)}`);
@@ -83,71 +77,132 @@ function collectCorrelations(
   return correlations;
 }
 
-function findSequences(
-  correlations: IDivergencePoint[],
-  minPoints: number
-): IDivergencePoint[][] {
-  const sequences: IDivergencePoint[][] = [];
-
-  // Try different starting points for sequences of minimum length
-  for (let startIdx = 0; startIdx <= correlations.length - minPoints; startIdx++) {
-    for (let endIdx = startIdx + minPoints - 1; endIdx < correlations.length; endIdx++) {
-      const sequence = correlations.slice(startIdx, endIdx + 1);
-      sequences.push(sequence);
+/**
+ * Find consecutive groups of correlations (allowing small gaps in peak indices)
+ * This is much more efficient than generating all possible subsequences
+ */
+function findConsecutiveGroups(correlations: IDivergencePoint[]): IDivergencePoint[][] {
+  if (correlations.length < 2) return [];
+  
+  const groups: IDivergencePoint[][] = [];
+  let currentGroup: IDivergencePoint[] = [correlations[0]];
+  
+  for (let i = 1; i < correlations.length; i++) {
+    const current = correlations[i];
+    const last = currentGroup[currentGroup.length - 1];
+    
+    // Allow gaps up to 10 peak indices (adjustable based on your data)
+    const peakGap = current.peakIndex - last.peakIndex;
+    
+    if (peakGap <= 15) { // Consecutive enough
+      currentGroup.push(current);
+    } else {
+      // Save current group if it has enough points
+      if (currentGroup.length >= 4) {
+        groups.push([...currentGroup]);
+      }
+      // Start new group
+      currentGroup = [current];
     }
   }
-
-  return sequences;
+  
+  // Don't forget the last group
+  if (currentGroup.length >= 4) {
+    groups.push(currentGroup);
+  }
+  
+  return groups;
 }
 
-function analyzeSequences(sequences: IDivergencePoint[][], indicatorName: string): IDivergence[] {
+/**
+ * Find the longest valid divergence in each consecutive group
+ * This eliminates the need for duplicate removal
+ */
+function findDivergencesInGroups(groups: IDivergencePoint[][], indicatorName: string): IDivergence[] {
   const divergences: IDivergence[] = [];
-
-  for (const sequence of sequences) {
-    const divergence = analyzeDivergencePattern(sequence, indicatorName);
-    if (divergence) {
-      divergences.push(divergence);
+  
+  for (const group of groups) {
+    // Try to find the longest valid divergence starting from the full group
+    // and working backwards if needed
+    let foundDivergence = false;
+    
+    for (let length = group.length; length >= 4 && !foundDivergence; length--) {
+      for (let start = 0; start <= group.length - length && !foundDivergence; start++) {
+        const sequence = group.slice(start, start + length);
+        const divergence = analyseDivergencePattern(sequence, indicatorName);
+        
+        if (divergence) {
+          divergences.push(divergence);
+          foundDivergence = true; // Exit both loops for this group
+        }
+      }
     }
   }
-
+  
   return divergences;
 }
 
-function analyzeDivergencePattern(points: IDivergencePoint[], indicatorName: string): IDivergence | null {
-  // Separate highs and lows
-  const highs = points.filter(p => p.direction === 'HIGH').sort((a, b) => a.time.getTime() - b.time.getTime());
-  const lows = points.filter(p => p.direction === 'LOW').sort((a, b) => a.time.getTime() - b.time.getTime());
-
-  // Check both patterns and return the one that exists
-  const bullishDiv = lows.length >= 2 ? checkBullishDivergence(lows, indicatorName) : null;
-  const bearishDiv = highs.length >= 2 ? checkBearishDivergence(highs, indicatorName) : null;
-
-  // Return the divergence that exists, prefer stronger one if both exist
-  if (bullishDiv && bearishDiv) {
-    return bullishDiv.strength >= bearishDiv.strength ? bullishDiv : bearishDiv;
-  }
-
-  return bullishDiv || bearishDiv;
+function analyseDivergencePattern(points: IDivergencePoint[], indicatorName: string): IDivergence | null {
+  if (points.length < 4) return null;
+  
+  // Points are already in chronological order
+  // For valid divergences, we need consecutive zigzag points (alternating pattern)
+  
+  // Check for bullish divergence with consecutive lows
+  const bullishDiv = checkConsecutiveLowsDivergence(points, indicatorName);
+  if (bullishDiv) return bullishDiv;
+  
+  // Check for bearish divergence with consecutive highs  
+  const bearishDiv = checkConsecutiveHighsDivergence(points, indicatorName);
+  if (bearishDiv) return bearishDiv;
+  
+  return null;
 }
 
-function checkBullishDivergence(lows: IDivergencePoint[], indicatorName: string): IDivergence | null {
+function checkConsecutiveLowsDivergence(points: IDivergencePoint[], indicatorName: string): IDivergence | null {
+  // Extract only the LOWs and ensure they form a valid sequence
+  const lows = points.filter(p => p.direction === 'LOW');
   if (lows.length < 2) return null;
+  
+  // Verify these lows are properly spaced in the original sequence
+  // (i.e., there should be at least one HIGH between consecutive lows)
+  const validLows: IDivergencePoint[] = [lows[0]];
+  
+  for (let i = 1; i < lows.length; i++) {
+    const currentLow = lows[i];
+    const lastValidLow = validLows[validLows.length - 1];
+    
+    // Find positions in original points array
+    const lastLowPos = points.indexOf(lastValidLow);
+    const currentLowPos = points.indexOf(currentLow);
+    
+    // Check if there's at least one HIGH between them
+    const pointsBetween = points.slice(lastLowPos + 1, currentLowPos);
+    const hasHighBetween = pointsBetween.some(p => p.direction === 'HIGH');
+    
+    if (hasHighBetween) {
+      validLows.push(currentLow);
+    }
+  }
+  
+  if (validLows.length < 2) return null;
+  
+  const firstPrice = validLows[0].priceValue;
+  const lastPrice = validLows[validLows.length - 1].priceValue;
+  const firstIndicator = validLows[0].indicatorValue;
+  const lastIndicator = validLows[validLows.length - 1].indicatorValue;
 
-  const firstPrice = lows[0].priceValue;
-  const lastPrice = lows[lows.length - 1].priceValue;
-  const firstIndicator = lows[0].indicatorValue;
-  const lastIndicator = lows[lows.length - 1].indicatorValue;
-
+  // Check for bullish divergence: price lower lows, indicator higher lows
   const priceDecreasing = lastPrice < firstPrice;
   const indicatorIncreasing = lastIndicator > firstIndicator;
 
   if (priceDecreasing && indicatorIncreasing) {
     return {
       type: 'bullish',
-      startTime: lows[0].time,
-      endTime: lows[lows.length - 1].time,
-      points: lows,
-      strength: lows.length,
+      startTime: validLows[0].time,
+      endTime: validLows[validLows.length - 1].time,
+      points: validLows,
+      strength: validLows.length,
       indicator: indicatorName,
       description: `Bullish divergence: Price lower lows (${firstPrice.toFixed(3)} → ${lastPrice.toFixed(3)}) while ${indicatorName} higher lows (${firstIndicator.toFixed(1)} → ${lastIndicator.toFixed(1)})`
     };
@@ -156,19 +211,45 @@ function checkBullishDivergence(lows: IDivergencePoint[], indicatorName: string)
   return null;
 }
 
-function checkBearishDivergence(highs: IDivergencePoint[], indicatorName: string): IDivergence | null {
+function checkConsecutiveHighsDivergence(points: IDivergencePoint[], indicatorName: string): IDivergence | null {
+  // Extract only the HIGHs and ensure they form a valid sequence
+  const highs = points.filter(p => p.direction === 'HIGH');
   if (highs.length < 2) return null;
+  
+  // Verify these highs are properly spaced in the original sequence
+  // (i.e., there should be at least one LOW between consecutive highs)
+  const validHighs: IDivergencePoint[] = [highs[0]];
+  
+  for (let i = 1; i < highs.length; i++) {
+    const currentHigh = highs[i];
+    const lastValidHigh = validHighs[validHighs.length - 1];
+    
+    // Find positions in original points array
+    const lastHighPos = points.indexOf(lastValidHigh);
+    const currentHighPos = points.indexOf(currentHigh);
+    
+    // Check if there's at least one LOW between them
+    const pointsBetween = points.slice(lastHighPos + 1, currentHighPos);
+    const hasLowBetween = pointsBetween.some(p => p.direction === 'LOW');
+    
+    if (hasLowBetween) {
+      validHighs.push(currentHigh);
+    }
+  }
+  
+  if (validHighs.length < 2) return null;
 
-  const firstPrice = highs[0].priceValue;
-  const lastPrice = highs[highs.length - 1].priceValue;
-  const firstIndicator = highs[0].indicatorValue;
-  const lastIndicator = highs[highs.length - 1].indicatorValue;
+  const firstPrice = validHighs[0].priceValue;
+  const lastPrice = validHighs[validHighs.length - 1].priceValue;
+  const firstIndicator = validHighs[0].indicatorValue;
+  const lastIndicator = validHighs[validHighs.length - 1].indicatorValue;
 
-  const priceIncreasing = lastPrice > firstPrice;
-  const indicatorDecreasing = lastIndicator < firstIndicator;
-
-  const priceDecreasing = lastPrice < firstPrice;
-  const indicatorIncreasing = lastIndicator > firstIndicator;
+  // Check for bearish divergence patterns
+  const priceIncreasing = lastPrice > firstPrice; // higher highs
+  const indicatorDecreasing = lastIndicator < firstIndicator; // lower highs
+  
+  const priceDecreasing = lastPrice < firstPrice; // lower highs
+  const indicatorIncreasing = lastIndicator > firstIndicator; // higher highs
 
   if ((priceIncreasing && indicatorDecreasing) || (priceDecreasing && indicatorIncreasing)) {
     const pattern = priceIncreasing && indicatorDecreasing
@@ -177,39 +258,16 @@ function checkBearishDivergence(highs: IDivergencePoint[], indicatorName: string
 
     return {
       type: 'bearish',
-      startTime: highs[0].time,
-      endTime: highs[highs.length - 1].time,
-      points: highs,
-      strength: highs.length,
+      startTime: validHighs[0].time,
+      endTime: validHighs[validHighs.length - 1].time,
+      points: validHighs,
+      strength: validHighs.length,
       indicator: indicatorName,
       description: `Bearish divergence: Price ${pattern}`
     };
   }
 
   return null;
-}
-
-function removeDuplicateDivergences(divergences: IDivergence[]): IDivergence[] {
-  const unique: IDivergence[] = [];
-
-  for (const div of divergences) {
-    const overlapping = unique.find(existing => {
-      // Check if they overlap in time
-      const overlapStart = Math.max(existing.startTime.getTime(), div.startTime.getTime());
-      const overlapEnd = Math.min(existing.endTime.getTime(), div.endTime.getTime());
-      return overlapStart < overlapEnd;
-    });
-
-    if (!overlapping) {
-      unique.push(div);
-    } else if (div.strength > overlapping.strength) {
-      // Replace with stronger divergence
-      const index = unique.indexOf(overlapping);
-      unique[index] = div;
-    }
-  }
-
-  return unique;
 }
 
 /**
