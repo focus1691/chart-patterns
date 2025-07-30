@@ -13,5 +13,4 @@ export interface IDivergence {
   points: IDivergencePoint[];
   strength: number; // number of points
   description: string;
-  indicator: string; // 'MFI', 'RSI', etc.
 }
