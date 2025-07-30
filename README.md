@@ -18,7 +18,8 @@ TypeScript library that provides technical analysis for volume-based indicators 
 
 | Tool | Description |
 |------|-------------|
-| [Divergences](https://focus1691.github.io/chart-patterns/modules/lib.Divergences.html) | Detects bullish/bearish divergences between price and indicators (MFI, RSI). |
+| [MFI Divergences](https://focus1691.github.io/chart-patterns/functions/lib.Divergences.mfi.html) | Detects bullish/bearish divergences between price and Money Flow Index (MFI). |
+| [RSI Divergences](https://focus1691.github.io/chart-patterns/functions/lib.Divergences.rsi.html) | Detects bullish/bearish divergences between price and Relative Strength Index (RSI). |
 | [Peak Detector](https://focus1691.github.io/chart-patterns/modules/lib.PeakDetector.html) | Z-Score-based Peak Detector to find swing highs and lows. |
 | [Range Finder](https://focus1691.github.io/chart-patterns/functions/lib.RangeBuilder.findRanges.html) | Finds key support and resistance zones from price swings. |
 | [Zigzags](https://focus1691.github.io/chart-patterns/functions/lib.ZigZags.create.html) | Highlights major price swings only. |
